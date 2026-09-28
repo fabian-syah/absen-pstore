@@ -76,7 +76,8 @@
                         </div>
                     </form>
 
-                    <div class="table-responsive">
+                    {{-- DESKTOP TABLE VIEW --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover align-middle">
                             <thead class="bg-light">
                                 <tr>
@@ -186,7 +187,100 @@
                         </table>
                     </div>
 
-                    <div class="mt-4 d-flex justify-content-end">
+                    {{-- MOBILE CARD LIST VIEW --}}
+                    <div class="d-md-none">
+                        @forelse($salaries as $salary)
+                            @php
+                                $isPaid = $salary->status == 'paid';
+                                if (!$isPaid && $salary->status == 'pending' && $salary->published_at) {
+                                    if (\Carbon\Carbon::parse($salary->published_at)->startOfDay()->lte(now())) {
+                                        $isPaid = true;
+                                    }
+                                }
+                            @endphp
+                            <div class="card mb-3 border shadow-sm rounded-3 overflow-hidden">
+                                <div class="card-body p-3">
+                                    {{-- Periode & Status --}}
+                                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                        <div>
+                                            <span class="fw-bold text-dark fs-6">
+                                                {{ \Carbon\Carbon::createFromDate($salary->year, $salary->month, 1)->isoFormat('MMMM Y') }}
+                                            </span>
+                                            <small class="text-muted d-block">
+                                                <i class="mdi mdi-calendar-check me-1"></i>{{ $salary->published_at ? \Carbon\Carbon::parse($salary->published_at)->format('d M Y') : '-' }}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            @if($isPaid)
+                                                <span class="badge bg-success rounded-pill px-3 py-1"><i class="mdi mdi-check-circle me-1"></i> Lunas</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1"><i class="mdi mdi-clock-outline me-1"></i> Diproses</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    @if(in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span class="fw-bold text-dark">{{ $salary->user->name ?? '-' }}</span>
+                                                <small class="text-muted d-block">{{ $salary->user->division->name ?? '-' }}</small>
+                                            </div>
+                                            <span class="badge bg-light-info text-dark fw-bold border border-info rounded-pill px-2 py-1" style="background-color: #e0f7fa; font-size: 0.75rem;">
+                                                {{ $salary->user->branch->name ?? '-' }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    {{-- Total Amount & Metode Bayar --}}
+                                    <div class="bg-light rounded-3 p-2 mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="text-muted small fw-semibold">Total Diterima (THP):</span>
+                                            <span class="fw-bold text-primary fs-6">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center pt-1 border-top">
+                                            <span class="text-muted small">Metode Bayar:</span>
+                                            <div>
+                                                @if(in_array(auth()->user()->role, ['admin', 'admin_gaji', 'owner']))
+                                                    <form action="{{ route('salaries.toggle-payment-method', $salary->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="btn btn-sm {{ $salary->payment_method == 'transfer' ? 'btn-outline-primary' : 'btn-outline-success' }} rounded-pill border-0 py-0 px-2" style="font-size: 0.8rem;">
+                                                            @if($salary->payment_method == 'transfer')
+                                                                <i class="mdi mdi-bank"></i> Transfer
+                                                            @else
+                                                                <i class="mdi mdi-cash"></i> Tunai
+                                                            @endif
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    @if($salary->payment_method == 'transfer')
+                                                        <span class="badge badge-opacity-primary"><i class="mdi mdi-bank"></i> Transfer</span>
+                                                    @else
+                                                        <span class="badge badge-opacity-success"><i class="mdi mdi-cash"></i> Tunai</span>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <a href="{{ route('my-salary.show', $salary->id) }}"
+                                        class="btn btn-outline-primary btn-sm w-100 rounded-pill fw-bold py-2 d-flex align-items-center justify-content-center gap-1">
+                                        <i class="mdi mdi-file-document-outline"></i> Lihat Struk
+                                    </a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-5 text-center text-muted">
+                                <div class="bg-light rounded-circle p-3 mb-2 d-inline-block">
+                                    <i class="mdi mdi-file-hidden text-muted" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6 class="text-muted fw-bold">Belum ada riwayat gaji</h6>
+                                <small class="text-muted">Slip gaji akan muncul di sini setelah diterbitkan.</small>
+                            </div>
+                        @endforelse
+                    </div>
+
+                    <div class="mt-4 d-flex justify-content-center justify-content-md-end overflow-auto">
                         {{ $salaries->links('pagination::bootstrap-4') }}
                     </div>
                 </div>

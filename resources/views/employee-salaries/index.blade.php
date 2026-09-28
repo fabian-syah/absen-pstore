@@ -299,32 +299,58 @@
 
     @media (max-width: 768px) {
         .header-section {
-            padding: 24px;
+            padding: 20px 16px;
+            margin-bottom: 20px;
+            border-radius: 12px;
         }
 
         .header-section h3 {
-            font-size: 1.5rem;
-        }
-
-        .table-custom thead th,
-        .table-custom tbody td {
-            padding: 12px 10px;
-            font-size: 0.8rem;
+            font-size: 1.35rem;
         }
 
         .btn-header {
             padding: 10px 16px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+        }
+
+        .nav-tabs-custom {
+            padding: 0 4px;
+            scrollbar-width: none;
+        }
+
+        .nav-tabs-custom::-webkit-scrollbar {
+            display: none;
         }
 
         .nav-tabs-custom .nav-link {
-            padding: 10px 12px;
+            padding: 10px 14px;
             font-size: 0.85rem;
         }
 
         .avatar-wrapper {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
+        }
+
+        .pagination-section {
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .pagination-section div {
+            overflow-x: auto;
+            max-width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 0;
         }
     }
 
@@ -466,7 +492,8 @@
                         </ul>
                     </div>
 
-                    <div class="table-responsive">
+                    {{-- DESKTOP TABLE VIEW --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-custom mb-0">
                             <thead>
                                 <tr>
@@ -591,6 +618,116 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    {{-- MOBILE CARD LIST VIEW (Tampil Hanya di Layar HP) --}}
+                    <div class="d-md-none p-3">
+                        @forelse($users as $user)
+                            <div class="card mb-3 border shadow-sm rounded-3 overflow-hidden">
+                                <div class="card-body p-3">
+                                    {{-- Baris Profil & Kategori --}}
+                                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2 pb-2 border-bottom">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-wrapper" style="width: 44px; height: 44px;">
+                                                @if($user->profile_photo_path)
+                                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="avatar-img" alt="user">
+                                                @else
+                                                    <div class="avatar-img bg-gradient text-white d-flex align-items-center justify-content-center fw-bold" style="background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%); font-size: 1.1rem;">{{ substr($user->name, 0, 1) }}</div>
+                                                @endif
+                                            </div>
+                                            <div>
+                                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                                    <h6 class="mb-0 fw-bold text-dark">{{ $user->name }}</h6>
+                                                    @if(!$user->is_active)
+                                                        <span class="badge bg-danger text-white py-0 px-1" style="font-size: 9px;">INACTIVE</span>
+                                                    @endif
+                                                </div>
+                                                <small class="text-primary fw-bold">ID: {{ $user->login_id ?? '-' }}</small>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            @if($user->employeeSalary)
+                                                @php $cat = $user->employeeSalary->category; @endphp
+                                                @if($cat == 'employee')
+                                                    <span class="badge badge-soft-success py-1 px-2" style="font-size: 0.7rem;">TETAP</span>
+                                                @elseif($cat == 'promotor')
+                                                    <span class="badge badge-soft-info py-1 px-2" style="font-size: 0.7rem;">PROMOTOR</span>
+                                                @elseif($cat == 'freelance')
+                                                    <span class="badge badge-soft-warning py-1 px-2" style="font-size: 0.7rem;">FREELANCE</span>
+                                                @endif
+                                            @else
+                                                <span class="badge badge-soft-secondary py-1 px-2" style="font-size: 0.7rem;">BELUM DIATUR</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Lokasi & Divisi --}}
+                                    <div class="d-flex flex-wrap align-items-center gap-2 small text-muted mb-2">
+                                        <span><i class="mdi mdi-sitemap text-primary me-1"></i>{{ $user->division->name ?? 'Non-Div' }}</span>
+                                        <span>•</span>
+                                        <span><i class="mdi mdi-map-marker text-danger me-1"></i>{{ $user->branch->name ?? '-' }}</span>
+                                    </div>
+
+                                    {{-- Rincian Nominal Gaji --}}
+                                    <div class="bg-light rounded-3 p-2 mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="text-muted small fw-semibold">Gaji Utama:</span>
+                                            <div class="text-end">
+                                                @if($user->employeeSalary)
+                                                    @if($user->employeeSalary->category == 'freelance')
+                                                        <span class="fw-bold text-dark">Rp {{ number_format($user->employeeSalary->daily_salary, 0, ',', '.') }}</span>
+                                                        <small class="text-muted d-block" style="font-size: 10px;">/ kehadiran</small>
+                                                    @elseif($user->employeeSalary->category == 'promotor')
+                                                        <span class="fw-bold text-dark">Rp {{ number_format($user->employeeSalary->promotor_bonus, 0, ',', '.') }}</span>
+                                                        <small class="text-success fw-bold d-block" style="font-size: 10px;">/ bulan (Insentif)</small>
+                                                    @else
+                                                        <span class="fw-bold text-dark">Rp {{ number_format($user->employeeSalary->basic_salary, 0, ',', '.') }}</span>
+                                                        <small class="text-muted d-block" style="font-size: 10px;">/ bulan</small>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        @if($user->employeeSalary && $user->employeeSalary->category == 'employee')
+                                            @php
+                                                $totalMaster = $user->employeeSalary->basic_salary + 
+                                                               $user->employeeSalary->position_allowance + 
+                                                               $user->employeeSalary->owner_privilege;
+                                            @endphp
+                                            <div class="d-flex justify-content-between align-items-center pt-1 border-top">
+                                                <span class="text-muted small fw-semibold">Total Master:</span>
+                                                <div class="text-end">
+                                                    <span class="fw-bold text-primary">Rp {{ number_format($totalMaster, 0, ',', '.') }}</span>
+                                                    <small class="text-muted d-block" style="font-size: 10px;">Pokok + Tunj + Priv</small>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Tombol Aksi --}}
+                                    <a href="{{ route('employee-salaries.edit', [
+                                        'id' => $user->id, 
+                                        'page' => request('page'),
+                                        'search' => request('search'),
+                                        'branch_id' => request('branch_id'),
+                                        'category' => request('category')
+                                    ]) }}" 
+                                       class="btn btn-outline-primary btn-sm w-100 fw-bold py-2 d-flex align-items-center justify-content-center gap-2 rounded-3">
+                                        <i class="mdi mdi-pencil"></i> Atur Gaji
+                                    </a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-5">
+                                <div class="mb-3">
+                                    <i class="mdi mdi-folder-open text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                                <h6 class="text-muted fw-bold">Tidak ada data ditemukan</h6>
+                                <p class="text-secondary small">Coba ubah filter atau lakukan pencarian kembali</p>
+                            </div>
+                        @endforelse
                     </div>
 
                     <div class="pagination-section">

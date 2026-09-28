@@ -20,6 +20,13 @@
         .card-header-clean { padding: 20px 15px 10px; }
         .card-body-clean { padding: 10px 15px 25px; }
     }
+
+    @media (min-width: 768px) {
+        .border-end-md { border-right: 1px solid #dee2e6 !important; }
+    }
+    @media (max-width: 767.98px) {
+        .border-end-md { border-bottom: 1px solid #dee2e6 !important; padding-bottom: 2rem !important; margin-bottom: 1rem !important; }
+    }
     
     /* Custom Switch Modern (iOS Style) */
     .switch { position: relative; display: inline-block; width: 50px; height: 26px; vertical-align: middle; margin-right: 10px; }
@@ -108,10 +115,10 @@
                     <input type="hidden" name="current_search" value="{{ request('search') }}">
                     <input type="hidden" name="current_category" value="{{ request('category') }}">
 
-                    <div class="row g-5">
+                    <div class="row g-4 g-md-5">
                         
                         {{-- KIRI: KATEGORI --}}
-                        <div class="col-md-5 border-end">
+                        <div class="col-md-5 border-end-md">
                             <div class="mb-4">
                                 <h6 class="fw-bold text-uppercase text-secondary small ls-1 mb-3">Kategori & Pembayaran</h6>
                                 

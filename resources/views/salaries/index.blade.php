@@ -39,7 +39,8 @@
                         </div>
                     </form>
 
-                    <div class="table-responsive">
+                    {{-- DESKTOP TABLE VIEW --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -123,11 +124,103 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center">Belum ada data gaji untuk periode ini.</td>
+                                        <td colspan="7" class="text-center">Belum ada data gaji untuk periode ini.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    {{-- MOBILE CARD LIST VIEW --}}
+                    <div class="d-md-none">
+                        @forelse($salaries as $salary)
+                            @php
+                                $isPaid = $salary->status == 'paid';
+                                if (!$isPaid && $salary->status == 'pending' && $salary->published_at) {
+                                    if (\Carbon\Carbon::parse($salary->published_at)->startOfDay()->lte(now())) {
+                                        $isPaid = true;
+                                    }
+                                }
+                            @endphp
+                            <div class="card mb-3 border shadow-sm rounded-3 overflow-hidden">
+                                <div class="card-body p-3">
+                                    {{-- User info & status --}}
+                                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if($salary->user->profile_photo_path)
+                                                <img src="{{ asset('storage/' . $salary->user->profile_photo_path) }}"
+                                                    alt="profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                            @else
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold"
+                                                    style="width: 40px; height: 40px; font-size: 14px;">
+                                                    {{ substr($salary->user->name, 0, 1) }}
+                                                </div>
+                                            @endif
+                                            <div>
+                                                <p class="mb-0 fw-bold text-dark">{{ $salary->user->name }}</p>
+                                                <small class="text-muted">ID: {{ $salary->user->login_id ?? '-' }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            @if($isPaid)
+                                                <span class="badge badge-success">Lunas</span>
+                                            @else
+                                                <span class="badge badge-warning">Pending</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Details --}}
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between small text-muted mb-2">
+                                        <div>
+                                            <i class="mdi mdi-store-outline me-1"></i>{{ $salary->user->branch->name ?? '-' }}
+                                            <span class="mx-1">•</span>
+                                            <i class="mdi mdi-calendar me-1"></i>{{ $salary->month }} / {{ $salary->year }}
+                                        </div>
+                                        <div>
+                                            @if($salary->category == 'promotor')
+                                                <span class="badge badge-info" style="font-size: 0.7rem;">Promotor</span>
+                                            @elseif($salary->category == 'freelance')
+                                                <span class="badge badge-warning" style="font-size: 0.7rem;">Freelance</span>
+                                            @else
+                                                <span class="badge badge-success" style="font-size: 0.7rem;">Karyawan</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Total Gaji Box --}}
+                                    <div class="bg-light rounded-3 p-2 mb-3 d-flex justify-content-between align-items-center">
+                                        <span class="text-muted small fw-semibold">Total Gaji:</span>
+                                        <span class="fw-bold text-success fs-6">Rp {{ number_format($salary->total_amount, 0, ',', '.') }}</span>
+                                    </div>
+
+                                    {{-- Action Buttons --}}
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('salaries.show', $salary->id) }}"
+                                            class="btn btn-sm btn-info text-white flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-1 rounded-3">
+                                            <i class="mdi mdi-eye"></i> Detail
+                                        </a>
+
+                                        @if(auth()->user()->role == 'admin_gaji')
+                                            <a href="{{ route('salaries.edit', $salary->id) }}"
+                                                class="btn btn-sm btn-warning text-dark fw-bold px-3 py-2 d-flex align-items-center justify-content-center gap-1 rounded-3">
+                                                <i class="mdi mdi-pencil"></i> Edit
+                                            </a>
+                                            <form action="{{ route('salaries.destroy', $salary->id) }}" method="POST"
+                                                class="d-inline" onsubmit="return confirm('Yakin hapus data ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger text-white fw-bold px-3 py-2 d-flex align-items-center justify-content-center gap-1 rounded-3">
+                                                    <i class="mdi mdi-delete"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-4 text-center text-muted">Belum ada data gaji untuk periode ini.</div>
+                        @endforelse
                     </div>
                 </div>
             </div>

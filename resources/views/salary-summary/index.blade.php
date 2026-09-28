@@ -64,7 +64,8 @@
                         </form>
                     </div>
 
-                    <div class="table-responsive">
+                    {{-- DESKTOP TABLE VIEW --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover align-middle border">
                             <thead class="table-dark">
                                 <tr>
@@ -143,6 +144,91 @@
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+
+                    {{-- MOBILE CARD LIST VIEW --}}
+                    <div class="d-md-none">
+                        @foreach($summary as $item)
+                            @php
+                                $totalItem = $item['amount'] + $item['bonus_amount'] + $item['thr_amount'];
+                            @endphp
+                            <div class="card mb-3 border shadow-sm rounded-3 overflow-hidden">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded p-2 me-2 text-center text-primary" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="mdi mdi-calendar-month text-primary fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold text-dark">{{ $item['month_name'] }}</h6>
+                                                <small class="text-muted" style="font-size: 11px;">Bulan ke-{{ $item['month_num'] }}</small>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            @if($item['data'])
+                                                @if($item['data']->category == 'promotor')
+                                                    <span class="badge bg-info bg-opacity-25 text-dark border border-info rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">Promotor</span>
+                                                @elseif($item['data']->category == 'freelance')
+                                                    <span class="badge bg-warning bg-opacity-25 text-dark border border-warning rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">Freelance</span>
+                                                @else
+                                                    <span class="badge bg-success bg-opacity-25 text-dark border border-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">Karyawan</span>
+                                                @endif
+                                            @elseif($totalItem > 0)
+                                                <span class="badge bg-primary bg-opacity-25 text-dark border border-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">Total Gabungan</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="small text-muted mb-2">
+                                        <i class="mdi mdi-clock-outline me-1"></i>Cutoff: {{ $item['period_string'] }}
+                                    </div>
+
+                                    <div class="bg-light rounded-3 p-2 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="text-muted small">Gaji Pokok:</span>
+                                            <span class="fw-bold {{ $item['amount'] > 0 ? 'text-dark' : 'text-muted' }}">
+                                                {{ $item['amount'] > 0 ? 'Rp ' . number_format($item['amount'], 0, ',', '.') : '-' }}
+                                            </span>
+                                        </div>
+
+                                        @if($item['bonus_amount'] > 0 || $item['thr_amount'] > 0)
+                                            <div class="pt-1 border-top mt-1">
+                                                @if($item['bonus_amount'] > 0)
+                                                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                                                        <span class="text-info fw-semibold"><i class="mdi mdi-star"></i> Bonus:</span>
+                                                        <span class="fw-bold text-dark">Rp {{ number_format($item['bonus_amount'], 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endif
+                                                @if($item['thr_amount'] > 0)
+                                                    <div class="d-flex justify-content-between align-items-center small">
+                                                        <span class="text-warning fw-semibold"><i class="mdi mdi-wallet-giftcard"></i> THR:</span>
+                                                        <span class="fw-bold text-dark">Rp {{ number_format($item['thr_amount'], 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
+
+                                        <div class="d-flex justify-content-between align-items-center pt-1 border-top mt-1">
+                                            <span class="text-dark small fw-bold">Total Diterima:</span>
+                                            <span class="fw-bold {{ $totalItem > 0 ? 'text-primary' : 'text-muted' }} fs-6">
+                                                {{ $totalItem > 0 ? 'Rp ' . number_format($totalItem, 0, ',', '.') : '-' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+
+                        {{-- Mobile Grand Total Card --}}
+                        <div class="card border-0 bg-primary text-white shadow rounded-3 p-3 mt-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="opacity-75 d-block">Grand Total Tahun {{ $year }}</small>
+                                    <span class="fw-bold fs-5">Rp {{ number_format($totalAnnual, 0, ',', '.') }}</span>
+                                </div>
+                                <i class="mdi mdi-cash-multiple fs-2 opacity-50"></i>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

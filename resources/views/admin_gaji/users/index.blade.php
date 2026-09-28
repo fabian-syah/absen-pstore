@@ -41,7 +41,8 @@
         <!-- Table Card -->
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-body p-0">
-                <div class="table-responsive">
+                {{-- DESKTOP TABLE VIEW --}}
+                <div class="table-responsive d-none d-md-block">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
@@ -106,6 +107,56 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                {{-- MOBILE CARD LIST VIEW --}}
+                <div class="d-md-none p-3">
+                    @forelse($users as $index => $user)
+                        <div class="card mb-3 border shadow-sm rounded-3 overflow-hidden">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if($user->user && $user->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $user->user->profile_photo_path) }}"
+                                                class="rounded-circle" style="width: 42px; height: 42px; object-fit: cover;">
+                                        @else
+                                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                                style="width: 42px; height: 42px; font-size: 15px;">
+                                                {{ substr($user->name, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark">{{ $user->name }}</h6>
+                                            <small class="text-muted"><i class="mdi mdi-map-marker text-danger"></i> {{ $user->location ?? '-' }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-light text-primary rounded-3 p-2"
+                                            data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->id }}">
+                                            <i class="mdi mdi-pencil-outline fs-6"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-light text-danger rounded-3 p-2"
+                                            onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('delete-form-mobile-{{ $user->id }}').submit();">
+                                            <i class="mdi mdi-trash-can-outline fs-6"></i>
+                                        </button>
+                                        <form id="delete-form-mobile-{{ $user->id }}"
+                                            action="{{ route('admin-gaji.users.destroy', $user->id) }}" method="POST"
+                                            class="d-none">
+                                            @csrf @method('DELETE')
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="text-muted small ps-1 pt-1 border-top">
+                                    <i class="mdi mdi-calendar-clock me-1"></i> Dibuat: {{ $user->created_at->format('d M Y') }}
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-4 text-center text-muted">
+                            <i class="mdi mdi-inbox-off-outline fs-1 d-block mb-1"></i>
+                            <span class="small fw-medium">Belum ada data user tersimpan.</span>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>

@@ -702,5 +702,11 @@
     .card-radio:hover { background-color: #f8f9fa; }
     .btn-check:checked + .btn-outline-primary { background-color: #0d6efd; color: white; }
     .btn-check:checked + .btn-outline-success { background-color: #198754; color: white; }
+    @media (min-width: 768px) {
+        .border-end-md { border-right: 1px solid #dee2e6 !important; }
+    }
+    @media (max-width: 767.98px) {
+        .border-end-md { border-bottom: 1px solid #dee2e6 !important; padding-bottom: 1.5rem !important; margin-bottom: 1.5rem !important; }
+    }
 </style>
 @endsection

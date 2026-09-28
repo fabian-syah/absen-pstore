@@ -45,7 +45,8 @@
                         </div>
                     </form>
 
-                    <div class="table-responsive">
+                    {{-- DESKTOP TABLE VIEW --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -177,6 +178,107 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    {{-- MOBILE CARD LIST VIEW --}}
+                    <div class="d-md-none">
+                        @forelse($users as $user)
+                            @php
+                                $salaryThisMonth = $user->salaries->where('month', $month)->where('year', $year)->first();
+                                $bonusThisMonth = $user->bonuses->first();
+                            @endphp
+                            <div class="card mb-3 border shadow-sm rounded-3 overflow-hidden">
+                                <div class="card-body p-3">
+                                    {{-- Header: Profil & Status Gaji --}}
+                                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2 pb-2 border-bottom">
+                                        <div>
+                                            <a href="{{ route('users.show', $user->id) }}" class="text-decoration-none text-dark">
+                                                <h6 class="mb-0 fw-bold">{{ $user->name }}</h6>
+                                            </a>
+                                            <small class="text-muted d-block">ID: {{ $user->login_id ?? '-' }}</small>
+                                            <span class="badge badge-opacity-info mt-1" style="font-size: 0.75rem;">{{ $user->division->name ?? 'Non-Divisi' }}</span>
+                                        </div>
+                                        <div class="text-end">
+                                            @if($salaryThisMonth)
+                                                <span class="badge badge-success py-1 px-2" style="font-size: 0.75rem;">Sudah Digaji</span>
+                                            @else
+                                                <span class="badge badge-warning py-1 px-2" style="font-size: 0.75rem;">Belum Digaji</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Gaji & Status Info Box --}}
+                                    <div class="bg-light rounded-3 p-2 mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="text-muted small fw-semibold">Gaji Bulan Ini:</span>
+                                            <span class="fw-bold text-dark">
+                                                {{ $salaryThisMonth ? 'Rp ' . number_format($salaryThisMonth->total_amount, 0, ',', '.') : '-' }}
+                                            </span>
+                                        </div>
+
+                                        @if($bonusThisMonth && ($bonusThisMonth->bonus_amount > 0 || $bonusThisMonth->thr_amount > 0))
+                                            <div class="pt-1 border-top mt-1">
+                                                @if($bonusThisMonth->bonus_amount > 0)
+                                                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                                                        <span class="badge bg-info text-dark"><i class="mdi mdi-star"></i> Bonus:</span>
+                                                        <span class="fw-bold text-dark">Rp {{ number_format($bonusThisMonth->bonus_amount, 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endif
+                                                @if($bonusThisMonth->thr_amount > 0)
+                                                    <div class="d-flex justify-content-between align-items-center small">
+                                                        <span class="badge bg-primary text-white"><i class="mdi mdi-wallet-giftcard"></i> THR:</span>
+                                                        <span class="fw-bold text-dark">Rp {{ number_format($bonusThisMonth->thr_amount, 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
+
+                                        <div class="d-flex justify-content-between align-items-center pt-1 border-top mt-1">
+                                            <span class="text-muted small">Metode / Status:</span>
+                                            <div class="d-flex gap-1">
+                                                @if($salaryThisMonth)
+                                                    @if($salaryThisMonth->payment_method == 'transfer')
+                                                        <span class="badge badge-opacity-primary"><i class="mdi mdi-bank"></i> Transfer</span>
+                                                    @else
+                                                        <span class="badge badge-opacity-success"><i class="mdi mdi-cash"></i> Tunai</span>
+                                                    @endif
+
+                                                    @if($salaryThisMonth->status == 'paid')
+                                                        <span class="badge badge-outline-success"><i class="mdi mdi-check"></i> Paid</span>
+                                                    @else
+                                                        <span class="badge badge-outline-warning"><i class="mdi mdi-clock"></i> Pending</span>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted small">-</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Action Buttons --}}
+                                    <div class="d-flex gap-2">
+                                        @if(!$salaryThisMonth)
+                                            <a href="{{ route('salaries.create', ['user_id' => $user->id, 'month' => $month, 'year' => $year]) }}"
+                                                class="btn btn-sm btn-success text-white flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-1 rounded-3">
+                                                <i class="mdi mdi-cash-register"></i> Payroll
+                                            </a>
+                                        @else
+                                            <a href="{{ route('salaries.show', $salaryThisMonth->id) }}"
+                                                class="btn btn-sm btn-primary text-white flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-1 rounded-3">
+                                                <i class="mdi mdi-file-document-outline"></i> Struk
+                                            </a>
+                                        @endif
+
+                                        <a href="{{ route('bonuses.create', ['user_id' => $user->id, 'month' => $month, 'year' => $year]) }}"
+                                           class="btn {{ $bonusThisMonth ? 'btn-outline-warning' : 'btn-warning text-dark' }} btn-sm flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-1 rounded-3">
+                                            <i class="mdi mdi-star{{ $bonusThisMonth ? '-outline' : '' }}"></i> {{ $bonusThisMonth ? 'Edit Bonus' : 'Bonus & THR' }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-4 text-muted">Tidak ada data karyawan ditemukan.</div>
+                        @endforelse
                     </div>
                 </div>
             </div>

@@ -43,7 +43,8 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
+                    {{-- DESKTOP TABLE VIEW --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover align-middle mb-0" id="summaryTable">
                             <thead class="bg-light">
                                 <tr>
@@ -87,6 +88,36 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {{-- MOBILE CARD LIST VIEW --}}
+                    <div class="d-md-none p-3">
+                        @forelse($summary as $row)
+                            <div class="card mb-3 border shadow-sm rounded-3 overflow-hidden branch-card-mobile">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="icon-circle bg-light text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                                <i class="mdi mdi-office-building"></i>
+                                            </div>
+                                            <span class="fw-bold text-dark branch-name">{{ $row->name }}</span>
+                                        </div>
+                                        <span class="badge bg-soft-info border text-dark fw-bold px-2 py-1 rounded-2" style="font-size: 0.8rem;">
+                                            {{ $row->employee_count }} <span class="small fw-normal">Org</span>
+                                        </span>
+                                    </div>
+                                    <div class="bg-light rounded-3 p-2 d-flex justify-content-between align-items-center">
+                                        <span class="text-muted small">Total Gaji (Master):</span>
+                                        <span class="fw-bold text-dark">Rp {{ number_format($row->total_gross_salary, 0, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-4 text-muted">
+                                <i class="mdi mdi-alert-circle-outline text-muted fs-1 d-block mb-2"></i>
+                                <span>Data Tidak Tersedia</span>
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
                 <div class="card-footer bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-sm-row gap-2 text-center text-sm-start">
                     <span class="fw-bold text-dark">TOTAL KESELURUHAN ({{ $summary->count() }} Cabang)</span>
@@ -109,14 +140,17 @@
 <script>
     document.getElementById('branchSearch').addEventListener('keyup', function() {
         let value = this.value.toLowerCase();
-        let rows = document.querySelectorAll('.branch-row');
+        let rows = document.querySelectorAll('.branch-row, .branch-card-mobile');
         
         rows.forEach(row => {
-            let name = row.querySelector('.branch-name').innerText.toLowerCase();
-            if (name.includes(value)) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
+            let nameElem = row.querySelector('.branch-name');
+            if (nameElem) {
+                let name = nameElem.innerText.toLowerCase();
+                if (name.includes(value)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
             }
         });
     });
