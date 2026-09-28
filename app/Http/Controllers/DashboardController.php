@@ -319,18 +319,24 @@ class DashboardController extends Controller
                 $securityUsersQuery->where('branch_id', $branch_id);
             }
 
-            $securityUsers = $securityUsersQuery->get();
+            $securityUserIds = $securityUsersQuery->pluck('id');
 
-            $scanners = $securityUsers->map(function ($sec) use ($nowInBranch, $startQueryMonth, $endQueryMonth) {
-                $scanIn = Attendance::where('scanned_by_user_id', $sec->id)
-                    ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
-                    ->count();
+            // Aggregate scan counts in 2 queries instead of 2*N
+            $scanInCounts = Attendance::whereIn('scanned_by_user_id', $securityUserIds)
+                ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
+                ->groupBy('scanned_by_user_id')
+                ->selectRaw('scanned_by_user_id, count(*) as cnt')
+                ->pluck('cnt', 'scanned_by_user_id');
 
-                $scanOut = Attendance::where('scanned_out_by_user_id', $sec->id)
-                    ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
-                    ->count();
+            $scanOutCounts = Attendance::whereIn('scanned_out_by_user_id', $securityUserIds)
+                ->whereBetween('check_in_time', [$startQueryMonth, $endQueryMonth])
+                ->groupBy('scanned_out_by_user_id')
+                ->selectRaw('scanned_out_by_user_id, count(*) as cnt')
+                ->pluck('cnt', 'scanned_out_by_user_id');
 
-                $sec->total_scans = $scanIn + $scanOut;
+            $securityUsers = User::whereIn('id', $securityUserIds)->get();
+            $scanners = $securityUsers->map(function ($sec) use ($scanInCounts, $scanOutCounts) {
+                $sec->total_scans = ($scanInCounts[$sec->id] ?? 0) + ($scanOutCounts[$sec->id] ?? 0);
                 return $sec;
             });
 
@@ -561,6 +567,11 @@ class DashboardController extends Controller
             $calendarAttendances = Attendance::whereIn('user_id', $teamMembers->pluck('id'))
                 ->whereBetween('check_in_time', [$startDate, $endDate])
                 ->where('presence_status', '!=', 'Alpha')
+                ->select([
+                    'id', 'user_id', 'check_in_time', 'check_out_time',
+                    'presence_status', 'is_late_checkin', 'audit_note',
+                    'latitude', 'longitude'
+                ])
                 ->get()
                 ->groupBy([
                     'user_id',
@@ -579,7 +590,9 @@ class DashboardController extends Controller
                             $sub->where('start_date', '<', $startDate)
                                 ->where('end_date', '>', $endDate);
                         });
-                })->get()
+                })
+                ->select(['id', 'user_id', 'type', 'status', 'start_date', 'end_date', 'reason'])
+                ->get()
                 ->map(function ($leave) {
                     // Create date range for easier lookup
                     $start = Carbon::parse($leave->start_date);
@@ -643,6 +656,7 @@ class DashboardController extends Controller
 
         $attendances = Attendance::where('user_id', $user_id)
             ->whereBetween('check_in_time', [$startDate->copy()->subDay(), $limitDate->copy()->addDay()])
+            ->select('id', 'user_id', 'check_in_time', 'presence_status', 'status', 'attendance_type')
             ->get();
 
         $leaves = \App\Models\LeaveRequest::where('user_id', $user_id)
@@ -748,7 +762,7 @@ class DashboardController extends Controller
             ->first();
     }
 
-    private function getAdminAttendanceStats($branch_id = null, $todayDate)
+    private function getAdminAttendanceStats($branch_id = null, $todayDate = null)
     {
         $query = Attendance::whereDate('check_in_time', $todayDate)->where('presence_status', '!=', 'Alpha');
         if ($branch_id)
@@ -772,10 +786,17 @@ class DashboardController extends Controller
         if (!empty($branchIds)) {
             $query->whereIn('branch_id', is_array($branchIds) ? $branchIds : [$branchIds]);
         }
-        $totalToday = (clone $query)->count();
-        $verified = (clone $query)->whereNotNull('verified_by_user_id')->count();
-        $pending = (clone $query)->where('status', 'pending_verification')->count();
-        $late = (clone $query)->where('is_late_checkin', true)->count();
+        $raw = (clone $query)->selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN verified_by_user_id IS NOT NULL THEN 1 ELSE 0 END) as verified,
+            SUM(CASE WHEN status = 'pending_verification' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN is_late_checkin = 1 THEN 1 ELSE 0 END) as late
+        ")->first();
+
+        $totalToday = (int) ($raw->total ?? 0);
+        $verified = (int) ($raw->verified ?? 0);
+        $pending = (int) ($raw->pending ?? 0);
+        $late = (int) ($raw->late ?? 0);
 
         return [
             'total' => $totalToday,
@@ -794,9 +815,13 @@ class DashboardController extends Controller
         if (!empty($branchIds)) {
             $query->whereIn('branch_id', is_array($branchIds) ? $branchIds : [$branchIds]);
         }
-        $scanQuery = (clone $query)->where('attendance_type', 'scan');
-        $checkInScans = (clone $scanQuery)->count();
-        $checkOutScans = (clone $scanQuery)->whereNotNull('check_out_time')->count();
+        $raw = (clone $query)->where('attendance_type', 'scan')->selectRaw("
+            COUNT(*) as check_in_scans,
+            SUM(CASE WHEN check_out_time IS NOT NULL THEN 1 ELSE 0 END) as check_out_scans
+        ")->first();
+
+        $checkInScans = (int) ($raw->check_in_scans ?? 0);
+        $checkOutScans = (int) ($raw->check_out_scans ?? 0);
 
         return [
             'total_scans' => $checkInScans + $checkOutScans,
@@ -820,10 +845,17 @@ class DashboardController extends Controller
 
     private function calculateStats($query, $totalUsers)
     {
-        $presentCount = (clone $query)->count();
-        $lateCount = (clone $query)->where('is_late_checkin', true)->count();
-        $earlyCount = (clone $query)->where('is_early_checkout', true)->count();
-        $pendingCount = (clone $query)->where('status', 'pending_verification')->count();
+        $raw = (clone $query)->selectRaw("
+            COUNT(*) as present,
+            SUM(CASE WHEN is_late_checkin = 1 THEN 1 ELSE 0 END) as late,
+            SUM(CASE WHEN is_early_checkout = 1 THEN 1 ELSE 0 END) as early,
+            SUM(CASE WHEN status = 'pending_verification' THEN 1 ELSE 0 END) as pending
+        ")->first();
+
+        $presentCount = (int) ($raw->present ?? 0);
+        $lateCount = (int) ($raw->late ?? 0);
+        $earlyCount = (int) ($raw->early ?? 0);
+        $pendingCount = (int) ($raw->pending ?? 0);
         $onTimeCount = max($presentCount - $lateCount, 0);
         $divider = $totalUsers > 0 ? $totalUsers : ($presentCount > 0 ? $presentCount : 1);
         $absentCount = max($totalUsers - $presentCount, 0);

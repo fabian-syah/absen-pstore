@@ -1099,7 +1099,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Data Evaluasi Dinamis dari Backend
@@ -4644,9 +4643,8 @@
 @endpush
 
 @push('scripts')
-    {{-- QRCode Lib & Chart --}}
+    {{-- QRCode Lib --}}
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
 
@@ -5062,18 +5060,25 @@
 
         async function fetchRandomQuote() {
             try {
-                // 1. Fetch random quote from dummyjson.com (more reliable)
-                const response = await fetch('https://dummyjson.com/quotes/random');
+                // Timeout 3 detik agar tidak nge-hang kalau API lambat
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 3000);
+
+                const response = await fetch('https://dummyjson.com/quotes/random', { signal: controller.signal });
+                clearTimeout(timeout);
                 if (!response.ok) throw new Error('Quote API response was not ok');
                 const data = await response.json();
 
                 const originalText = data.quote;
                 const author = data.author;
 
-                // 2. Translate to Indonesian
+                // Translate ke Bahasa Indonesia (timeout 3 detik juga)
                 try {
+                    const trController = new AbortController();
+                    const trTimeout = setTimeout(() => trController.abort(), 3000);
                     const translateUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalText)}&langpair=en|id`;
-                    const trResponse = await fetch(translateUrl);
+                    const trResponse = await fetch(translateUrl, { signal: trController.signal });
+                    clearTimeout(trTimeout);
                     const trData = await trResponse.json();
 
                     if (trData && trData.responseData && trData.responseData.translatedText) {
@@ -5086,7 +5091,6 @@
                     console.warn('Translation failed, showing English:', trError);
                 }
 
-                // Fallback: Show original English if translation fails
                 return {
                     text: originalText,
                     author: author
@@ -5149,23 +5153,23 @@
             refreshBackgroundImage();
         }
 
-        // Nature background images from Unsplash (reliable, high-quality)
+        // Background images dari Unsplash (ukuran kecil untuk performa)
         const natureBackgrounds = [
-            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=400&fit=crop', // Mountains
-            'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&h=400&fit=crop', // Forest
-            'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&h=400&fit=crop', // Foggy mountains
-            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=400&fit=crop', // Forest light
-            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&h=400&fit=crop', // Mountain lake
-            'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&h=400&fit=crop', // Valley
-            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1200&h=400&fit=crop', // Green hills
-            'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=400&fit=crop', // Lake sunset
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop', // Beach
-            'https://images.unsplash.com/photo-1518173946687-a4c036bc8ce8?w=1200&h=400&fit=crop', // Sky clouds
-            'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&h=400&fit=crop', // Starry mountain
-            'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=1200&h=400&fit=crop', // Waterfall
-            'https://images.unsplash.com/photo-1465919292999-00f5a4e5861b?w=1200&h=400&fit=crop', // Misty forest
-            'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=1200&h=400&fit=crop', // Aurora
-            'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=1200&h=400&fit=crop'  // Night sky
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=200&fit=crop&q=60', // Mountains
+            'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600&h=200&fit=crop&q=60', // Forest
+            'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&h=200&fit=crop&q=60', // Foggy mountains
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=200&fit=crop&q=60', // Forest light
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&h=200&fit=crop&q=60', // Mountain lake
+            'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=600&h=200&fit=crop&q=60', // Valley
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=600&h=200&fit=crop&q=60', // Green hills
+            'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&h=200&fit=crop&q=60', // Lake sunset
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=200&fit=crop&q=60', // Beach
+            'https://images.unsplash.com/photo-1518173946687-a4c036bc8ce8?w=600&h=200&fit=crop&q=60', // Sky clouds
+            'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&h=200&fit=crop&q=60', // Starry mountain
+            'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=600&h=200&fit=crop&q=60', // Waterfall
+            'https://images.unsplash.com/photo-1465919292999-00f5a4e5861b?w=600&h=200&fit=crop&q=60', // Misty forest
+            'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=600&h=200&fit=crop&q=60', // Aurora
+            'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=600&h=200&fit=crop&q=60'  // Night sky
         ];
 
         function refreshBackgroundImage() {
@@ -5190,15 +5194,22 @@
             return natureBackgrounds[index];
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async function () {
-            // Initial load
-            const quote = await getDailyQuote();
-            displayQuote(quote);
+        // Inisialisasi quote (deferred agar tidak block render halaman)
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tampilkan backup quote dulu secara instant
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const index = dayOfYear % backupQuotes.length;
+            displayQuote(backupQuotes[index]);
 
-            // Initial background
-            refreshBackgroundImage();
-        }); // ============================================
+            // Lalu fetch quote dari API di background (tidak blocking)
+            setTimeout(async function() {
+                const quote = await fetchRandomQuote();
+                if (quote) displayQuote(quote);
+            }, 100);
+        });
+
+        // ============================================
         // DOCUMENT WARNING POPUP FUNCTIONS
         // ============================================
         function closeDocumentWarning() {
@@ -5251,32 +5262,36 @@
                 document.body.appendChild(calTooltip);
             }
 
+            // Prep: set data-cal-tip attribute pada semua status cells (tanpa event listener individual)
             const allCells = document.querySelectorAll('.status-cell');
             allCells.forEach(cell => {
                 const label = cell.getAttribute('data-status-label') || cell.getAttribute('title');
                 if (label) {
                     cell.setAttribute('data-cal-tip', label);
-                    cell.removeAttribute('title'); // Hapus attribute title bawaan browser agar tidak double
+                    cell.removeAttribute('title');
                 }
+            });
 
-                cell.addEventListener('mouseenter', function() {
-                    const tip = this.getAttribute('data-cal-tip');
+            // Event Delegation: satu listener untuk semua tooltip (bukan per-cell)
+            const calendarWrapper = document.querySelector('.table-responsive') || document.querySelector('.card-body');
+            if (calendarWrapper) {
+                calendarWrapper.addEventListener('mouseover', function(e) {
+                    const cell = e.target.closest('.status-cell[data-cal-tip]');
+                    if (!cell) return;
+
+                    const tip = cell.getAttribute('data-cal-tip');
                     if (!tip) return;
 
-                    const canKoreksi = this.getAttribute('data-can-koreksi') === '1';
+                    const canKoreksi = cell.getAttribute('data-can-koreksi') === '1';
                     calTooltip.innerHTML = `<div class="fw-bold">${tip}</div>${canKoreksi ? '<div style="font-size: 10px; color: #38bdf8; margin-top: 3px;"><i class="mdi mdi-cursor-default-click"></i> Klik untuk koreksi data</div>' : ''}`;
                     calTooltip.style.display = 'block';
 
-                    const rect = this.getBoundingClientRect();
+                    const rect = cell.getBoundingClientRect();
                     const tipRect = calTooltip.getBoundingClientRect();
 
-                    // Hitung posisi vertikal (jika terlalu dekat ke atas layar, munculkan di bawah cell)
                     let top = rect.top - tipRect.height - 8;
-                    if (top < 10) {
-                        top = rect.bottom + 8;
-                    }
+                    if (top < 10) top = rect.bottom + 8;
 
-                    // Hitung posisi horizontal (pastikan tidak keluar dari layar kiri/kanan)
                     let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
                     if (left < 10) left = 10;
                     if (left + tipRect.width > window.innerWidth - 10) {
@@ -5288,17 +5303,20 @@
                     calTooltip.style.opacity = '1';
                 });
 
-                cell.addEventListener('mouseleave', function() {
+                calendarWrapper.addEventListener('mouseout', function(e) {
+                    const cell = e.target.closest('.status-cell[data-cal-tip]');
+                    if (!cell) return;
+                    // Cek apakah relatedTarget masih di dalam cell yang sama
+                    if (cell.contains(e.relatedTarget)) return;
                     if (calTooltip) {
                         calTooltip.style.opacity = '0';
                         calTooltip.style.display = 'none';
                     }
                 });
-            });
+            }
 
-            // 3. EVENT HANDLER KLIK CELL UNTUK KOREKSI DATA
-            const koreksiCells = document.querySelectorAll('.js-koreksi-cell');
-            if (!koreksiCells.length || !modalEl) return;
+            // 3. EVENT HANDLER KLIK CELL UNTUK KOREKSI DATA (Event Delegation)
+            if (!modalEl) return;
 
             const form = document.getElementById('formKoreksiDashboard');
             const methodInput = document.getElementById('koreksiMethodInput');
@@ -5319,9 +5337,12 @@
 
             let currentCellData = {};
 
-            koreksiCells.forEach(cell => {
-                cell.addEventListener('click', function(e) {
-                    e.preventDefault();
+            // Event delegation: satu click listener di wrapper, bukan per-cell
+            const clickWrapper = calendarWrapper || document;
+            clickWrapper.addEventListener('click', function(e) {
+                const cell = e.target.closest('.js-koreksi-cell');
+                if (!cell) return;
+                e.preventDefault();
 
                     // Sembunyikan floating tooltip saat diklik
                     if (calTooltip) {
@@ -5334,7 +5355,7 @@
                         document.body.appendChild(modalEl);
                     }
 
-                    const d = this.dataset;
+                    const d = cell.dataset;
                     currentCellData = {
                         userId: d.userId,
                         userName: d.userName,
@@ -5426,7 +5447,7 @@
                         $('#modalKoreksiDashboard').modal('show');
                     }
                 });
-            });
+
 
             // Handle Delete Attendance Day
             if (btnDeleteDay) {
