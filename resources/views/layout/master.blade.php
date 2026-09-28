@@ -107,6 +107,15 @@
             overflow-x: hidden;
         }
 
+        /* SweetAlert2 selalu berada di layer paling depan di atas seluruh modal & elemen sistem */
+        div.swal2-container,
+        .swal2-container {
+            z-index: 999999 !important;
+        }
+        .swal2-popup {
+            z-index: 1000000 !important;
+        }
+
         /* Layout Structure */
         @media (min-width: 992px) {
 

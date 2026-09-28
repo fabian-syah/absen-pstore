@@ -114,6 +114,15 @@
         #modalBulkActionSuperadmin .text-muted {
             color: #475569 !important;
         }
+
+        /* SWEETALERT2 SELALU DI PALING DEPAN DI ATAS SEMUA MODAL */
+        div.swal2-container,
+        .swal2-container {
+            z-index: 999999 !important;
+        }
+        .swal2-popup {
+            z-index: 1000000 !important;
+        }
     </style>
 
     <div class="row">
@@ -431,7 +440,7 @@
 
     {{-- MODAL AKSI MASSAL SUPERADMIN (FILTER RENTANG TANGGAL & MULTI-TYPE) --}}
     @if ($isSuperAdmin)
-        <div class="modal fade" id="modalBulkActionSuperadmin" tabindex="-1" aria-labelledby="modalBulkActionLabel" aria-hidden="true" style="z-index: 9998;">
+        <div class="modal fade" id="modalBulkActionSuperadmin" tabindex="-1" aria-labelledby="modalBulkActionLabel" aria-hidden="true" style="z-index: 2000;">
             <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
                     {{-- MODAL HEADER --}}
@@ -749,6 +758,13 @@
                 confirmButtonText: 'Mengerti'
             });
         @endif
+
+        // CEGAH BOOTSTRAP MODAL FOCUS TRAP MENGGANGGU SWEETALERT2
+        $(document).on('focusin', function(e) {
+            if ($(e.target).closest('.swal2-container').length) {
+                e.stopImmediatePropagation();
+            }
+        });
 
         // FUNGSI UNTUK KONFIRMASI SUBMIT DENGAN SWEETALERT
         window.confirmSubmit = function(event, form, message) {
