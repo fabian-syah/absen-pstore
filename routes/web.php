@@ -446,9 +446,15 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
         Route::get('/all-attendance', [AdminAttendanceController::class, 'index'])->name('admin.attendance.all');
         Route::put('/audit/verify-attendance/{id}', [App\Http\Controllers\AuditController::class, 'verifyAttendance'])->name('audit.verify.attendance');
+    });
+
+    Route::middleware(['role:admin,audit,admin_gaji,leader'])->group(function () {
         Route::put('/attendance/{id}/audit-update', [App\Http\Controllers\AuditController::class, 'updateAttendance'])->name('audit.update.attendance');
         Route::post('/audit/attendance/store', [App\Http\Controllers\AuditController::class, 'storeByAudit'])->name('audit.store.attendance');
         Route::post('/audit/attendance/delete-day', [App\Http\Controllers\AuditController::class, 'deleteAttendanceDay'])->name('audit.delete_day');
+    });
+
+    Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
 
         Route::get('/branches/{branch}/export-excel', [BranchController::class, 'exportBranchExcel'])->name('branches.export.excel');
         Route::get('/branches/{branch}/export-pdf', [BranchController::class, 'exportBranchPdf'])->name('branches.export.pdf');

@@ -296,6 +296,8 @@
         .status-cell.off, .legend-color.off { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); } /* Slate */
         .status-cell.telat, .legend-color.telat { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); box-shadow: 0 0 0 2px #fff inset; } /* Rose */
         .status-cell.alpha, .legend-color.alpha { background: linear-gradient(135deg, #334155 0%, #0f172a 100%); } /* Slate Dark */
+        .js-koreksi-cell { cursor: pointer !important; }
+        .js-koreksi-cell:hover { outline: 2px solid #0dcaf0; outline-offset: 1px; }
 
         .calendar-legend {
             display: flex;
@@ -436,9 +438,21 @@
         </div>
     </div>
     --}}
-    {{-- ======================================================================= --}}
-    {{-- WELCOME & ATTENDANCE STATS (Responsive) --}}
-    {{-- ======================================================================= --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-3">
+            <i class="mdi mdi-check-circle-outline me-2 fs-5 align-middle"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-3">
+            <i class="mdi mdi-alert-circle-outline me-2 fs-5 align-middle"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="mb-4 mt-4 pt-2 pt-lg-0 animate-enter" style="animation-delay: 0.05s;">
         {{-- Sapaan Khusus Mobile (Karena di desktop sudah ada di Top Navbar) --}}
         <div class="d-block d-lg-none mb-2">
@@ -1523,6 +1537,9 @@
     {{-- [NEW] TEAM CALENDAR SECTION --}}
     {{-- ======================================================================= --}}
     @if(isset($teamCalendar))
+        @php
+            $canKoreksi = in_array(Auth::user()->role, ['admin', 'audit', 'admin_gaji', 'leader']);
+        @endphp
         <div class="row mb-5 animate-enter" style="animation-delay: 0.25s">
             <div class="col-12">
                 <div class="calendar-container card border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
@@ -1531,7 +1548,11 @@
                             <h4 class="fw-bold mb-1 text-dark">
                                 <i class="mdi mdi-calendar-multiselect text-primary me-2"></i>Kalender Kehadiran Tim
                             </h4>
-                            <p class="text-muted small mb-0">Klik pada kotak status untuk detail harian.</p>
+                            @if($canKoreksi)
+                                <p class="text-muted small mb-0"><i class="mdi mdi-cursor-default-click text-primary me-1"></i>Klik pada kotak status (A, P, M, S, dll) untuk melihat & mengoreksi absensi langsung.</p>
+                            @else
+                                <p class="text-muted small mb-0">Klik pada kotak status untuk detail harian.</p>
+                            @endif
                         </div>
                         <form action="{{ route('dashboard') }}" method="GET" class="d-flex align-items-center gap-2">
                             <select name="month" class="form-select form-select-sm border border-2 text-dark fw-bold rounded-pill shadow-sm bg-white" style="cursor: pointer; min-width: 140px; padding-left: 1rem; padding-right: 2rem; border-color: #cbd5e1;" onchange="this.form.submit()">
@@ -1635,9 +1656,42 @@
                                                     $statusValue = 'A'; 
                                                     $statusTitle = 'Alpha (Tanpa Keterangan)';
                                                 }
+
+                                                $cellStatusForModal = 'Masuk';
+                                                if ($att) {
+                                                    $cellStatusForModal = $att->presence_status ?? 'Masuk';
+                                                } elseif ($leave) {
+                                                    $lt = strtolower($leave->type ?? '');
+                                                    if ($lt == 'sakit') $cellStatusForModal = 'Sakit';
+                                                    elseif ($lt == 'izin') $cellStatusForModal = 'Izin';
+                                                    elseif ($lt == 'cuti') $cellStatusForModal = 'Cuti';
+                                                    elseif ($lt == 'wfh') $cellStatusForModal = 'WFH';
+                                                    elseif ($lt == 'libur') $cellStatusForModal = 'Libur';
+                                                    else $cellStatusForModal = ucfirst($leave->type ?? 'Masuk');
+                                                } elseif ($statusClass == 'alpha') {
+                                                    $cellStatusForModal = 'Alpha';
+                                                }
                                             @endphp
                                             <td class="{{ $isWeekend ? 'weekend-day' : '' }}">
-                                                <div class="status-cell {{ $statusClass }}" title="{{ $statusTitle }}">
+                                                <div class="status-cell {{ $statusClass }} {{ $canKoreksi ? 'js-koreksi-cell' : '' }}" 
+                                                    title="{{ $statusTitle }}{{ $canKoreksi ? ' • Klik untuk Koreksi Data' : '' }}"
+                                                    @if($canKoreksi)
+                                                        data-user-id="{{ $teamMember->id }}"
+                                                        data-user-name="{{ e($teamMember->name) }}"
+                                                        data-branch-name="{{ e($teamMember->branch->name ?? '-') }}"
+                                                        data-date="{{ $dateStr }}"
+                                                        data-date-formatted="{{ $dateObj->translatedFormat('d F Y') }}"
+                                                        data-att-id="{{ $att ? $att->id : '' }}"
+                                                        data-check-in="{{ ($att && $att->check_in_time) ? \Carbon\Carbon::parse($att->check_in_time)->format('H:i') : '' }}"
+                                                        data-check-out="{{ ($att && $att->check_out_time) ? \Carbon\Carbon::parse($att->check_out_time)->format('H:i') : '' }}"
+                                                        data-presence-status="{{ $cellStatusForModal }}"
+                                                        data-audit-note="{{ $att ? e($att->audit_note ?? '') : ($leave ? e($leave->reason ?? '') : '') }}"
+                                                        data-lat="{{ $att ? ($att->latitude ?? '') : '' }}"
+                                                        data-lng="{{ $att ? ($att->longitude ?? '') : '' }}"
+                                                        data-has-record="{{ ($att || $leave) ? '1' : '0' }}"
+                                                        data-status-label="{{ $statusTitle }}"
+                                                    @endif
+                                                >
                                                     {{ $statusValue }}
                                                 </div>
                                             </td>
@@ -3102,6 +3156,106 @@
             </div>
         </div>
     </div>
+
+    @if(in_array(Auth::user()->role, ['admin', 'audit', 'admin_gaji', 'leader']))
+        {{-- [BARU] MODAL KOREKSI DATA DASHBOARD (QUICK EDIT ABSENSI) --}}
+        <div class="modal fade" id="modalKoreksiDashboard" tabindex="-1" aria-labelledby="modalKoreksiDashboardLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+                    <div class="modal-header bg-info text-white p-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="mdi mdi-calendar-edit fs-4"></i>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0" id="modalKoreksiDashboardLabel">Koreksi Data</h5>
+                                <small class="text-white-50" id="koreksiSubTitle" style="font-size: 11px;">-</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="formKoreksiDashboard" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="_method" id="koreksiMethodInput" value="PUT">
+                        <input type="hidden" name="user_id" id="koreksiUserId">
+                        <input type="hidden" name="date" id="koreksiDate">
+                        <input type="hidden" name="status" value="verified">
+
+                        <div class="modal-body p-4">
+                            <!-- Info Karyawan & Tanggal -->
+                            <div class="alert alert-light border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold text-dark fs-6" id="koreksiUserName">-</div>
+                                    <small class="text-muted" id="koreksiBranchDate">-</small>
+                                </div>
+                                <span class="badge bg-info text-white rounded-pill px-3 py-2" id="koreksiBadgeStatus">-</span>
+                            </div>
+
+                            <!-- Map link button if location exists -->
+                            <div id="koreksiMapContainer" class="mb-3 d-none">
+                                <a href="#" id="koreksiMapLink" target="_blank" class="btn btn-xs btn-info text-white rounded-pill px-3 fw-bold">
+                                    <i class="mdi mdi-map-marker-radius me-1"></i> Cek Lokasi Maps
+                                </a>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold">Jam Masuk</label>
+                                    <input type="time" name="check_in_time" id="koreksiCheckInTime" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold">Jam Pulang</label>
+                                    <input type="time" name="check_out_time" id="koreksiCheckOutTime" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Status</label>
+                                <select name="presence_status" id="koreksiPresenceStatus" class="form-select" required>
+                                    <option value="Masuk">✅ Masuk</option>
+                                    <option value="WFH">🏠 WFH</option>
+                                    <option value="Sakit">🤒 Sakit</option>
+                                    <option value="Izin">📝 Izin</option>
+                                    <option value="Libur">📅 Libur (Off Day)</option>
+                                    <option value="Cuti">🏖️ Cuti</option>
+                                    <option value="Alpha">❌ Alpha</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-danger">Foto Bukti Audit</label>
+                                <input type="file" name="audit_photo" id="koreksiAuditPhoto" class="form-control mb-2" accept="image/*">
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Catatan / Alasan Koreksi</label>
+                                <textarea name="audit_note" id="koreksiAuditNote" class="form-control" rows="2" placeholder="Alasan koreksi..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light p-3 d-flex justify-content-between">
+                            <div>
+                                <button type="button" class="btn btn-outline-danger rounded-pill px-3 fw-bold" id="btnDeleteDay" style="display: none;">
+                                    <i class="mdi mdi-delete me-1"></i> Hapus Bersih
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-info text-white rounded-pill px-4 fw-bold shadow-sm">
+                                    <i class="mdi mdi-content-save me-1"></i> Simpan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Form Hapus Hari Terpilih --}}
+        <form id="formDeleteAttendanceDay" action="{{ route('audit.delete_day') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="user_id" id="deleteDayUserId">
+            <input type="hidden" name="date" id="deleteDayDate">
+        </form>
+    @endif
 
 @endsection
 
@@ -5061,9 +5215,151 @@
 
         // Optional: Confetti Effect Function (Placeholder)
         function confettiEffect() {
-            alert("🎉 Happy Birthday! PStore wish you all the best! 🎉");
+            // Placeholder
         }
 
+        // ============================================
+        // QUICK KOREKSI ABSENSI DARI DASHBOARD
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const koreksiCells = document.querySelectorAll('.js-koreksi-cell');
+            const modalEl = document.getElementById('modalKoreksiDashboard');
+            if (!koreksiCells.length || !modalEl) return;
+
+            const form = document.getElementById('formKoreksiDashboard');
+            const methodInput = document.getElementById('koreksiMethodInput');
+            const subTitle = document.getElementById('koreksiSubTitle');
+            const userNameEl = document.getElementById('koreksiUserName');
+            const branchDateEl = document.getElementById('koreksiBranchDate');
+            const badgeStatus = document.getElementById('koreksiBadgeStatus');
+            const userIdInput = document.getElementById('koreksiUserId');
+            const dateInput = document.getElementById('koreksiDate');
+            const checkInInput = document.getElementById('koreksiCheckInTime');
+            const checkOutInput = document.getElementById('koreksiCheckOutTime');
+            const statusSelect = document.getElementById('koreksiPresenceStatus');
+            const auditNoteTextarea = document.getElementById('koreksiAuditNote');
+            const auditPhotoInput = document.getElementById('koreksiAuditPhoto');
+            const mapContainer = document.getElementById('koreksiMapContainer');
+            const mapLink = document.getElementById('koreksiMapLink');
+            const btnDeleteDay = document.getElementById('btnDeleteDay');
+
+            let currentCellData = {};
+
+            koreksiCells.forEach(cell => {
+                cell.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const d = this.dataset;
+                    currentCellData = {
+                        userId: d.userId,
+                        userName: d.userName,
+                        branchName: d.branchName,
+                        date: d.date,
+                        dateFormatted: d.dateFormatted,
+                        attId: d.attId,
+                        checkIn: d.checkIn,
+                        checkOut: d.checkOut,
+                        presenceStatus: d.presenceStatus || 'Masuk',
+                        auditNote: d.auditNote || '',
+                        lat: d.lat,
+                        lng: d.lng,
+                        hasRecord: d.hasRecord === '1',
+                        statusLabel: d.statusLabel || ''
+                    };
+
+                    // Header & Info Banner
+                    if (subTitle) subTitle.textContent = `${currentCellData.userName} • ${currentCellData.dateFormatted}`;
+                    if (userNameEl) userNameEl.textContent = currentCellData.userName;
+                    if (branchDateEl) branchDateEl.textContent = `${currentCellData.branchName} • ${currentCellData.dateFormatted}`;
+                    if (badgeStatus) badgeStatus.textContent = currentCellData.statusLabel || currentCellData.presenceStatus;
+
+                    // Hidden inputs
+                    if (userIdInput) userIdInput.value = currentCellData.userId;
+                    if (dateInput) dateInput.value = currentCellData.date;
+
+                    // Times
+                    if (checkInInput) checkInInput.value = currentCellData.checkIn || '';
+                    if (checkOutInput) checkOutInput.value = currentCellData.checkOut || '';
+
+                    // Select Status (case-insensitive match)
+                    if (statusSelect) {
+                        const targetStatus = (currentCellData.presenceStatus || '').trim().toLowerCase();
+                        let matched = false;
+                        for (let i = 0; i < statusSelect.options.length; i++) {
+                            if (statusSelect.options[i].value.toLowerCase() === targetStatus) {
+                                statusSelect.selectedIndex = i;
+                                matched = true;
+                                break;
+                            }
+                        }
+                        if (!matched) {
+                            statusSelect.value = 'Masuk';
+                        }
+                    }
+
+                    // Reset photo & note
+                    if (auditPhotoInput) auditPhotoInput.value = '';
+                    if (auditNoteTextarea) auditNoteTextarea.value = currentCellData.auditNote;
+
+                    // Maps link
+                    if (mapContainer && mapLink) {
+                        if (currentCellData.lat && currentCellData.lng) {
+                            mapLink.href = `https://maps.google.com/?q=${currentCellData.lat},${currentCellData.lng}`;
+                            mapContainer.classList.remove('d-none');
+                        } else {
+                            mapContainer.classList.add('d-none');
+                        }
+                    }
+
+                    // Action & Method
+                    if (currentCellData.attId) {
+                        form.action = `/attendance/${currentCellData.attId}/audit-update`;
+                        if (methodInput) {
+                            methodInput.value = 'PUT';
+                            methodInput.disabled = false;
+                        }
+                    } else {
+                        form.action = "{{ route('audit.store.attendance') }}";
+                        if (methodInput) {
+                            methodInput.disabled = true;
+                        }
+                    }
+
+                    // Delete button visibility
+                    if (btnDeleteDay) {
+                        if (currentCellData.hasRecord) {
+                            btnDeleteDay.style.display = 'inline-block';
+                        } else {
+                            btnDeleteDay.style.display = 'none';
+                        }
+                    }
+
+                    // Show Modal
+                    if (window.bootstrap && bootstrap.Modal) {
+                        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    } else if (window.$) {
+                        $('#modalKoreksiDashboard').modal('show');
+                    }
+                });
+            });
+
+            // Handle Delete Attendance Day
+            if (btnDeleteDay) {
+                btnDeleteDay.addEventListener('click', function() {
+                    if (!currentCellData.userId || !currentCellData.date) return;
+                    const confirmMsg = `HAPUS BERSIH: Yakin ingin menghapus semua data (Absen & Izin/Libur) untuk karyawan "${currentCellData.userName}" pada tanggal ${currentCellData.dateFormatted}?\n\nData absensi hari ini akan dihapus dan kembali bersih (seperti belum pernah absen).`;
+                    if (confirm(confirmMsg)) {
+                        const delUser = document.getElementById('deleteDayUserId');
+                        const delDate = document.getElementById('deleteDayDate');
+                        const delForm = document.getElementById('formDeleteAttendanceDay');
+                        if (delUser && delDate && delForm) {
+                            delUser.value = currentCellData.userId;
+                            delDate.value = currentCellData.date;
+                            delForm.submit();
+                        }
+                    }
+                });
+            }
+        });
 
     </script>
 @endpush

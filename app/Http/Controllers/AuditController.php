@@ -1283,7 +1283,7 @@ class AuditController extends Controller
     public function updateAttendance(Request $request, $id)
     {
         $request->validate([
-            'check_in_time' => 'required', // Jam masuk wajib ada (Format H:i)
+            'check_in_time' => 'nullable', // Format H:i
             'check_out_time' => 'nullable', // Format H:i
             'presence_status' => 'required|string',
             'status' => 'required|string',
@@ -1319,7 +1319,8 @@ class AuditController extends Controller
         $originalDateLocal = Carbon::parse($attendance->check_in_time)->timezone($branchTimezone)->format('Y-m-d');
 
         // 2. Proses Jam Masuk (Parse sebagai waktu lokal user)
-        $newCheckInLocal = Carbon::createFromFormat('Y-m-d H:i', $originalDateLocal . ' ' . $request->check_in_time, $branchTimezone);
+        $timeIn = $request->check_in_time ?: ($attendance->check_in_time ? Carbon::parse($attendance->check_in_time)->timezone($branchTimezone)->format('H:i') : '08:00');
+        $newCheckInLocal = Carbon::createFromFormat('Y-m-d H:i', $originalDateLocal . ' ' . $timeIn, $branchTimezone);
         // Konversi ke App Timezone (UTC/WIB) untuk simpan ke DB
         $newCheckInDB = $newCheckInLocal->copy()->setTimezone(config('app.timezone'));
 
