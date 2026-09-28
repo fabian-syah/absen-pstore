@@ -12,49 +12,107 @@
     <style>
         .type-select-card {
             cursor: pointer;
-            border: 1.5px solid #e2e8f0;
+            border: 1.5px solid #cbd5e1;
             border-radius: 10px;
             background: #fff;
             transition: all 0.15s ease-in-out;
             user-select: none;
+            color: #0f172a;
         }
         .type-select-card:hover {
-            border-color: #94a3b8;
+            border-color: #0d6efd;
             background: #f8fafc;
         }
         .type-select-card.active {
             border-color: #0d6efd !important;
-            background: #f0f7ff !important;
+            background: #eff6ff !important;
+        }
+        .type-select-card .fw-semibold {
+            color: #0f172a !important;
         }
         .date-mode-card {
             cursor: pointer;
-            border: 1.5px solid #e2e8f0;
+            border: 1.5px solid #cbd5e1;
             border-radius: 10px;
             background: #fff;
             transition: all 0.15s ease-in-out;
             user-select: none;
         }
         .date-mode-card:hover {
-            border-color: #94a3b8;
+            border-color: #0d6efd;
             background: #f8fafc;
         }
         .date-mode-card.active {
             border-color: #0d6efd !important;
-            background: #f0f7ff !important;
+            background: #eff6ff !important;
+        }
+        .date-mode-card .mode-title {
+            color: #0f172a !important;
+            font-weight: 600 !important;
+        }
+        .date-mode-card .mode-desc {
+            color: #475569 !important;
+            font-weight: 500 !important;
         }
         .quick-date-btn {
             border-radius: 20px;
             font-size: 11px;
-            font-weight: 500;
-            border: 1px solid #e2e8f0;
-            color: #475569;
-            background: #fff;
+            font-weight: 600;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            background: #ffffff;
             transition: all 0.15s;
         }
         .quick-date-btn:hover {
-            background: #f1f5f9;
-            color: #0d6efd;
-            border-color: #cbd5e1;
+            background: #0d6efd;
+            color: #ffffff;
+            border-color: #0d6efd;
+        }
+
+        /* HIGH-CONTRAST TYPOGRAPHY & FORM CONTROLS FOR MODAL */
+        #modalBulkActionSuperadmin select.form-select,
+        #modalBulkActionSuperadmin .form-select,
+        #modalBulkActionSuperadmin .form-control,
+        #modalBulkActionSuperadmin select,
+        #modalBulkActionSuperadmin input[type="date"],
+        #modalBulkActionSuperadmin input {
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-weight: 600 !important;
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            opacity: 1 !important;
+        }
+        #modalBulkActionSuperadmin select option {
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-weight: 600 !important;
+            background-color: #ffffff !important;
+        }
+        #modalBulkActionSuperadmin .input-group-text {
+            color: #1e293b !important;
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            font-weight: 600;
+        }
+        #modalBulkActionSuperadmin .table thead th {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background-color: #e2e8f0 !important;
+            border-bottom: 2px solid #94a3b8 !important;
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+            white-space: nowrap;
+        }
+        #modalBulkActionSuperadmin .table tbody td {
+            color: #0f172a !important;
+            vertical-align: middle;
+        }
+        #modalBulkActionSuperadmin .text-muted {
+            color: #475569 !important;
         }
     </style>
 
@@ -413,18 +471,18 @@
                                 <div class="row g-2">
                                     <div class="col-12 col-sm-6">
                                         <div class="form-group mb-0">
-                                            <label class="small text-muted mb-1 fw-semibold">Tanggal Mulai</label>
+                                            <label class="small text-dark mb-1 fw-bold">Tanggal Mulai</label>
                                             <div class="input-group">
-                                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="mdi mdi-calendar"></i></span>
+                                                <span class="input-group-text bg-light border-end-0 text-dark"><i class="mdi mdi-calendar"></i></span>
                                                 <input type="date" class="form-control border-start-0" id="bulk_start_date" name="start_date" required>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-12 col-sm-6">
                                         <div class="form-group mb-0">
-                                            <label class="small text-muted mb-1 fw-semibold">Tanggal Selesai</label>
+                                            <label class="small text-dark mb-1 fw-bold">Tanggal Selesai</label>
                                             <div class="input-group">
-                                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="mdi mdi-calendar"></i></span>
+                                                <span class="input-group-text bg-light border-end-0 text-dark"><i class="mdi mdi-calendar"></i></span>
                                                 <input type="date" class="form-control border-start-0" id="bulk_end_date" name="end_date" required>
                                             </div>
                                         </div>
@@ -433,14 +491,14 @@
 
                                 {{-- Metode Pencocokan --}}
                                 <div class="mt-3">
-                                    <label class="small text-muted d-block mb-1 fw-semibold">Metode Pencocokan Tanggal:</label>
+                                    <label class="small text-dark d-block mb-1 fw-bold">Metode Pencocokan Tanggal:</label>
                                     <div class="row g-2">
                                         <div class="col-12 col-sm-4">
                                             <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0 active" for="date_mode_within">
                                                 <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_within" value="within" checked>
                                                 <div>
-                                                    <span class="d-block fw-semibold text-dark" style="font-size: 12px;">Di Dalam Rentang</span>
-                                                    <small class="text-muted d-block" style="font-size: 10px; line-height: 1.2;">Mulai & selesai di rentang ini</small>
+                                                    <span class="d-block mode-title" style="font-size: 12.5px;">Di Dalam Rentang</span>
+                                                    <small class="mode-desc d-block" style="font-size: 11px; line-height: 1.2;">Mulai & selesai di rentang ini</small>
                                                 </div>
                                             </label>
                                         </div>
@@ -448,8 +506,8 @@
                                             <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0" for="date_mode_overlap">
                                                 <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_overlap" value="overlap">
                                                 <div>
-                                                    <span class="d-block fw-semibold text-dark" style="font-size: 12px;">Bersinggungan</span>
-                                                    <small class="text-muted d-block" style="font-size: 10px; line-height: 1.2;">Overlap tanggal yang dipilih</small>
+                                                    <span class="d-block mode-title" style="font-size: 12.5px;">Bersinggungan</span>
+                                                    <small class="mode-desc d-block" style="font-size: 11px; line-height: 1.2;">Overlap tanggal yang dipilih</small>
                                                 </div>
                                             </label>
                                         </div>
@@ -457,8 +515,8 @@
                                             <label class="date-mode-card d-flex align-items-center p-2 rounded-3 border w-100 mb-0" for="date_mode_start_only">
                                                 <input class="form-check-input me-2 mt-0" type="radio" name="date_mode" id="date_mode_start_only" value="start_only">
                                                 <div>
-                                                    <span class="d-block fw-semibold text-dark" style="font-size: 12px;">Tanggal Mulai Saja</span>
-                                                    <small class="text-muted d-block" style="font-size: 10px; line-height: 1.2;">Berdasarkan tanggal awal</small>
+                                                    <span class="d-block mode-title" style="font-size: 12.5px;">Tanggal Mulai Saja</span>
+                                                    <small class="mode-desc d-block" style="font-size: 11px; line-height: 1.2;">Berdasarkan tanggal awal</small>
                                                 </div>
                                             </label>
                                         </div>
@@ -561,12 +619,12 @@
                                     <span>Filter Cabang (Opsional)</span>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="mdi mdi-store-outline"></i></span>
-                                    <select class="form-select border-start-0" id="bulk_branch_id" name="branch_id">
-                                        <option value="all">Semua Cabang (Global)</option>
+                                    <span class="input-group-text bg-light border-end-0 text-dark"><i class="mdi mdi-store-outline"></i></span>
+                                    <select class="form-select border-start-0" id="bulk_branch_id" name="branch_id" style="color: #0f172a !important; -webkit-text-fill-color: #0f172a !important; font-weight: 600;">
+                                        <option value="all" style="color: #0f172a; font-weight: 500;">Semua Cabang (Global)</option>
                                         @isset($branches)
                                             @foreach($branches as $b)
-                                                <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                                <option value="{{ $b->id }}" style="color: #0f172a; font-weight: 500;">{{ $b->name }}</option>
                                             @endforeach
                                         @endisset
                                     </select>
@@ -580,34 +638,34 @@
                                         <span class="badge rounded-circle bg-info text-white me-2 d-inline-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 11px;">4</span>
                                         <span>Hasil Pencocokan Data</span>
                                     </label>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm py-1 px-3 rounded-pill" id="btnCheckPreview">
+                                    <button type="button" class="btn btn-primary btn-sm py-1 px-3 rounded-pill fw-semibold shadow-sm" id="btnCheckPreview">
                                         <i class="mdi mdi-refresh me-1"></i> Cek Data
                                     </button>
                                 </div>
 
                                 {{-- Preview Box --}}
                                 <div id="previewStatusBox" class="p-3 rounded-3 text-center border" style="background: #f8fafc;">
-                                    <span class="text-muted small"><i class="mdi mdi-information-outline me-1"></i> Masukkan rentang tanggal dan pilih jenis izin untuk melihat data.</span>
+                                    <span class="text-dark small fw-medium"><i class="mdi mdi-information-outline text-primary me-1"></i> Masukkan rentang tanggal dan pilih jenis izin untuk melihat data.</span>
                                 </div>
 
                                 <div id="previewDetailsContainer" class="d-none mt-2">
                                     <div class="d-flex flex-wrap gap-1 mb-2" id="previewBreakdownBadges"></div>
                                     <div class="border rounded-3 overflow-hidden shadow-sm" style="max-height: 220px; overflow-y: auto;">
                                         <table class="table table-sm table-hover mb-0" style="font-size: 12px;">
-                                            <thead class="bg-light sticky-top text-muted">
+                                            <thead class="sticky-top">
                                                 <tr>
-                                                    <th class="ps-3">#</th>
-                                                    <th>Nama Karyawan</th>
-                                                    <th>Cabang</th>
-                                                    <th>Tipe</th>
-                                                    <th>Tanggal</th>
-                                                    <th>Alasan</th>
+                                                    <th class="ps-3 text-dark fw-bold" style="width: 45px;">#</th>
+                                                    <th class="text-dark fw-bold">Nama Karyawan</th>
+                                                    <th class="text-dark fw-bold">Cabang</th>
+                                                    <th class="text-dark fw-bold">Tipe</th>
+                                                    <th class="text-dark fw-bold">Tanggal</th>
+                                                    <th class="text-dark fw-bold">Alasan</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="previewTableBody"></tbody>
                                         </table>
                                     </div>
-                                    <small class="text-muted mt-1 d-block text-end" id="previewMoreNotice"></small>
+                                    <small class="fw-semibold mt-1 d-block text-end" style="color: #334155; font-size: 12px;" id="previewMoreNotice"></small>
                                 </div>
                             </div>
                         </form>
@@ -615,7 +673,7 @@
 
                     {{-- MODAL FOOTER --}}
                     <div class="modal-footer bg-light px-4 py-3 d-flex justify-content-between flex-wrap gap-2 border-top">
-                        <button type="button" class="btn btn-light border text-muted px-4 py-2 rounded-3" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-light border text-dark fw-semibold px-4 py-2 rounded-3" data-bs-dismiss="modal">
                             Batal
                         </button>
                         <div class="d-flex gap-2">
@@ -926,7 +984,7 @@
                         let breakdownHtml = '';
                         if (resp.breakdown && resp.breakdown.length > 0) {
                             resp.breakdown.forEach(function (b) {
-                                breakdownHtml += `<span class="badge rounded-pill border py-1 px-2" style="background: #ffffff; color: #334155; font-size: 11px;">${b.label}: <strong class="text-primary">${b.count}</strong></span> `;
+                                breakdownHtml += `<span class="badge rounded-pill border py-1 px-3 shadow-xs" style="background: #ffffff; color: #0f172a; border-color: #cbd5e1 !important; font-size: 12px; font-weight: 600;">${b.label}: <strong class="text-primary">${b.count}</strong></span> `;
                             });
                         }
                         $('#previewBreakdownBadges').html(breakdownHtml);
@@ -937,12 +995,12 @@
                             resp.sample_items.forEach(function (item, idx) {
                                 rowsHtml += `
                                     <tr>
-                                        <td class="ps-3 text-muted">${idx + 1}</td>
+                                        <td class="ps-3 text-dark fw-bold">${idx + 1}</td>
                                         <td class="fw-bold text-dark">${item.user_name}</td>
-                                        <td><span class="badge bg-light text-dark border">${item.branch_name}</span></td>
-                                        <td><span class="badge bg-primary text-white rounded-pill px-2">${item.type_label}</span></td>
-                                        <td>${item.dates}</td>
-                                        <td class="text-truncate" style="max-width: 180px;" title="${item.reason}">${item.reason}</td>
+                                        <td><span class="badge" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">${item.branch_name}</span></td>
+                                        <td><span class="badge bg-primary text-white rounded-pill px-2 py-1 fw-semibold">${item.type_label}</span></td>
+                                        <td class="text-dark fw-semibold" style="font-size: 12px; white-space: nowrap;">${item.dates}</td>
+                                        <td class="text-dark fw-normal" style="max-width: 200px; word-break: break-word;" title="${item.reason}">${item.reason}</td>
                                     </tr>
                                 `;
                             });
@@ -959,7 +1017,7 @@
                         $('#btnBulkApproveAction, #btnBulkRejectAction').prop('disabled', false);
                     } else {
                         $('#previewStatusBox').html(`
-                            <div class="py-2 text-muted small">
+                            <div class="py-2 text-dark small fw-medium">
                                 <i class="mdi mdi-alert-circle-outline text-warning me-1"></i>
                                 <span>Tidak ditemukan pengajuan pending dengan kriteria rentang tanggal dan jenis izin tersebut.</span>
                             </div>
@@ -989,10 +1047,10 @@
             Swal.fire({
                 title: 'Konfirmasi Persetujuan Massal',
                 html: `Apakah Anda yakin ingin <strong>MENYETUJUI SEMUA (${matchedPendingCount})</strong> pengajuan izin pending terpilih?<br><br>
-                       <div class="text-start p-3 rounded-3 small border" style="background: #f8fafc;">
-                       • Rentang Tanggal: <strong>${startDate} s/d ${endDate}</strong><br>
-                       • Jenis Izin: <strong>${types.join(', ').toUpperCase()}</strong><br>
-                       • Total Pengajuan: <strong>${matchedPendingCount} Data</strong>
+                       <div class="text-start p-3 rounded-3 small border" style="background: #f8fafc; color: #0f172a;">
+                       • Rentang Tanggal: <strong style="color: #0f172a;">${startDate} s/d ${endDate}</strong><br>
+                       • Jenis Izin: <strong style="color: #0f172a;">${types.join(', ').toUpperCase()}</strong><br>
+                       • Total Pengajuan: <strong class="text-primary">${matchedPendingCount} Data</strong>
                        </div>`,
                 icon: 'question',
                 showCancelButton: true,
@@ -1057,7 +1115,7 @@
                 title: 'Konfirmasi Penolakan Massal',
                 html: `Anda akan <strong>MENOLAK SEMUA (${matchedPendingCount})</strong> pengajuan izin pending terpilih.<br><br>
                        <label class="form-label fw-bold text-dark d-block text-start small">Alasan Penolakan <span class="text-danger">*</span>:</label>
-                       <textarea id="swalBulkRejectReason" class="form-control text-dark rounded-3" rows="3" placeholder="Tulis alasan penolakan..."></textarea>`,
+                       <textarea id="swalBulkRejectReason" class="form-control text-dark rounded-3" rows="3" placeholder="Tulis alasan penolakan..." style="color: #0f172a !important; -webkit-text-fill-color: #0f172a !important; font-weight: 500; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important;"></textarea>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
@@ -1212,7 +1270,7 @@
                 title: 'Tolak Pengajuan Terpilih',
                 html: `Anda akan menolak <strong>${ids.length}</strong> pengajuan izin.<br><br>
                        <label class="form-label fw-bold text-dark d-block text-start small">Alasan Penolakan <span class="text-danger">*</span>:</label>
-                       <textarea id="swalSelectedRejectReason" class="form-control rounded-3" rows="3" placeholder="Tulis alasan penolakan..."></textarea>`,
+                       <textarea id="swalSelectedRejectReason" class="form-control text-dark rounded-3" rows="3" placeholder="Tulis alasan penolakan..." style="color: #0f172a !important; -webkit-text-fill-color: #0f172a !important; font-weight: 500; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important;"></textarea>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
