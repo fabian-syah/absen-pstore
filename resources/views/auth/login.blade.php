@@ -663,7 +663,7 @@
                 </div>
 
                 <div class="help-caption">
-                    Kendala akses akun? Hubungi HRD atau IT Support cabang Anda.
+                    Kendala akses akun? Hubungi IT Support Pusat.
                 </div>
             </section>
 
