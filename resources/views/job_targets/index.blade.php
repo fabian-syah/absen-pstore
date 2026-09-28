@@ -16,22 +16,15 @@
 {{-- HEADER & BUTTON --}}
 <div class="row align-items-center mb-4 g-3">
     <div class="col-12 col-md-8">
-        <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-2 py-1 rounded">PORTAL TARGET & KINERJA</span>
-        </div>
-        <h3 class="fw-bold text-dark mb-1">Manajemen Target & Pencapaian</h3>
+        <h3 class="fw-bold text-dark mb-1">Manajemen Target &amp; Pencapaian</h3>
         <p class="text-muted mb-0 small">
             Monitor performa kerja cabang <span class="fw-semibold text-primary">{{ auth()->user()->branch->name ?? 'Pusat' }}</span> serta evaluasi pencapaian target individu.
         </p>
     </div>
     <div class="col-12 col-md-4 text-md-end">
-        <a href="{{ route('job-targets.create') }}" class="btn btn-primary shadow-sm rounded-3 px-4 py-2 fw-semibold d-inline-flex align-items-center justify-content-center gap-2 w-100 w-md-auto">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="16"></line>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-            </svg>
-            <span>Buat Target Baru</span>
+        <a href="{{ route('job-targets.create') }}" class="btn btn-primary shadow-sm rounded-3 px-4 py-2 fw-semibold d-inline-flex align-items-center justify-content-center gap-2 text-nowrap w-100 w-md-auto">
+            <i class="mdi mdi-plus-circle-outline fs-5"></i>
+            <span>Buat Target</span>
         </a>
     </div>
 </div>
@@ -39,13 +32,8 @@
 {{-- KPI SUMMARY METRICS --}}
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-3 p-3 h-100 kpi-card">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-semibold">Target Berjalan</span>
-                <span class="kpi-icon-box bg-warning bg-opacity-10 text-warning">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </span>
-            </div>
+        <div class="card border-0 shadow-sm p-3 h-100 kpi-card kpi-warning">
+            <div class="text-muted small fw-semibold mb-2">Target Berjalan</div>
             <div class="d-flex align-items-baseline gap-2">
                 <h3 class="fw-bold text-dark mb-0">{{ $totalActive }}</h3>
                 <span class="text-muted small">Aktif</span>
@@ -53,13 +41,8 @@
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-3 p-3 h-100 kpi-card">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-semibold">Target Selesai</span>
-                <span class="kpi-icon-box bg-success bg-opacity-10 text-success">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                </span>
-            </div>
+        <div class="card border-0 shadow-sm p-3 h-100 kpi-card kpi-success">
+            <div class="text-muted small fw-semibold mb-2">Target Selesai</div>
             <div class="d-flex align-items-baseline gap-2">
                 <h3 class="fw-bold text-dark mb-0">{{ $totalCompleted }}</h3>
                 <span class="text-muted small">Tercapai</span>
@@ -67,13 +50,8 @@
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-3 p-3 h-100 kpi-card">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-semibold">Target Cabang</span>
-                <span class="kpi-icon-box bg-primary bg-opacity-10 text-primary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2"/></svg>
-                </span>
-            </div>
+        <div class="card border-0 shadow-sm p-3 h-100 kpi-card kpi-primary">
+            <div class="text-muted small fw-semibold mb-2">Target Cabang</div>
             <div class="d-flex align-items-baseline gap-2">
                 <h3 class="fw-bold text-dark mb-0">{{ $totalTeam }}</h3>
                 <span class="text-muted small">Total Tim</span>
@@ -81,13 +59,8 @@
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-3 p-3 h-100 kpi-card">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-semibold">Target Pribadi</span>
-                <span class="kpi-icon-box bg-info bg-opacity-10 text-info">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </span>
-            </div>
+        <div class="card border-0 shadow-sm p-3 h-100 kpi-card kpi-info">
+            <div class="text-muted small fw-semibold mb-2">Target Pribadi</div>
             <div class="d-flex align-items-baseline gap-2">
                 <h3 class="fw-bold text-dark mb-0">{{ $totalPersonal }}</h3>
                 <span class="text-muted small">Personal</span>
@@ -100,20 +73,12 @@
 <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
     <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-3">
-                <div class="target-section-icon bg-primary bg-opacity-10 text-primary">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h5 class="mb-0 fw-bold text-dark">Target & Pencapaian Cabang</h5>
-                    <small class="text-muted">Sasaran prioritas tim operasional dan keberhasilan cabang</small>
-                </div>
+            <div>
+                <h5 class="mb-1 fw-bold text-dark">Target &amp; Pencapaian Cabang</h5>
+                <small class="text-muted">Sasaran prioritas tim operasional dan keberhasilan cabang</small>
             </div>
             <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small fw-semibold">
-                {{ auth()->user()->branch->name ?? 'Pusat' }}
+                Cabang {{ auth()->user()->branch->name ?? 'Pusat' }}
             </span>
         </div>
     </div>
@@ -131,21 +96,12 @@
 <div class="card shadow-sm border-0 rounded-4 mb-5 overflow-hidden">
     <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-3">
-                <div class="target-section-icon bg-success bg-opacity-10 text-success">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <polyline points="16 11 18 13 22 9"></polyline>
-                    </svg>
-                </div>
-                <div>
-                    <h5 class="mb-0 fw-bold text-dark">Target & Pencapaian Pribadi</h5>
-                    <small class="text-muted">Sasaran kerja individual dan portofolio pencapaian Anda</small>
-                </div>
+            <div>
+                <h5 class="mb-1 fw-bold text-dark">Target &amp; Pencapaian Pribadi</h5>
+                <small class="text-muted">Sasaran kerja individual dan portofolio pencapaian Anda</small>
             </div>
             <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small fw-semibold">
-                {{ auth()->user()->name }}
+                Personal &bull; {{ auth()->user()->name }}
             </span>
         </div>
     </div>
@@ -163,32 +119,32 @@
 @include('job_targets.partials.modal_update')
 
 <style>
-    /* Styling Dasar & Komponen */
+    /* Styling Dasar KPI */
     .kpi-card {
         background-color: #ffffff;
-        border: 1px solid #eef2f6 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        position: relative;
+        overflow: hidden;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
+        padding-left: 20px !important;
     }
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 4px;
+    }
+    .kpi-card.kpi-warning::before { background-color: #f59e0b; }
+    .kpi-card.kpi-success::before { background-color: #10b981; }
+    .kpi-card.kpi-primary::before { background-color: #2563eb; }
+    .kpi-card.kpi-info::before { background-color: #06b6d4; }
+    
     .kpi-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.05) !important;
-    }
-    .kpi-icon-box {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .target-section-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
+        box-shadow: 0 6px 14px rgba(0,0,0,0.04) !important;
     }
 
     /* Modern Segmented Navigation Tabs */
@@ -244,10 +200,10 @@
         display: inline-block;
     }
 
-    /* Item Card / Table */
+    /* Item Card */
     .target-item-card {
         background-color: #ffffff;
-        border: 1px solid #eef2f6;
+        border: 1px solid #e2e8f0;
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 12px;
