@@ -252,6 +252,11 @@ class User extends Authenticatable
         return $this->hasOne(EmployeeSalary::class, 'user_id');
     }
 
+    public function employeeEvaluations(): HasMany
+    {
+        return $this->hasMany(EmployeeEvaluation::class, 'user_id');
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

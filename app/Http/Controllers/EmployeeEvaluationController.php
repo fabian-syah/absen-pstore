@@ -23,11 +23,21 @@ class EmployeeEvaluationController extends Controller
             return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
+        $userQuery = function ($q) {
+            $q->where('is_active', true);
+        };
+
+        $evaluatedQuery = function ($q) {
+            $q->where('is_active', true)
+                ->whereHas('employeeEvaluations');
+        };
+
         // Ambil daftar cabang
         if ($user->role === 'admin') {
-            $branches = Branch::withCount(['users' => function ($q) {
-                $q->where('is_active', true);
-            }])->get();
+            $branches = Branch::withCount([
+                'users as users_count' => $userQuery,
+                'users as evaluated_users_count' => $evaluatedQuery,
+            ])->orderBy('name')->get();
         } else {
             $branches = collect();
 
@@ -35,18 +45,20 @@ class EmployeeEvaluationController extends Controller
 
             // Branch utama
             if ($user->branch_id) {
-                $mainBranch = Branch::withCount(['users' => function ($q) {
-                    $q->where('is_active', true);
-                }])->find($user->branch_id);
+                $mainBranch = Branch::withCount([
+                    'users as users_count' => $userQuery,
+                    'users as evaluated_users_count' => $evaluatedQuery,
+                ])->find($user->branch_id);
                 if ($mainBranch && !$isTeamAuditNonLeader) {
                     $branches->push($mainBranch);
                 }
             }
 
             // Branch kelolaan
-            $managedBranches = $user->branches()->withCount(['users' => function ($q) {
-                $q->where('is_active', true);
-            }])->get();
+            $managedBranches = $user->branches()->withCount([
+                'users as users_count' => $userQuery,
+                'users as evaluated_users_count' => $evaluatedQuery,
+            ])->orderBy('name')->get();
 
             foreach ($managedBranches as $mb) {
                 if (!$branches->contains('id', $mb->id)) {
@@ -58,7 +70,26 @@ class EmployeeEvaluationController extends Controller
             }
         }
 
-        return view('employee_evaluations.branches', compact('branches'));
+        // Pisahkan cabang Pusat dan Cabang Operasional
+        $pusatBranches = $branches->filter(fn($b) => $b->is_pusat)->values();
+        $cabangBranches = $branches->filter(fn($b) => !$b->is_pusat)->values();
+
+        // Hitung total karyawan dan yang sudah dinilai
+        $totalPusatUsers = $pusatBranches->sum('users_count');
+        $evaluatedPusatUsers = $pusatBranches->sum('evaluated_users_count');
+
+        $totalCabangUsers = $cabangBranches->sum('users_count');
+        $evaluatedCabangUsers = $cabangBranches->sum('evaluated_users_count');
+
+        return view('employee_evaluations.branches', compact(
+            'branches',
+            'pusatBranches',
+            'cabangBranches',
+            'totalPusatUsers',
+            'evaluatedPusatUsers',
+            'totalCabangUsers',
+            'evaluatedCabangUsers'
+        ));
     }
 
     /**
@@ -72,7 +103,14 @@ class EmployeeEvaluationController extends Controller
             return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        $branch = Branch::findOrFail($branch_id);
+        $branch = Branch::withCount([
+            'users as users_count' => function ($q) {
+                $q->where('is_active', true);
+            },
+            'users as evaluated_users_count' => function ($q) {
+                $q->where('is_active', true)->whereHas('employeeEvaluations');
+            }
+        ])->findOrFail($branch_id);
 
         // Hanya ambil user yang branch utamanya adalah cabang ini
         $query = User::with(['branch', 'division'])
@@ -448,6 +486,200 @@ class EmployeeEvaluationController extends Controller
         return $pdf->stream($fileName);
     }
 
+    /**
+     * Download All Pusat PDF Rapor untuk karyawan yang sudah dinilai.
+     */
+    public function exportAllPusatPdf(Request $request)
+    {
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
+
+        $currentUser = Auth::user();
+        if (!in_array($currentUser->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        $date = $request->query('date', now()->format('Y-m-d'));
+
+        // Ambil daftar nama unit Pusat
+        $pusatList = Branch::pusatList();
+        $pusatBranches = Branch::whereIn('name', $pusatList)->get();
+        $pusatBranchIds = $pusatBranches->pluck('id');
+
+        // Ambil karyawan aktif di unit Pusat yang SUDAH DINILAI (punya data di employee_evaluations)
+        $users = User::with(['branch', 'division', 'divisions'])
+            ->whereIn('branch_id', $pusatBranchIds)
+            ->where('is_active', true)
+            ->whereHas('employeeEvaluations')
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
+            ->orderBy('branches.name', 'asc')
+            ->orderByRaw("CASE WHEN users.role = 'leader' THEN 1 ELSE 2 END")
+            ->orderBy('users.name', 'asc')
+            ->select('users.*')
+            ->get();
+
+        if ($users->isEmpty()) {
+            return back()->with('error', 'Belum ada karyawan di unit Pusat yang sudah dinilai.');
+        }
+
+        // Ambil evaluasi terbaru untuk tiap user
+        $evaluations = EmployeeEvaluation::whereIn('user_id', $users->pluck('id'))
+            ->orderBy('evaluation_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->unique('user_id')
+            ->keyBy('user_id');
+
+        // Generate Photos and QuickCharts
+        $userCharts = [];
+        $userPhotos = [];
+        $chartUrls = [];
+
+        foreach ($users as $u) {
+            // Photo
+            $userPhotos[$u->id] = null;
+            if ($u->profile_photo_path) {
+                $photoPath = public_path('storage/' . $u->profile_photo_path);
+                if (!file_exists($photoPath)) {
+                    $photoPath = storage_path('app/public/' . $u->profile_photo_path);
+                }
+                if (file_exists($photoPath)) {
+                    $mime = @mime_content_type($photoPath) ?: 'image/jpeg';
+                    $userPhotos[$u->id] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($photoPath));
+                }
+            }
+
+            // Radar Chart Data
+            $eval = $evaluations->get($u->id);
+            if ($eval) {
+                $labels = ['Kecerdasan', 'Amanah', 'Sosial media', 'Kepemimpinan', 'Data & ketelitian', 'Komunikasi', 'Kedisiplinan'];
+                $dataScores = [
+                    (int) $eval->kecerdasan_score,
+                    (int) $eval->amanah_score,
+                    (int) $eval->sosial_media_score,
+                    (int) $eval->kepemimpinan_score,
+                    (int) $eval->data_ketelitian_score,
+                    (int) $eval->komunikasi_score,
+                    (int) $eval->kedisiplinan_score
+                ];
+
+                if ($eval->custom_score !== null && $eval->custom_score !== '') {
+                    $labels[] = $eval->custom_title ?? 'Kriteria Tambahan';
+                    $dataScores[] = (int) $eval->custom_score;
+                }
+
+                $chartData = [
+                    'type' => 'radar',
+                    'data' => [
+                        'labels' => $labels,
+                        'datasets' => [
+                            [
+                                'label' => 'Nilai',
+                                'data' => $dataScores,
+                                'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
+                                'borderColor' => 'rgba(54, 162, 235, 1)',
+                                'pointBackgroundColor' => 'rgba(54, 162, 235, 1)',
+                                'pointBorderColor' => '#fff',
+                            ]
+                        ]
+                    ],
+                    'options' => [
+                        'plugins' => [
+                            'legend' => ['display' => false],
+                            'datalabels' => [
+                                'display' => true,
+                                'color' => '#000000',
+                                'align' => 'bottom',
+                                'font' => ['weight' => 'bold', 'size' => 10],
+                                'backgroundColor' => 'rgba(255, 255, 255, 0.7)',
+                                'borderRadius' => 3
+                            ]
+                        ],
+                        'scale' => [
+                            'pointLabels' => [
+                                'fontColor' => '#000000',
+                                'fontStyle' => 'bold',
+                                'fontSize' => 11
+                            ],
+                            'ticks' => [
+                                'beginAtZero' => true,
+                                'max' => 100,
+                                'min' => 0,
+                                'stepSize' => 20,
+                                'display' => false
+                            ]
+                        ]
+                    ]
+                ];
+                $chartUrls[$u->id] = 'https://quickchart.io/chart?c=' . urlencode(json_encode($chartData)) . '&w=300&h=300';
+            }
+        }
+
+        // Fetch QuickCharts secara paralel (curl_multi) dengan timeout cepat
+        if (!empty($chartUrls) && function_exists('curl_multi_init')) {
+            $mh = curl_multi_init();
+            $handles = [];
+            foreach ($chartUrls as $userId => $url) {
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_multi_add_handle($mh, $ch);
+                $handles[$userId] = $ch;
+            }
+
+            $running = null;
+            do {
+                curl_multi_exec($mh, $running);
+                curl_multi_select($mh, 0.1);
+            } while ($running > 0);
+
+            foreach ($handles as $userId => $ch) {
+                $content = curl_multi_getcontent($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                if ($content && $httpCode == 200) {
+                    $userCharts[$userId] = 'data:image/png;base64,' . base64_encode($content);
+                } else {
+                    $userCharts[$userId] = null;
+                }
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+            }
+            curl_multi_close($mh);
+        } else {
+            foreach ($chartUrls as $userId => $url) {
+                try {
+                    $ctx = stream_context_create([
+                        'http' => ['timeout' => 2],
+                        'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+                    ]);
+                    $content = @file_get_contents($url, false, $ctx);
+                    $userCharts[$userId] = $content ? 'data:image/png;base64,' . base64_encode($content) : null;
+                } catch (\Exception $e) {
+                    $userCharts[$userId] = null;
+                }
+            }
+        }
+
+        $pdf = app('dompdf.wrapper')->loadView('pdf.all-pusat-evaluation', compact(
+            'users',
+            'evaluations',
+            'date',
+            'userCharts',
+            'userPhotos',
+            'pusatBranches'
+        ));
+
+        $paperSize = in_array(strtolower($request->query('paper', 'a4')), ['a4', 'a5']) ? strtolower($request->query('paper', 'a4')) : 'a4';
+        $pdf->setPaper($paperSize, 'portrait');
+
+        $dateFormatted = \Carbon\Carbon::parse($date)->translatedFormat('d_F_Y');
+        $fileName = 'Rapor_Semua_Pusat_' . $dateFormatted . '.pdf';
+
+        return $pdf->stream($fileName);
+    }
+
     public function history(Request $request)
     {
         $user = Auth::user();
@@ -458,26 +690,39 @@ class EmployeeEvaluationController extends Controller
 
         $branch_id = $request->get('branch_id');
 
+        $userQuery = function ($q) {
+            $q->where('is_active', true);
+        };
+
+        $evaluatedQuery = function ($q) {
+            $q->where('is_active', true)
+                ->whereHas('employeeEvaluations');
+        };
+
         // Ambil daftar cabang yang boleh diakses
         $branches = collect();
         if ($user->role === 'admin') {
-            $branches = Branch::withCount(['users' => function ($q) {
-                $q->where('is_active', true);
-            }])->get();
+            $branches = Branch::withCount([
+                'users as users_count' => $userQuery,
+                'users as evaluated_users_count' => $evaluatedQuery,
+            ])->orderBy('name')->get();
         } else {
             $isTeamAuditNonLeader = ($user->branch_id == 64 && $user->role !== 'leader' && !in_array(strtolower($user->login_id ?? ''), ['herlina', 'eva', 'agung', 'adminherlina']));
 
             if ($user->branch_id) {
-                $mainBranch = Branch::withCount(['users' => function ($q) {
-                    $q->where('is_active', true);
-                }])->find($user->branch_id);
+                $mainBranch = Branch::withCount([
+                    'users as users_count' => $userQuery,
+                    'users as evaluated_users_count' => $evaluatedQuery,
+                ])->find($user->branch_id);
                 if ($mainBranch && !$isTeamAuditNonLeader) {
                     $branches->push($mainBranch);
                 }
             }
-            $managedBranches = $user->branches()->withCount(['users' => function ($q) {
-                $q->where('is_active', true);
-            }])->get();
+            $managedBranches = $user->branches()->withCount([
+                'users as users_count' => $userQuery,
+                'users as evaluated_users_count' => $evaluatedQuery,
+            ])->orderBy('name')->get();
+
             foreach ($managedBranches as $mb) {
                 if (!$branches->contains('id', $mb->id)) {
                     if ($mb->id == 64 && $isTeamAuditNonLeader) {
@@ -488,10 +733,14 @@ class EmployeeEvaluationController extends Controller
             }
         }
 
+        // Pisahkan cabang Pusat dan Cabang Operasional
+        $pusatBranches = $branches->filter(fn($b) => $b->is_pusat)->values();
+        $cabangBranches = $branches->filter(fn($b) => !$b->is_pusat)->values();
+
         // Jika belum ada cabang yang dipilih, jangan tampilkan data
         if (!$branch_id) {
             $evaluations = collect(); // Kosongkan agar user harus pilih cabang dulu
-            return view('employee_evaluations.history', compact('evaluations', 'branches', 'branch_id'));
+            return view('employee_evaluations.history', compact('evaluations', 'branches', 'pusatBranches', 'cabangBranches', 'branch_id'));
         }
 
         $query = EmployeeEvaluation::with(['user', 'user.branch', 'assessor'])
@@ -510,7 +759,7 @@ class EmployeeEvaluationController extends Controller
 
         $evaluations = $query->paginate(20)->appends($request->all());
 
-        return view('employee_evaluations.history', compact('evaluations', 'branches', 'branch_id'));
+        return view('employee_evaluations.history', compact('evaluations', 'branches', 'pusatBranches', 'cabangBranches', 'branch_id'));
     }
 
     public function myHistory(Request $request)

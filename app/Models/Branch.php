@@ -34,4 +34,60 @@ class Branch extends Model
     {
         return $this->belongsToMany(User::class, 'branch_user', 'branch_id', 'user_id');
     }
+
+    /**
+     * Daftar unit/cabang yang masuk kategori Pusat
+     */
+    public static function pusatList(): array
+    {
+        return [
+            'AppleLux',
+            'Arcis & Debs',
+            'Cleaning service',
+            'Dokter Pstore',
+            'Driver pstore',
+            'Finance',
+            'Inventory',
+            'keluarga Pstore',
+            'Managament',
+            'Marketing Creative',
+            'Masjid abdurrohman bin auf',
+            'Mega pstore',
+            'Ps arwana',
+            'PS bakery',
+            'PS big jakarta',
+            'PS catering',
+            'PS new jakarta',
+            'Pskontraktor',
+            'Pstore Lenteng Agung',
+            'Pstore Peduli',
+            'Pstore Qcell jakarta',
+            'Shopee',
+            'Security Jakarta',
+            'Team Audit',
+            'Team Creative',
+            'Tiktok',
+            'Operator',
+        ];
+    }
+
+    /**
+     * Cek apakah cabang ini termasuk kantor/unit Pusat
+     */
+    public function getIsPusatAttribute(): bool
+    {
+        $list = self::pusatList();
+        $name = strtolower(trim($this->name ?? ''));
+        foreach ($list as $p) {
+            if ($name === strtolower(trim($p))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isPusat(): bool
+    {
+        return $this->is_pusat;
+    }
 }

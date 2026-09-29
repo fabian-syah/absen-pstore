@@ -53,17 +53,31 @@
 @endpush
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div class="d-flex align-items-center">
         <a href="{{ route('employee-evaluations.index') }}" class="btn btn-light shadow-sm rounded-circle p-2 me-3">
             <i class="mdi mdi-arrow-left fs-5"></i>
         </a>
         <div>
-            <h4 class="mb-0 fw-bold">Evaluasi: {{ $branch->name }}</h4>
-            <p class="text-muted mb-0 small">Pilih karyawan yang ingin dinilai</p>
+            <div class="d-flex align-items-center gap-2">
+                <h4 class="mb-0 fw-bold">Evaluasi: {{ $branch->name }}</h4>
+                @if($branch->is_pusat)
+                    <span class="badge bg-primary text-white" style="font-size: 0.75rem;">Kantor/Unit Pusat</span>
+                @else
+                    <span class="badge bg-info text-white" style="font-size: 0.75rem;">Cabang Operasional</span>
+                @endif
+            </div>
+            <p class="text-muted mb-0 small">
+                Progres Penilaian: <strong>{{ $branch->evaluated_users_count ?? 0 }}</strong> dari <strong>{{ $branch->users_count ?? 0 }}</strong> karyawan sudah dinilai
+            </p>
         </div>
     </div>
-    <div>
+    <div class="d-flex gap-2 flex-wrap">
+        @if($branch->is_pusat)
+            <a href="{{ route('employee-evaluations.export-all-pusat-pdf') }}" target="_blank" class="btn btn-outline-danger shadow-sm d-flex align-items-center">
+                <i class="mdi mdi-file-multiple fs-5 me-1"></i> All Pusat PDF
+            </a>
+        @endif
         <a href="{{ route('employee-evaluations.export-branch-pdf', ['id' => $branch->id, 'date' => request('date', now()->format('Y-m-d'))]) }}" target="_blank" class="btn btn-danger shadow-sm d-flex align-items-center">
             <i class="mdi mdi-file-pdf-box fs-5 me-1"></i> Print PDF Cabang
         </a>

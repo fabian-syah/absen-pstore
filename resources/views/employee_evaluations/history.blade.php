@@ -84,11 +84,20 @@
                         <label class="form-label text-muted small fw-bold">Pilih Cabang</label>
                         <select name="branch_id" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">-- Kembali (Semua Cabang) --</option>
-                            @foreach($branches as $branch)
-                                <option value="{{ $branch->id }}" {{ $branch_id == $branch->id ? 'selected' : '' }}>
-                                    {{ $branch->name }}
-                                </option>
-                            @endforeach
+                            <optgroup label="🏢 Kantor & Unit Pusat">
+                                @foreach($pusatBranches ?? $branches->filter(fn($b) => $b->is_pusat) as $branch)
+                                    <option value="{{ $branch->id }}" {{ $branch_id == $branch->id ? 'selected' : '' }}>
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="🏬 Cabang Operasional">
+                                @foreach($cabangBranches ?? $branches->filter(fn($b) => !$b->is_pusat) as $branch)
+                                    <option value="{{ $branch->id }}" {{ $branch_id == $branch->id ? 'selected' : '' }}>
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
                         </select>
                     </div>
                 </form>
@@ -99,56 +108,74 @@
 @endif
 
 @if(!$branch_id)
-    <div class="row mb-3">
-        <div class="col-12">
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-8">
             <h4 class="branch-section-title">Pilih Cabang ({{ count($branches) }})</h4>
-            <p class="text-muted small ms-4">Silakan pilih cabang untuk melihat riwayat evaluasi harian.</p>
+            <p class="text-muted small ms-4 mb-0">Silakan pilih cabang untuk melihat riwayat evaluasi harian. Terbagi atas Pusat dan Cabang.</p>
         </div>
     </div>
 
-    <div class="row g-4">
-        @forelse ($branches as $branch)
-            <div class="col-xl-3 col-md-6">
-                <div class="branch-card-item p-4">
-                    {{-- Header Card --}}
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="branch-icon-box">
-                            <i class="mdi mdi-storefront-outline"></i>
-                        </div>
-                        <span class="badge bg-light text-secondary border">
-                            ID: {{ $branch->id }}
-                        </span>
-                    </div>
+    {{-- Tabs Pemisah --}}
+    <ul class="nav nav-pills gap-2 mb-4" id="historyTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4" id="hist-pusat-tab" data-bs-toggle="pill" data-bs-target="#hist-pusat" type="button" role="tab">
+                <i class="mdi mdi-city me-1"></i> Kantor & Unit Pusat ({{ count($pusatBranches ?? []) }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4" id="hist-cabang-tab" data-bs-toggle="pill" data-bs-target="#hist-cabang" type="button" role="tab">
+                <i class="mdi mdi-storefront-outline me-1"></i> Cabang Operasional ({{ count($cabangBranches ?? []) }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4" id="hist-all-tab" data-bs-toggle="pill" data-bs-target="#hist-all" type="button" role="tab">
+                <i class="mdi mdi-view-grid-outline me-1"></i> Semua ({{ count($branches) }})
+            </button>
+        </li>
+    </ul>
 
-                    {{-- Nama Cabang --}}
-                    <h5 class="fw-bold text-dark mb-1">{{ Str::limit($branch->name, 20) }}</h5>
-                    <p class="text-muted small mb-3">
-                        <i class="mdi mdi-map-marker-outline me-1"></i>
-                        {{ Str::limit($branch->address ?? 'Alamat belum diatur', 40) }}
-                    </p>
+    <div class="tab-content" id="historyTabContent">
+        {{-- TAB PUSAT --}}
+        <div class="tab-pane fade show active" id="hist-pusat" role="tabpanel">
+            <div class="row g-4">
+                @forelse ($pusatBranches ?? [] as $branch)
+                    @include('employee_evaluations._history_branch_card', ['branch' => $branch])
+                @empty
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="mdi mdi-office-building-off fs-1"></i>
+                        <p class="mt-2">Tidak ada data unit pusat.</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
 
-                    {{-- Footer Card --}}
-                    <div class="branch-footer mt-4">
-                        <div class="small text-muted">
-                            Total: <strong>{{ $branch->users_count }}</strong> Karyawan
-                        </div>
-                        <a href="{{ route('employee-evaluations.history', ['branch_id' => $branch->id]) }}"
-                            class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                            Lihat Riwayat <i class="mdi mdi-arrow-right ms-1"></i>
-                        </a>
+        {{-- TAB CABANG --}}
+        <div class="tab-pane fade" id="hist-cabang" role="tabpanel">
+            <div class="row g-4">
+                @forelse ($cabangBranches ?? [] as $branch)
+                    @include('employee_evaluations._history_branch_card', ['branch' => $branch])
+                @empty
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="mdi mdi-store-off fs-1"></i>
+                        <p class="mt-2">Tidak ada data cabang operasional.</p>
                     </div>
-                </div>
+                @endforelse
             </div>
-        @empty
-            <div class="col-12">
-                <div class="card p-5 text-center border-0 shadow-sm">
-                    <div class="text-muted">
-                        <i class="mdi mdi-office-building-off" style="font-size: 3rem;"></i>
-                        <p class="mt-2">Anda tidak memiliki kontrol cabang khusus atau tidak ada cabang yang aktif.</p>
+        </div>
+
+        {{-- TAB SEMUA --}}
+        <div class="tab-pane fade" id="hist-all" role="tabpanel">
+            <div class="row g-4">
+                @forelse ($branches as $branch)
+                    @include('employee_evaluations._history_branch_card', ['branch' => $branch])
+                @empty
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="mdi mdi-office-building-off fs-1"></i>
+                        <p class="mt-2">Tidak ada data cabang.</p>
                     </div>
-                </div>
+                @endforelse
             </div>
-        @endforelse
+        </div>
     </div>
 @else
 <div class="row">
