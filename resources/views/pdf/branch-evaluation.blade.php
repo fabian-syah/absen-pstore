@@ -28,8 +28,8 @@
         .info-cell { padding-left: 15px; vertical-align: top; }
         
         .profile-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
-        .user-photo { width: 80px; height: 80px; border-radius: 40px; border: 2px solid #e2e8f0; display: block; margin: 0 auto; }
-        .user-photo-placeholder { width: 80px; height: 80px; border-radius: 40px; background-color: #3b82f6; color: white; text-align: center; line-height: 76px; font-weight: bold; font-size: 26px; border: 2px solid #e2e8f0; display: block; box-sizing: border-box; margin: 0 auto; }
+        .user-photo { max-width: 80px; max-height: 80px; border-radius: 6px; border: 2px solid #e2e8f0; display: block; margin: 0 auto; }
+        .user-photo-placeholder { width: 80px; height: 80px; border-radius: 6px; background-color: #3b82f6; color: white; text-align: center; line-height: 76px; font-weight: bold; font-size: 26px; border: 2px solid #e2e8f0; display: block; box-sizing: border-box; margin: 0 auto; }
         
         .user-name { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 2px; }
         .user-meta { font-size: 11px; color: #64748b; line-height: 1.3; }
@@ -84,7 +84,7 @@
                                 <tr>
                                     <td style="width: 95px; vertical-align: middle;">
                                         @if(isset($userPhotos[$user->id]) && $userPhotos[$user->id])
-                                            <img src="{{ $userPhotos[$user->id] }}" width="80" height="80" class="user-photo" alt="Photo">
+                                            <img src="{{ $userPhotos[$user->id] }}" class="user-photo" alt="Photo">
                                         @else
                                             <div class="user-photo-placeholder">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
                                         @endif

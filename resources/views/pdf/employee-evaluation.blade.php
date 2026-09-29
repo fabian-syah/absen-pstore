@@ -36,11 +36,11 @@
             <td rowspan="3" style="width: 140px; text-align: center; border: none; padding: 0 12px 0 0; vertical-align: middle;">
                 @php
                     if (!isset($photoUrl) || !$photoUrl) {
-                        $photoUrl = \App\Http\Controllers\EmployeeEvaluationController::getSquareProfilePhotoBase64($user->profile_photo_path, 280);
+                        $photoUrl = \App\Http\Controllers\EmployeeEvaluationController::getProfilePhotoData($user->profile_photo_path);
                     }
                 @endphp
                 @if($photoUrl)
-                    <img src="{{ $photoUrl }}" width="130" height="130" style="width: 130px; height: 130px; border-radius: 8px; border: 1px solid #cbd5e1; display: block; margin: 0 auto;" alt="Foto">
+                    <img src="{{ $photoUrl }}" style="max-width: 130px; max-height: 130px; border-radius: 8px; border: 1px solid #cbd5e1; display: block; margin: 0 auto;" alt="Foto">
                 @else
                     <div style="width: 130px; height: 130px; background-color: #f1f5f9; border-radius: 8px; border: 1px solid #cbd5e1; line-height: 130px; color: #94a3b8; font-size: 12px; margin: 0 auto; text-align: center;">Tanpa Foto</div>
                 @endif
