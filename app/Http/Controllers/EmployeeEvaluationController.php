@@ -23,6 +23,17 @@ class EmployeeEvaluationController extends Controller
             return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
+        // Hapus stale route cache jika ada
+        $routeCache = base_path('bootstrap/cache/routes-v7.php');
+        if (file_exists($routeCache)) {
+            @unlink($routeCache);
+        }
+
+        // Direct Download All Pusat PDF jika diakses lewat query parameter
+        if ($request->has('download_pusat_pdf') || $request->has('export_all_pusat')) {
+            return $this->exportAllPusatPdf($request);
+        }
+
         $userQuery = function ($q) {
             $q->where('is_active', true);
         };

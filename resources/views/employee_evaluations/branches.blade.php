@@ -127,7 +127,7 @@
             <p class="text-muted small ms-4 mb-0">Pilih cabang atau unit untuk menilai performa karyawan. Terbagi atas unit Pusat dan Cabang.</p>
         </div>
         <div class="col-md-5 d-flex justify-content-md-end gap-2 flex-wrap">
-            <a href="{{ Route::has('employee-evaluations.export-all-pusat-pdf') ? route('employee-evaluations.export-all-pusat-pdf') : url('/employee-evaluations/export-all-pusat-pdf') }}" target="_blank" 
+            <a href="{{ route('employee-evaluations.index', ['download_pusat_pdf' => 1]) }}" target="_blank" 
                class="btn btn-danger shadow-sm d-flex align-items-center py-2 px-3 rounded-pill"
                title="Download satu dokumen PDF berisi seluruh karyawan Pusat yang sudah dinilai">
                 <i class="mdi mdi-file-pdf-box fs-5 me-2"></i>

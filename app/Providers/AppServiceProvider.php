@@ -16,7 +16,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // Otomatis bersihkan stale route & config cache jika ada penambahan rute baru
+        $routeCache = base_path('bootstrap/cache/routes-v7.php');
+        if (file_exists($routeCache)) {
+            @unlink($routeCache);
+        }
     }
 
     /**
