@@ -66,6 +66,7 @@ class Branch extends Model
             'Security Jakarta',
             'Team Audit',
             'Team Creative',
+            'Tim Elite',
             'Tiktok',
             'Operator',
         ];

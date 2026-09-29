@@ -53,35 +53,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
             });
 
         // --- PUSAT / CABANG GROUPING FILTER ---
-        $pusatList = [
-            'AppleLux',
-            'Arcis & Debs',
-            'Cleaning service',
-            'Dokter Pstore',
-            'Driver pstore',
-            'Finance',
-            'Inventory',
-            'keluarga Pstore',
-            'Managament',
-            'Marketing Creative',
-            'Masjid abdurrohman bin auf',
-            'Mega pstore',
-            'Ps arwana',
-            'PS bakery',
-            'PS big jakarta',
-            'PS catering',
-            'PS new jakarta',
-            'Pskontraktor',
-            'Pstore Lenteng Agung',
-            'Pstore Peduli',
-            'Pstore Qcell jakarta',
-            'Shopee',
-            'Security Jakarta',
-            'Team Audit',
-            'Team Creative',
-            'Tiktok',
-            'Operator',
-        ];
+        $pusatList = \App\Models\Branch::pusatList();
 
         if ($this->group === 'pusat') {
             $query->whereHas('branch', function ($q) use ($pusatList) {
@@ -329,35 +301,7 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
 
         // --- PUSAT / CABANG GROUPING ---
         $branchName = $user->branch->name ?? '-';
-        $pusatList = [
-            'AppleLux',
-            'Arcis & Debs',
-            'Cleaning service',
-            'Dokter Pstore',
-            'Driver pstore',
-            'Finance',
-            'Inventory',
-            'keluarga Pstore',
-            'Managament',
-            'Marketing Creative',
-            'Masjid abdurrohman bin auf',
-            'Mega pstore',
-            'Ps arwana',
-            'PS bakery',
-            'PS big jakarta',
-            'PS catering',
-            'PS new jakarta',
-            'Pskontraktor',
-            'Pstore Lenteng Agung',
-            'Pstore Peduli',
-            'Pstore Qcell jakarta',
-            'Shopee',
-            'Security Jakarta',
-            'Team Audit',
-            'Team Creative',
-            'Tiktok',
-            'Operator',
-        ];
+        $pusatList = \App\Models\Branch::pusatList();
 
         $isPusat = false;
         // Check case-insensitively

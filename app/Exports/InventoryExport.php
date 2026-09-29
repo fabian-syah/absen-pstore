@@ -25,36 +25,7 @@ class InventoryExport extends DefaultValueBinder implements FromCollection, With
         $query = Inventory::with(['user', 'user.division', 'user.branch'])
             ->whereNotNull('user_id');
 
-        $pusatList = [
-            'AppleLux',
-            'Arcis & Debs',
-            'Cleaning service',
-            'Dokter Pstore',
-            'Driver pstore',
-            'Finance',
-            'Inventory',
-            'keluarga Pstore',
-            'Managament',
-            'Marketing Creative',
-            'Masjid abdurrohman bin auf',
-            'Mega pstore',
-            'Ps arwana',
-            'PS bakery',
-            'PS big jakarta',
-            'PS catering',
-            'PS new jakarta',
-            'Pskontraktor',
-            'Pstore Lenteng Agung',
-            'Pstore Peduli',
-            'Pstore Qcell jakarta',
-            'Shopee',
-            'Security Jakarta',
-            'Team Audit',
-            'Team Creative',
-            'Tim Elite',
-            'Tiktok',
-            'Operator',
-        ];
+        $pusatList = \App\Models\Branch::pusatList();
 
         if ($group === 'pusat') {
             $query->whereHas('user.branch', function ($q) use ($pusatList) {
