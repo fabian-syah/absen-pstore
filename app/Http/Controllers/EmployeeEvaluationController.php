@@ -732,6 +732,53 @@ class EmployeeEvaluationController extends Controller
                 return 'data:' . $mime . ';base64,' . base64_encode($data);
             }
 
+            // Koreksi orientasi EXIF kamera smartphone (iPhone / Android)
+            if (function_exists('exif_read_data')) {
+                $exif = @exif_read_data($resolvedPath);
+                if (!empty($exif['Orientation'])) {
+                    switch ((int) $exif['Orientation']) {
+                        case 2:
+                            imageflip($image, IMG_FLIP_HORIZONTAL);
+                            break;
+                        case 3:
+                            $rotated = imagerotate($image, 180, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                        case 4:
+                            imageflip($image, IMG_FLIP_VERTICAL);
+                            break;
+                        case 5:
+                            imageflip($image, IMG_FLIP_HORIZONTAL);
+                            $rotated = imagerotate($image, 270, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                        case 6:
+                        case 8:
+                            // Rotasi 270 derajat (-90 CW) membuat foto portrait HP tegak lurus
+                            $rotated = imagerotate($image, 270, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                        case 7:
+                            imageflip($image, IMG_FLIP_HORIZONTAL);
+                            $rotated = imagerotate($image, 270, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                    }
+                }
+            }
+
             // Center-crop ke rasio 1:1 sempurna persis seperti kartu profil web (object-fit: cover, anti gepeng)
             $srcW = imagesx($image);
             $srcH = imagesy($image);
