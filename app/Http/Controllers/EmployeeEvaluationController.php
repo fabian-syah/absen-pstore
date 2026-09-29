@@ -618,10 +618,12 @@ class EmployeeEvaluationController extends Controller
         ];
 
         $rawBody = null;
+        $baseUrl = rtrim(env('SEKAI_BASE_URL', 'https://api.sekaigateway.xyz/v2'), '/');
+        $endpoint = $baseUrl . '/chat/completions';
 
         // Percobaan 1: Gunakan cURL bawaan PHP jika fungsi tersedia
         if (function_exists('curl_init')) {
-            $ch = curl_init('https://api.sekaigateway.xyz/v1/chat/completions');
+            $ch = curl_init($endpoint);
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_POST => true,
@@ -658,7 +660,7 @@ class EmployeeEvaluationController extends Controller
                     'verify_peer_name' => false,
                 ]
             ];
-            $rawBody = @file_get_contents('https://api.sekaigateway.xyz/v1/chat/completions', false, stream_context_create($opts));
+            $rawBody = @file_get_contents($endpoint, false, stream_context_create($opts));
         }
 
         if (!$rawBody) {
