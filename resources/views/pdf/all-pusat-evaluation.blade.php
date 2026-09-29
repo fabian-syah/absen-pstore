@@ -124,8 +124,8 @@
             margin-bottom: 4px;
         }
         .user-photo {
-            max-width: 76px;
-            max-height: 76px;
+            width: 76px;
+            height: 76px;
             border-radius: 6px;
             border: 2px solid #e2e8f0;
             display: block;
@@ -298,7 +298,7 @@
                                 <tr>
                                     <td style="width: 88px; vertical-align: middle;">
                                         @if(isset($userPhotos[$user->id]) && $userPhotos[$user->id])
-                                            <img src="{{ $userPhotos[$user->id] }}" class="user-photo" alt="Photo">
+                                            <img src="{{ $userPhotos[$user->id] }}" width="76" height="76" class="user-photo" alt="Photo">
                                         @else
                                             <div class="user-photo-placeholder">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
                                         @endif

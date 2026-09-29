@@ -403,8 +403,8 @@ class EmployeeEvaluationController extends Controller
         $userCharts = [];
         $userPhotos = [];
         foreach ($users as $u) {
-            // Photo (original)
-            $userPhotos[$u->id] = self::getProfilePhotoData($u->profile_photo_path);
+            // Photo (upright & square)
+            $userPhotos[$u->id] = self::getProfilePhotoData($u->profile_photo_path, 200);
 
             $eval = $evaluations->get($u->id);
             if ($eval) {
@@ -543,8 +543,8 @@ class EmployeeEvaluationController extends Controller
         $chartUrls = [];
 
         foreach ($users as $u) {
-            // Photo (original)
-            $userPhotos[$u->id] = self::getProfilePhotoData($u->profile_photo_path);
+            // Photo (upright & square)
+            $userPhotos[$u->id] = self::getProfilePhotoData($u->profile_photo_path, 200);
 
             // Radar Chart Data
             $eval = $evaluations->get($u->id);
@@ -678,13 +678,14 @@ class EmployeeEvaluationController extends Controller
     }
 
     /**
-     * Mengambil data foto profil karyawan langsung apa adanya dari storage profil (original)
-     * dalam bentuk base64 agar aman dan kompatibel di DomPDF tanpa manipulasi/rotasi/distorsi.
+     * Mengambil dan memproses foto profil agar tegak (auto-orient EXIF kamera smartphone)
+     * dan dipotong bujursangkar 1:1 (smart fit/cover) persis seperti kartu profil web.
      *
      * @param string|null $photoRelativePath
+     * @param int $targetSize
      * @return string|null
      */
-    public static function getProfilePhotoData($photoRelativePath)
+    public static function getProfilePhotoData($photoRelativePath, $targetSize = 280)
     {
         if (empty($photoRelativePath)) {
             return null;
@@ -711,22 +712,99 @@ class EmployeeEvaluationController extends Controller
         } catch (\Throwable $e) {
         }
 
+        $resolvedPath = null;
         foreach ($pathsToTry as $p) {
             if (file_exists($p) && is_file($p)) {
-                $mime = @mime_content_type($p) ?: 'image/jpeg';
-                $content = @file_get_contents($p);
-                if ($content) {
-                    return 'data:' . $mime . ';base64,' . base64_encode($content);
-                }
+                $resolvedPath = $p;
+                break;
             }
         }
 
-        return null;
+        if (!$resolvedPath) {
+            return null;
+        }
+
+        // 1. Coba gunakan Intervention Image (resmi terkonfigurasi di proyek ini)
+        // Membaca orientasi EXIF kamera HP dan auto-rotate tegak lurus,
+        // serta smart center-crop 1:1 persis seperti object-fit: cover pada kartu profil web.
+        try {
+            $img = \Intervention\Image\Facades\Image::make($resolvedPath);
+            $img->orientate();
+            if ($targetSize > 0) {
+                $img->fit($targetSize, $targetSize);
+            }
+            return (string) $img->encode('data-url');
+        } catch (\Throwable $e) {
+        }
+
+        // 2. Fallback native PHP GD
+        try {
+            $content = @file_get_contents($resolvedPath);
+            if ($content) {
+                $image = @imagecreatefromstring($content);
+                if ($image) {
+                    if (function_exists('exif_read_data')) {
+                        $exif = @exif_read_data($resolvedPath);
+                        if (!empty($exif['Orientation'])) {
+                            switch ((int) $exif['Orientation']) {
+                                case 3:
+                                    $image = imagerotate($image, 180, 0);
+                                    break;
+                                case 6:
+                                    $image = imagerotate($image, -90, 0);
+                                    break;
+                                case 8:
+                                    $image = imagerotate($image, 90, 0);
+                                    break;
+                            }
+                        }
+                    }
+
+                    if ($targetSize > 0) {
+                        $srcW = imagesx($image);
+                        $srcH = imagesy($image);
+                        $cropSize = min($srcW, $srcH);
+                        $cropX = (int) (($srcW - $cropSize) / 2);
+                        $cropY = (int) (($srcH - $cropSize) / 2);
+
+                        $thumb = imagecreatetruecolor($targetSize, $targetSize);
+                        $white = imagecolorallocate($thumb, 255, 255, 255);
+                        imagefilledrectangle($thumb, 0, 0, $targetSize, $targetSize, $white);
+                        imagecopyresampled($thumb, $image, 0, 0, $cropX, $cropY, $targetSize, $targetSize, $cropSize, $cropSize);
+
+                        ob_start();
+                        imagejpeg($thumb, null, 90);
+                        $jpegData = ob_get_clean();
+                        imagedestroy($thumb);
+                        imagedestroy($image);
+
+                        if ($jpegData) {
+                            return 'data:image/jpeg;base64,' . base64_encode($jpegData);
+                        }
+                    } else {
+                        ob_start();
+                        imagejpeg($image, null, 90);
+                        $jpegData = ob_get_clean();
+                        imagedestroy($image);
+
+                        if ($jpegData) {
+                            return 'data:image/jpeg;base64,' . base64_encode($jpegData);
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
+        // 3. Fallback terakhir: base64 mentah
+        $mime = @mime_content_type($resolvedPath) ?: 'image/jpeg';
+        $rawContent = @file_get_contents($resolvedPath);
+        return $rawContent ? 'data:' . $mime . ';base64,' . base64_encode($rawContent) : null;
     }
 
     public static function getSquareProfilePhotoBase64($photoRelativePath, $targetSize = 280)
     {
-        return self::getProfilePhotoData($photoRelativePath);
+        return self::getProfilePhotoData($photoRelativePath, $targetSize);
     }
 
     public function history(Request $request)
