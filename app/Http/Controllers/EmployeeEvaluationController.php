@@ -258,6 +258,8 @@ class EmployeeEvaluationController extends Controller
 
     public function exportPdf(Request $request, $user_id)
     {
+        ini_set('memory_limit', '512M');
+
         $user = User::findOrFail($user_id);
 
         $currentUser = Auth::user();
@@ -354,7 +356,9 @@ class EmployeeEvaluationController extends Controller
             // Biarkan null jika gagal fetch chart
         }
 
-        $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'date', 'chartImage'));
+        $photoUrl = self::getSquareProfilePhotoBase64($user->profile_photo_path, 280);
+
+        $pdf = app('dompdf.wrapper')->loadView('pdf.employee-evaluation', compact('user', 'evaluation', 'date', 'chartImage', 'photoUrl'));
         $paperSize = in_array(strtolower($request->query('paper', 'a4')), ['a4', 'a5']) ? strtolower($request->query('paper', 'a4')) : 'a4';
         $pdf->setPaper($paperSize, 'portrait');
 
@@ -366,6 +370,9 @@ class EmployeeEvaluationController extends Controller
 
     public function exportBranchPdf(Request $request, $branch_id)
     {
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
+
         $currentUser = Auth::user();
         if (!in_array($currentUser->role, ['admin', 'audit', 'leader'])) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
@@ -396,19 +403,8 @@ class EmployeeEvaluationController extends Controller
         $userCharts = [];
         $userPhotos = [];
         foreach ($users as $u) {
-            // Photo
-            if ($u->profile_photo_path) {
-                $photoPath = storage_path('app/public/' . $u->profile_photo_path);
-                if (file_exists($photoPath)) {
-                    $mime = mime_content_type($photoPath);
-                    $photoData = base64_encode(file_get_contents($photoPath));
-                    $userPhotos[$u->id] = 'data:' . $mime . ';base64,' . $photoData;
-                } else {
-                    $userPhotos[$u->id] = null;
-                }
-            } else {
-                $userPhotos[$u->id] = null;
-            }
+            // Photo (upright & square)
+            $userPhotos[$u->id] = self::getSquareProfilePhotoBase64($u->profile_photo_path, 200);
 
             $eval = $evaluations->get($u->id);
             if ($eval) {
@@ -547,18 +543,8 @@ class EmployeeEvaluationController extends Controller
         $chartUrls = [];
 
         foreach ($users as $u) {
-            // Photo
-            $userPhotos[$u->id] = null;
-            if ($u->profile_photo_path) {
-                $photoPath = public_path('storage/' . $u->profile_photo_path);
-                if (!file_exists($photoPath)) {
-                    $photoPath = storage_path('app/public/' . $u->profile_photo_path);
-                }
-                if (file_exists($photoPath)) {
-                    $mime = @mime_content_type($photoPath) ?: 'image/jpeg';
-                    $userPhotos[$u->id] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($photoPath));
-                }
-            }
+            // Photo (upright & square)
+            $userPhotos[$u->id] = self::getSquareProfilePhotoBase64($u->profile_photo_path, 200);
 
             // Radar Chart Data
             $eval = $evaluations->get($u->id);
@@ -689,6 +675,144 @@ class EmployeeEvaluationController extends Controller
         $fileName = 'Rapor_Semua_Pusat_' . $dateFormatted . '.pdf';
 
         return $pdf->stream($fileName);
+    }
+
+    /**
+     * Mengambil foto profil karyawan, mengoreksi orientasi EXIF (agar tidak miring di DomPDF),
+     * memotong (center-crop) ke rasio 1:1 bujur sangkar (agar tidak gepeng/terdistorsi),
+     * dan mengonversinya menjadi base64 JPEG berkualitas tinggi.
+     *
+     * @param string|null $photoRelativePath
+     * @param int $targetSize
+     * @return string|null
+     */
+    public static function getSquareProfilePhotoBase64($photoRelativePath, $targetSize = 280)
+    {
+        if (empty($photoRelativePath)) {
+            return null;
+        }
+
+        $cleanPath = ltrim($photoRelativePath, '/\\');
+        $cleanPath = preg_replace('#^storage/#', '', $cleanPath);
+
+        $pathsToTry = [
+            public_path('storage/' . $cleanPath),
+            storage_path('app/public/' . $cleanPath),
+            public_path($cleanPath),
+            base_path('public/storage/' . $cleanPath),
+        ];
+
+        $resolvedPath = null;
+        foreach ($pathsToTry as $p) {
+            if (file_exists($p) && is_file($p)) {
+                $resolvedPath = $p;
+                break;
+            }
+        }
+
+        if (!$resolvedPath) {
+            return null;
+        }
+
+        // Jika ekstensi GD tidak aktif, fallback ke base64 mentah
+        if (!extension_loaded('gd') || !function_exists('imagecreatefromstring')) {
+            $mime = @mime_content_type($resolvedPath) ?: 'image/jpeg';
+            return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($resolvedPath));
+        }
+
+        try {
+            $data = file_get_contents($resolvedPath);
+            if (!$data) {
+                return null;
+            }
+
+            $image = @imagecreatefromstring($data);
+            if (!$image) {
+                $mime = @mime_content_type($resolvedPath) ?: 'image/jpeg';
+                return 'data:' . $mime . ';base64,' . base64_encode($data);
+            }
+
+            // Koreksi orientasi EXIF kamera smartphone (iOS / Android)
+            if (function_exists('exif_read_data')) {
+                $exif = @exif_read_data($resolvedPath);
+                if (!empty($exif['Orientation'])) {
+                    switch ($exif['Orientation']) {
+                        case 2:
+                            imageflip($image, IMG_FLIP_HORIZONTAL);
+                            break;
+                        case 3:
+                            $rotated = imagerotate($image, 180, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                        case 4:
+                            imageflip($image, IMG_FLIP_VERTICAL);
+                            break;
+                        case 5:
+                            imageflip($image, IMG_FLIP_HORIZONTAL);
+                            $rotated = imagerotate($image, -90, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                        case 6:
+                            // 90 derajat searah jarum jam (CW)
+                            $rotated = imagerotate($image, -90, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                        case 7:
+                            imageflip($image, IMG_FLIP_HORIZONTAL);
+                            $rotated = imagerotate($image, 90, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                        case 8:
+                            // 90 derajat berlawanan jarum jam (CCW)
+                            $rotated = imagerotate($image, 90, 0);
+                            if ($rotated) {
+                                imagedestroy($image);
+                                $image = $rotated;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            // Center-crop ke rasio 1:1 sempurna (menghilangkan efek gepeng)
+            $srcW = imagesx($image);
+            $srcH = imagesy($image);
+            $cropSize = min($srcW, $srcH);
+            $cropX = (int) (($srcW - $cropSize) / 2);
+            $cropY = (int) (($srcH - $cropSize) / 2);
+
+            $thumb = imagecreatetruecolor($targetSize, $targetSize);
+
+            // Background putih jika transparan
+            $white = imagecolorallocate($thumb, 255, 255, 255);
+            imagefilledrectangle($thumb, 0, 0, $targetSize, $targetSize, $white);
+
+            imagecopyresampled($thumb, $image, 0, 0, $cropX, $cropY, $targetSize, $targetSize, $cropSize, $cropSize);
+
+            ob_start();
+            imagejpeg($thumb, null, 88);
+            $jpegContent = ob_get_clean();
+
+            imagedestroy($thumb);
+            imagedestroy($image);
+
+            return 'data:image/jpeg;base64,' . base64_encode($jpegContent);
+        } catch (\Throwable $e) {
+            $mime = @mime_content_type($resolvedPath) ?: 'image/jpeg';
+            return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($resolvedPath));
+        }
     }
 
     public function history(Request $request)

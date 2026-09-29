@@ -33,22 +33,16 @@
 
     <table class="employee-info" style="border: none;">
         <tr>
-            <td rowspan="3" style="width: 150px; text-align: center; border: none; padding: 0 15px 0 0; vertical-align: middle;">
+            <td rowspan="3" style="width: 140px; text-align: center; border: none; padding: 0 12px 0 0; vertical-align: middle;">
                 @php
-                    $photoUrl = null;
-                    if ($user->profile_photo_path && file_exists(public_path('storage/' . $user->profile_photo_path))) {
-                        $path = public_path('storage/' . $user->profile_photo_path);
-                        $type = pathinfo($path, PATHINFO_EXTENSION);
-                        $data = file_get_contents($path);
-                        $photoUrl = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    if (!isset($photoUrl) || !$photoUrl) {
+                        $photoUrl = \App\Http\Controllers\EmployeeEvaluationController::getSquareProfilePhotoBase64($user->profile_photo_path, 280);
                     }
                 @endphp
                 @if($photoUrl)
-                    <div style="width: 140px; height: 140px; overflow: hidden; border-radius: 6px; display: inline-block;">
-                        <img src="{{ $photoUrl }}" style="height: 140px; width: auto; max-width: 140px; display: block; margin: 0 auto;">
-                    </div>
+                    <img src="{{ $photoUrl }}" width="130" height="130" style="width: 130px; height: 130px; border-radius: 8px; border: 1px solid #cbd5e1; display: block; margin: 0 auto;" alt="Foto">
                 @else
-                    <div style="width: 140px; height: 140px; background-color: #e2e8f0; border-radius: 6px; line-height: 140px; color: #64748b; font-size: 13px; margin: 0 auto;">Tanpa Foto</div>
+                    <div style="width: 130px; height: 130px; background-color: #f1f5f9; border-radius: 8px; border: 1px solid #cbd5e1; line-height: 130px; color: #94a3b8; font-size: 12px; margin: 0 auto; text-align: center;">Tanpa Foto</div>
                 @endif
             </td>
             <th>Nama Karyawan</th>

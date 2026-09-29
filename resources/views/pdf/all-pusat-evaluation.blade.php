@@ -124,27 +124,27 @@
             margin-bottom: 4px;
         }
         .user-photo {
-            width: 80px;
-            height: 80px;
-            border-radius: 40px;
+            width: 76px;
+            height: 76px;
+            border-radius: 38px;
             border: 2px solid #e2e8f0;
-            object-fit: cover;
-            display: inline-block;
+            display: block;
+            margin: 0 auto;
         }
         .user-photo-placeholder {
-            width: 80px;
-            height: 80px;
-            border-radius: 40px;
+            width: 76px;
+            height: 76px;
+            border-radius: 38px;
             background-color: #3b82f6;
             color: white;
             text-align: center;
-            line-height: 76px;
+            line-height: 72px;
             font-weight: bold;
             font-size: 26px;
             border: 2px solid #e2e8f0;
-            display: inline-block;
+            display: block;
             box-sizing: border-box;
-            vertical-align: middle;
+            margin: 0 auto;
         }
         
         .user-name {
@@ -298,7 +298,7 @@
                                 <tr>
                                     <td style="width: 88px; vertical-align: middle;">
                                         @if(isset($userPhotos[$user->id]) && $userPhotos[$user->id])
-                                            <img src="{{ $userPhotos[$user->id] }}" class="user-photo" alt="Photo">
+                                            <img src="{{ $userPhotos[$user->id] }}" width="76" height="76" class="user-photo" alt="Photo">
                                         @else
                                             <div class="user-photo-placeholder">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
                                         @endif
