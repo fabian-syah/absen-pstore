@@ -361,10 +361,12 @@
 
                     const infoSpan = document.getElementById('ai_status_info');
                     if (infoSpan) {
-                        if (data.model && data.model.includes('bansos')) {
-                            infoSpan.innerHTML = '<i class="mdi mdi-gift-outline text-success me-1"></i> Berhasil dibuat via Bansos GLM-5.3 (Gratis)';
+                        if (data.model && (data.model.includes('glm') || data.model.includes('bansos'))) {
+                            infoSpan.innerHTML = '<i class="mdi mdi-lightning-bolt text-success me-1"></i> Berhasil dibuat via Sekai AI (GLM 5.3 Flash)';
+                        } else if (data.model && data.model.includes('deepseek')) {
+                            infoSpan.innerHTML = '<i class="mdi mdi-robot text-primary me-1"></i> Berhasil dibuat via Sekai AI (DeepSeek V4.1 Flash)';
                         } else {
-                            infoSpan.innerHTML = '<i class="mdi mdi-lightning-bolt text-warning me-1"></i> Berhasil dibuat via DeepSeek V4.1 Flash (Fallback)';
+                            infoSpan.innerHTML = '<i class="mdi mdi-check-circle text-success me-1"></i> Berhasil dibuat via AI (' + (data.model || 'Sekai') + ')';
                         }
                     }
                 } else {

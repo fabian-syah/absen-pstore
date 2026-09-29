@@ -537,8 +537,8 @@ class EmployeeEvaluationController extends Controller
             'prompt' => 'required|string',
         ]);
 
-        $apiKey = env('SEKAI_API_KEY', 'sk-b95891e58a833597-v0dn0b-d1696332');
-        $primaryModel = env('SEKAI_BANSOS_MODEL', 'bansos/glm-5.3');
+        $apiKey = env('SEKAI_API_KEY', 'sk-c98ae4ca8de19e0e-v5a0ku-e975f589');
+        $primaryModel = env('SEKAI_BANSOS_MODEL', 'z-ai/glm-5.3-flash');
         $fallbackModel = env('SEKAI_AI_MODEL', 'ds/deepseek-v4.1-flash');
         $prompt = $request->input('prompt');
 
