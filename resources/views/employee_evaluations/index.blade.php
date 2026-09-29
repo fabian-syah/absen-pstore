@@ -74,7 +74,7 @@
     </div>
     <div class="d-flex gap-2 flex-wrap">
         @if($branch->is_pusat)
-            <a href="{{ route('employee-evaluations.export-all-pusat-pdf') }}" target="_blank" class="btn btn-outline-danger shadow-sm d-flex align-items-center">
+            <a href="{{ Route::has('employee-evaluations.export-all-pusat-pdf') ? route('employee-evaluations.export-all-pusat-pdf') : url('/employee-evaluations/export-all-pusat-pdf') }}" target="_blank" class="btn btn-outline-danger shadow-sm d-flex align-items-center">
                 <i class="mdi mdi-file-multiple fs-5 me-1"></i> All Pusat PDF
             </a>
         @endif

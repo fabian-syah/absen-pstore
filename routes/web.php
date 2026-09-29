@@ -635,6 +635,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/employee-evaluations/branch/{id}/export-pdf', [EmployeeEvaluationController::class, 'exportBranchPdf'])->name('employee-evaluations.export-branch-pdf');
         Route::post('/employee-evaluations/{user_id}', [EmployeeEvaluationController::class, 'store'])->name('employee-evaluations.store');
 
+        Route::get('/clear-system-cache', function () {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            return response('Berhasil membersihkan cache sistem, routing, dan view! Silakan refresh halaman.');
+        })->name('system.clear-cache')->middleware('role:admin');
+
         Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])
             ->name('inventory.branches');
 
