@@ -732,61 +732,7 @@ class EmployeeEvaluationController extends Controller
                 return 'data:' . $mime . ';base64,' . base64_encode($data);
             }
 
-            // Koreksi orientasi EXIF kamera smartphone (iOS / Android)
-            if (function_exists('exif_read_data')) {
-                $exif = @exif_read_data($resolvedPath);
-                if (!empty($exif['Orientation'])) {
-                    switch ($exif['Orientation']) {
-                        case 2:
-                            imageflip($image, IMG_FLIP_HORIZONTAL);
-                            break;
-                        case 3:
-                            $rotated = imagerotate($image, 180, 0);
-                            if ($rotated) {
-                                imagedestroy($image);
-                                $image = $rotated;
-                            }
-                            break;
-                        case 4:
-                            imageflip($image, IMG_FLIP_VERTICAL);
-                            break;
-                        case 5:
-                            imageflip($image, IMG_FLIP_HORIZONTAL);
-                            $rotated = imagerotate($image, -90, 0);
-                            if ($rotated) {
-                                imagedestroy($image);
-                                $image = $rotated;
-                            }
-                            break;
-                        case 6:
-                            // 90 derajat searah jarum jam (CW)
-                            $rotated = imagerotate($image, -90, 0);
-                            if ($rotated) {
-                                imagedestroy($image);
-                                $image = $rotated;
-                            }
-                            break;
-                        case 7:
-                            imageflip($image, IMG_FLIP_HORIZONTAL);
-                            $rotated = imagerotate($image, 90, 0);
-                            if ($rotated) {
-                                imagedestroy($image);
-                                $image = $rotated;
-                            }
-                            break;
-                        case 8:
-                            // 90 derajat berlawanan jarum jam (CCW)
-                            $rotated = imagerotate($image, 90, 0);
-                            if ($rotated) {
-                                imagedestroy($image);
-                                $image = $rotated;
-                            }
-                            break;
-                    }
-                }
-            }
-
-            // Center-crop ke rasio 1:1 sempurna (menghilangkan efek gepeng)
+            // Center-crop ke rasio 1:1 sempurna persis seperti kartu profil web (object-fit: cover, anti gepeng)
             $srcW = imagesx($image);
             $srcH = imagesy($image);
             $cropSize = min($srcW, $srcH);
