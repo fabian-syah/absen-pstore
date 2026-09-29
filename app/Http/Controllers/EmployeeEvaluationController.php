@@ -519,10 +519,10 @@ class EmployeeEvaluationController extends Controller
 
         // Ambil karyawan aktif di unit Pusat yang SUDAH DINILAI (punya data di employee_evaluations)
         $users = User::with(['branch', 'division', 'divisions'])
-            ->whereIn('branch_id', $pusatBranchIds)
-            ->where('is_active', true)
-            ->whereHas('employeeEvaluations')
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
+            ->whereIn('users.branch_id', $pusatBranchIds)
+            ->where('users.is_active', true)
+            ->whereHas('employeeEvaluations')
             ->orderBy('branches.name', 'asc')
             ->orderByRaw("CASE WHEN users.role = 'leader' THEN 1 ELSE 2 END")
             ->orderBy('users.name', 'asc')
