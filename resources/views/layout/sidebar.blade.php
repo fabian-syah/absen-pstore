@@ -220,7 +220,8 @@
             z-index: 1060 !important;
             transform: translateX(-105%) !important;
             -webkit-transform: translateX(-105%) !important;
-            transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1) !important;
+            visibility: hidden !important;
+            transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1), visibility 0.28s ease !important;
             display: flex !important;
             flex-direction: column !important;
             padding: 0 !important;
@@ -231,6 +232,7 @@
         .sidebar.sidebar-offcanvas.active {
             transform: translateX(0) !important;
             -webkit-transform: translateX(0) !important;
+            visibility: visible !important;
         }
 
         .sidebar.sidebar-offcanvas .nav {
@@ -410,15 +412,35 @@
     .sidebar::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
     }
+
+    /* Sidebar Mobile Drawer Header & Profile Card */
+    .sidebar-mobile-header,
+    .sidebar-mobile-user {
+        display: none !important;
+    }
+
+    @media (max-width: 991px) {
+        .sidebar.sidebar-offcanvas.active .sidebar-mobile-header,
+        .sidebar.sidebar-offcanvas.active .sidebar-mobile-user {
+            display: flex !important;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .sidebar-mobile-header,
+        .sidebar-mobile-user {
+            display: none !important;
+        }
+    }
 </style>
 
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     {{-- =================================== --}}
     {{-- MOBILE DRAWER HEADER & USER PROFILE --}}
     {{-- =================================== --}}
-    <div class="sidebar-mobile-header d-flex d-lg-none align-items-center justify-content-between px-3 py-3 border-bottom bg-slate-50 flex-shrink-0">
+    <div class="sidebar-mobile-header align-items-center justify-content-between px-3 py-3 border-bottom bg-slate-50 flex-shrink-0" style="display: none;">
         <div class="d-flex align-items-center gap-2">
-            <img src="{{ pstoreFaviconDataUri() }}" onerror="this.onerror=null; this.src='{{ asset('assets/images/logo-pstore.png') }}';" alt="PStore" style="height: 32px; width: 32px; border-radius: 8px; object-fit: cover;">
+            <img src="{{ pstoreFaviconDataUri() }}" onerror="this.onerror=null; this.src='{{ asset('assets/images/logo-pstore.png') }}';" alt="PStore" width="32" height="32" style="height: 32px; width: 32px; border-radius: 8px; object-fit: cover;">
             <div>
                 <div class="fw-bold text-slate-900" style="font-size: 13px; line-height: 1.2;">PStore Absensi</div>
                 <span class="badge" style="font-size: 9.5px; font-weight: 700; background: #0f172a; color: #ffffff; padding: 2px 6px; border-radius: 4px;">{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}</span>
@@ -429,11 +451,11 @@
         </button>
     </div>
 
-    <div class="sidebar-mobile-user px-3 py-2.5 border-bottom bg-white d-flex d-lg-none align-items-center gap-2.5 flex-shrink-0">
-        <div class="user-avatar-wrap position-relative flex-shrink-0" style="width: 36px; height: 36px; overflow: visible;">
-            <div class="user-avatar-circle" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; border: 1.5px solid #e2e8f0;">
+    <div class="sidebar-mobile-user px-3 py-2.5 border-bottom bg-white align-items-center gap-2.5 flex-shrink-0" style="display: none;">
+        <div class="user-avatar-wrap position-relative flex-shrink-0" style="width: 36px; height: 36px; min-width: 36px; max-width: 36px; overflow: visible;">
+            <div class="user-avatar-circle" style="width: 36px; height: 36px; min-width: 36px; max-width: 36px; border-radius: 50%; overflow: hidden; border: 1.5px solid #e2e8f0; position: relative;">
                 @if (Auth::user()->profile_photo_path)
-                    <img src="{{ \Illuminate\Support\Facades\Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}" style="width: 36px; height: 36px; object-fit: cover;">
+                    <img src="{{ \Illuminate\Support\Facades\Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}" width="36" height="36" style="width: 36px; height: 36px; min-width: 36px; max-width: 36px; object-fit: cover; display: block; border-radius: 50%;">
                 @else
                     <div class="rounded-circle bg-slate-100 text-slate-700 d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 12px;">
                         {{ getInitials(Auth::user()->name) }}

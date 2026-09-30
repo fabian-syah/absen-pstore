@@ -27,12 +27,18 @@
                 <img src="{{ pstoreLogoHorizontalDataUri() }}" 
                      onerror="this.onerror=null; this.src='{{ asset('assets/images/logo-pstore.png') }}';" 
                      alt="PStore Logo" 
+                     width="160"
+                     height="48"
+                     style="height: 48px; max-height: 48px; width: auto; max-width: 165px; object-fit: contain; display: block;"
                      class="brand-logo-img" />
             </a>
             <a class="navbar-brand brand-logo-mini" href="{{ route('dashboard') }}">
                 <img src="{{ pstoreFaviconDataUri() }}" 
                      onerror="this.onerror=null; this.src='{{ asset('assets/images/logo-pstore.png') }}';" 
                      alt="PStore Logo" 
+                     width="44"
+                     height="44"
+                     style="height: 44px; max-height: 44px; width: auto; object-fit: contain; display: block;"
                      class="brand-logo-mini-img" />
             </a>
         </div>
@@ -187,14 +193,16 @@
             <div class="dropdown user-dropdown">
                 <button class="user-pill-btn d-flex align-items-center gap-2" type="button" id="UserDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="user-avatar-wrap position-relative flex-shrink-0">
-                        <div class="user-avatar-circle">
+                    <div class="user-avatar-wrap position-relative flex-shrink-0" style="width: 36px; height: 36px; min-width: 36px; max-width: 36px; overflow: visible;">
+                        <div class="user-avatar-circle" style="width: 36px; height: 36px; min-width: 36px; max-width: 36px; border-radius: 50%; overflow: hidden; border: 1.5px solid #e2e8f0; position: relative;">
                             @if (Auth::user()->profile_photo_path)
                                 <img class="user-avatar-img"
                                     src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                    alt="{{ Auth::user()->name }}">
+                                    alt="{{ Auth::user()->name }}"
+                                    width="36" height="36"
+                                    style="width: 36px; height: 36px; min-width: 36px; max-width: 36px; object-fit: cover; display: block; border-radius: 50%;">
                             @else
-                                <div class="user-avatar-initials">
+                                <div class="user-avatar-initials" style="width: 36px; height: 36px; border-radius: 50%;">
                                     {{ getInitials(Auth::user()->name) }}
                                 </div>
                             @endif
@@ -217,14 +225,16 @@
                     aria-labelledby="UserDropdown">
                     <div class="user-dropdown-header p-3 border-bottom bg-slate-50">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="user-header-avatar-wrap position-relative flex-shrink-0">
-                                <div class="user-header-avatar-circle">
+                            <div class="user-header-avatar-wrap position-relative flex-shrink-0" style="width: 46px; height: 46px; min-width: 46px; max-width: 46px; overflow: visible;">
+                                <div class="user-header-avatar-circle" style="width: 46px; height: 46px; min-width: 46px; max-width: 46px; border-radius: 50%; overflow: hidden; border: 2px solid #ffffff; position: relative;">
                                     @if (Auth::user()->profile_photo_path)
                                         <img class="user-header-avatar"
                                             src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                            alt="{{ Auth::user()->name }}">
+                                            alt="{{ Auth::user()->name }}"
+                                            width="46" height="46"
+                                            style="width: 46px; height: 46px; min-width: 46px; max-width: 46px; object-fit: cover; display: block; border-radius: 50%;">
                                     @else
-                                        <div class="user-header-initials">
+                                        <div class="user-header-initials" style="width: 46px; height: 46px; border-radius: 50%;">
                                             {{ getInitials(Auth::user()->name) }}
                                         </div>
                                     @endif

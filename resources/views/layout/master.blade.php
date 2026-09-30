@@ -119,6 +119,120 @@
             z-index: 1000000 !important;
         }
 
+        /* ==========================================================
+           CRITICAL ANTI-FOUC & LAYOUT PREVENTIONS
+           Applied in <head> immediately before <body> parses
+           ========================================================== */
+
+        /* 1. Prevent Dropdown & Popover FOUC */
+        .dropdown-menu:not(.show) {
+            display: none !important;
+        }
+
+        /* 2. Critical Avatar Anti-FOUC & Sizing Constraints */
+        .user-avatar-wrap {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            max-width: 36px !important;
+            position: relative !important;
+            overflow: visible !important;
+            flex-shrink: 0 !important;
+        }
+
+        .user-avatar-circle {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            max-width: 36px !important;
+            border-radius: 50% !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }
+
+        .user-avatar-img,
+        img.user-avatar-img {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            max-width: 36px !important;
+            object-fit: cover !important;
+            display: block !important;
+            border-radius: 50% !important;
+        }
+
+        .user-header-avatar-wrap {
+            width: 46px !important;
+            height: 46px !important;
+            min-width: 46px !important;
+            max-width: 46px !important;
+            position: relative !important;
+            overflow: visible !important;
+            flex-shrink: 0 !important;
+        }
+
+        .user-header-avatar-circle {
+            width: 46px !important;
+            height: 46px !important;
+            min-width: 46px !important;
+            max-width: 46px !important;
+            border-radius: 50% !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }
+
+        .user-header-avatar,
+        img.user-header-avatar {
+            width: 46px !important;
+            height: 46px !important;
+            min-width: 46px !important;
+            max-width: 46px !important;
+            object-fit: cover !important;
+            display: block !important;
+            border-radius: 50% !important;
+        }
+
+        /* 3. Critical Mobile Sidebar Drawer Anti-FOUC */
+        .sidebar-mobile-header,
+        .sidebar-mobile-user {
+            display: none !important;
+        }
+
+        @media (max-width: 991px) {
+            .sidebar.sidebar-offcanvas {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: auto !important;
+                width: 290px !important;
+                max-width: 86vw !important;
+                height: 100vh !important;
+                transform: translateX(-105%) !important;
+                -webkit-transform: translateX(-105%) !important;
+                z-index: 1060 !important;
+                visibility: hidden !important;
+                transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1), visibility 0.28s ease !important;
+            }
+
+            .sidebar.sidebar-offcanvas.active {
+                transform: translateX(0) !important;
+                -webkit-transform: translateX(0) !important;
+                visibility: visible !important;
+            }
+
+            .sidebar.sidebar-offcanvas.active .sidebar-mobile-header,
+            .sidebar.sidebar-offcanvas.active .sidebar-mobile-user {
+                display: flex !important;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .sidebar-mobile-header,
+            .sidebar-mobile-user {
+                display: none !important;
+            }
+        }
+
         /* Layout Structure */
         @media (min-width: 992px) {
 
