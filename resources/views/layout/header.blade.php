@@ -49,7 +49,7 @@
         {{-- HEADING / TITLE (DESKTOP) --}}
         <div class="header-heading-box d-none d-lg-flex flex-column justify-content-center">
             <h1 class="header-page-title mb-0">@yield('heading')</h1>
-            <div class="header-page-meta d-flex align-items-center gap-1.5 mt-1">
+            <div class="header-page-meta d-flex align-items-center gap-2 mt-1 flex-wrap">
                 <span class="header-role-badge">
                     <i class="mdi mdi-shield-check me-1"></i>{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}
                 </span>
@@ -253,7 +253,7 @@
                                     @endif
                                 </h6>
                                 <small class="text-muted d-block text-truncate mt-0.5" style="font-size: 11px;">{{ Auth::user()->email }}</small>
-                                <div class="d-flex align-items-center gap-1.5 mt-2 flex-wrap">
+                                <div class="user-dropdown-badges d-flex align-items-center gap-2 mt-2 flex-wrap">
                                     <span class="dropdown-role-badge">
                                         <i class="mdi mdi-shield-account me-1"></i>{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}
                                     </span>
@@ -1095,7 +1095,7 @@
     /* --- HEADING AREA --- */
     .header-heading-box {
         min-width: 0;
-        max-width: 320px;
+        max-width: 480px;
         flex-shrink: 1;
         overflow: hidden;
     }
@@ -1114,13 +1114,15 @@
 
     .header-page-meta {
         font-size: 11px;
+        gap: 8px !important;
+        margin-top: 4px !important;
     }
 
     .header-role-badge {
         font-size: 10.5px;
         font-weight: 700;
         letter-spacing: 0.04em;
-        padding: 2.5px 8px;
+        padding: 3px 9px;
         border-radius: 6px;
         background: #0f172a !important;
         color: #ffffff !important;
@@ -1128,12 +1130,13 @@
         align-items: center;
         line-height: 1.25;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        white-space: nowrap;
     }
 
     .header-division-badge {
         font-size: 11px;
         font-weight: 600;
-        padding: 2.5px 8px;
+        padding: 3px 9px;
         border-radius: 6px;
         background: #eff6ff !important;
         color: #1d4ed8 !important;
@@ -1141,6 +1144,7 @@
         display: inline-flex;
         align-items: center;
         line-height: 1.25;
+        white-space: nowrap;
     }
 
     /* --- SEARCH BAR --- */
@@ -1420,7 +1424,7 @@
     }
 
     .user-dropdown-pane {
-        width: 250px;
+        width: 290px;
     }
 
     .user-header-avatar-wrap {
@@ -1481,30 +1485,37 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
     }
 
+    .user-dropdown-badges {
+        gap: 8px !important;
+        row-gap: 6px !important;
+    }
+
     .dropdown-role-badge {
         font-size: 10px;
         font-weight: 700;
         letter-spacing: 0.04em;
-        padding: 2.5px 8px;
+        padding: 3px 9px;
         border-radius: 6px;
         background: #0f172a !important;
         color: #ffffff !important;
         display: inline-flex;
         align-items: center;
-        line-height: 1.25;
+        line-height: 1.3;
+        white-space: nowrap;
     }
 
     .dropdown-division-badge {
         font-size: 11px;
         font-weight: 600;
-        padding: 2.5px 8px;
+        padding: 3px 9px;
         border-radius: 6px;
         background: #eff6ff !important;
         color: #1d4ed8 !important;
         border: 1px solid #bfdbfe;
         display: inline-flex;
         align-items: center;
-        line-height: 1.25;
+        line-height: 1.3;
+        white-space: nowrap;
     }
 
     .modern-dropdown-item {
