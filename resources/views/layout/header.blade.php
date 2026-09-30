@@ -16,10 +16,10 @@
                 <i class="mdi mdi-menu"></i>
             </button>
             <a class="navbar-brand brand-logo" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/logo-pstore.png') }}?v=20260930" alt="PStore Logo" class="brand-logo-img" />
+                <img src="{{ asset('assets/images/logo-pstore-horizontal.png') }}?v=20260930c" alt="PStore Logo" class="brand-logo-img" />
             </a>
             <a class="navbar-brand brand-logo-mini" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/logo-pstore.png') }}?v=20260930" alt="PStore Logo" class="brand-logo-mini-img" />
+                <img src="{{ asset('assets/images/logo-pstore.png') }}?v=20260930c" alt="PStore Logo" class="brand-logo-mini-img" />
             </a>
         </div>
     </div>
@@ -931,9 +931,10 @@
 
     /* --- BRAND LOGO STYLING --- */
     .brand-logo-img {
-        height: 54px !important;
-        max-height: 54px !important;
+        height: 48px !important;
+        max-height: 48px !important;
         width: auto !important;
+        max-width: 165px !important;
         object-fit: contain !important;
         display: block !important;
         filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.04));
