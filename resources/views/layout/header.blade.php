@@ -24,10 +24,16 @@
 
             {{-- Brand Logos --}}
             <a class="navbar-brand brand-logo" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/logo-pstore-horizontal.png') }}?v=20260930c" alt="PStore Logo" class="brand-logo-img" />
+                <img src="{{ pstoreLogoHorizontalDataUri() }}" 
+                     onerror="this.onerror=null; this.src='{{ asset('assets/images/logo-pstore.png') }}';" 
+                     alt="PStore Logo" 
+                     class="brand-logo-img" />
             </a>
             <a class="navbar-brand brand-logo-mini" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/logo-pstore.png') }}?v=20260930c" alt="PStore Logo" class="brand-logo-mini-img" />
+                <img src="{{ pstoreFaviconDataUri() }}" 
+                     onerror="this.onerror=null; this.src='{{ asset('assets/images/logo-pstore.png') }}';" 
+                     alt="PStore Logo" 
+                     class="brand-logo-mini-img" />
             </a>
         </div>
     </div>
@@ -37,10 +43,13 @@
         {{-- HEADING / TITLE (DESKTOP) --}}
         <div class="header-heading-box d-none d-lg-flex flex-column justify-content-center">
             <h1 class="header-page-title mb-0">@yield('heading')</h1>
-            <div class="header-page-meta d-flex align-items-center gap-1 mt-0.5">
-                <span class="role-badge">{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}</span>
-                <span class="meta-dot text-muted">•</span>
-                <span class="division-text text-muted">{{ Auth::user()->division->name ?? 'Headquarters' }}</span>
+            <div class="header-page-meta d-flex align-items-center gap-1.5 mt-1">
+                <span class="header-role-badge">
+                    <i class="mdi mdi-shield-check me-1"></i>{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}
+                </span>
+                <span class="header-division-badge">
+                    <i class="mdi mdi-office-building-marker me-1"></i>{{ Auth::user()->division->name ?? 'Headquarters' }}
+                </span>
             </div>
         </div>
 
@@ -178,27 +187,28 @@
             <div class="dropdown user-dropdown">
                 <button class="user-pill-btn d-flex align-items-center gap-2" type="button" id="UserDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="user-avatar-wrap position-relative" style="width: 36px; height: 36px; min-width: 36px; max-width: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                        @if (Auth::user()->profile_photo_path)
-                            <img class="user-avatar-img rounded-circle"
-                                src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                alt="{{ Auth::user()->name }}"
-                                style="width: 36px !important; height: 36px !important; min-width: 36px !important; max-width: 36px !important; min-height: 36px !important; max-height: 36px !important; object-fit: cover !important; display: block !important; border-radius: 50% !important;">
-                        @else
-                            <div class="user-avatar-initials rounded-circle" style="width: 36px; height: 36px; border-radius: 50%;">
-                                {{ getInitials(Auth::user()->name) }}
-                            </div>
-                        @endif
+                    <div class="user-avatar-wrap position-relative flex-shrink-0">
+                        <div class="user-avatar-circle">
+                            @if (Auth::user()->profile_photo_path)
+                                <img class="user-avatar-img"
+                                    src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                    alt="{{ Auth::user()->name }}">
+                            @else
+                                <div class="user-avatar-initials">
+                                    {{ getInitials(Auth::user()->name) }}
+                                </div>
+                            @endif
+                        </div>
 
                         @if(Auth::user()->is_verified)
-                            <span class="user-verified-badge position-absolute" title="Verified Account">
+                            <span class="user-verified-badge" title="Verified Account">
                                 <i class="mdi mdi-check-decagram"></i>
                             </span>
                         @endif
                     </div>
                     <div class="user-pill-text d-none d-xl-flex flex-column text-start">
                         <span class="user-pill-name text-truncate">{{ Str::limit(Auth::user()->name, 15) }}</span>
-                        <span class="user-pill-role text-truncate">{{ Auth::user()->role }}</span>
+                        <span class="user-pill-role text-truncate">{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}</span>
                     </div>
                     <i class="mdi mdi-chevron-down user-pill-chevron d-none d-sm-inline-block"></i>
                 </button>
@@ -207,34 +217,40 @@
                     aria-labelledby="UserDropdown">
                     <div class="user-dropdown-header p-3 border-bottom bg-slate-50">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="position-relative flex-shrink-0" style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden;">
-                                @if (Auth::user()->profile_photo_path)
-                                    <img class="user-header-avatar rounded-circle"
-                                        src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                        alt="{{ Auth::user()->name }}"
-                                        style="width: 44px !important; height: 44px !important; min-width: 44px !important; max-width: 44px !important; min-height: 44px !important; max-height: 44px !important; object-fit: cover !important; display: block !important; border-radius: 50% !important;">
-                                @else
-                                    <div class="user-header-initials rounded-circle" style="width: 44px; height: 44px; border-radius: 50%;">
-                                        {{ getInitials(Auth::user()->name) }}
-                                    </div>
-                                @endif
+                            <div class="user-header-avatar-wrap position-relative flex-shrink-0">
+                                <div class="user-header-avatar-circle">
+                                    @if (Auth::user()->profile_photo_path)
+                                        <img class="user-header-avatar"
+                                            src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                            alt="{{ Auth::user()->name }}">
+                                    @else
+                                        <div class="user-header-initials">
+                                            {{ getInitials(Auth::user()->name) }}
+                                        </div>
+                                    @endif
+                                </div>
                                 @if(Auth::user()->is_verified)
-                                    <span class="user-header-verified position-absolute">
+                                    <span class="user-header-verified" title="Verified Account">
                                         <i class="mdi mdi-check-decagram"></i>
                                     </span>
                                 @endif
                             </div>
-                            <div class="overflow-hidden">
-                                <h6 class="mb-0 fw-bold text-slate-900 text-truncate d-flex align-items-center gap-1" style="font-size: 13px;">
+                            <div class="overflow-hidden flex-grow-1">
+                                <h6 class="mb-0 fw-bold text-slate-900 text-truncate d-flex align-items-center gap-1" style="font-size: 13.5px;">
                                     {{ Auth::user()->name }}
                                     @if(Auth::user()->is_verified)
-                                        <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
+                                        <i class="mdi mdi-check-decagram text-primary" style="font-size: 15px;"></i>
                                     @endif
                                 </h6>
-                                <small class="text-muted d-block text-truncate" style="font-size: 11px;">{{ Auth::user()->email }}</small>
-                                <span class="badge bg-white text-slate-700 border mt-1" style="font-size: 10px; font-weight: 600; border-color: #e2e8f0 !important;">
-                                    {{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }} • {{ Auth::user()->division->name ?? 'Headquarters' }}
-                                </span>
+                                <small class="text-muted d-block text-truncate mt-0.5" style="font-size: 11px;">{{ Auth::user()->email }}</small>
+                                <div class="d-flex align-items-center gap-1.5 mt-2 flex-wrap">
+                                    <span class="dropdown-role-badge">
+                                        <i class="mdi mdi-shield-account me-1"></i>{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}
+                                    </span>
+                                    <span class="dropdown-division-badge">
+                                        <i class="mdi mdi-office-building me-1"></i>{{ Auth::user()->division->name ?? 'Headquarters' }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1090,22 +1106,31 @@
         font-size: 11px;
     }
 
-    .role-badge {
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        padding: 1px 6px;
-        border-radius: 4px;
-        background: var(--slate-100);
-        color: var(--slate-700);
-        border: 1px solid var(--slate-200);
-        display: inline-block;
-        line-height: 1.3;
+    .header-role-badge {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 2.5px 8px;
+        border-radius: 6px;
+        background: #0f172a !important;
+        color: #ffffff !important;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1.25;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
-    .division-text {
-        font-weight: 500;
-        max-width: 180px;
+    .header-division-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2.5px 8px;
+        border-radius: 6px;
+        background: #eff6ff !important;
+        color: #1d4ed8 !important;
+        border: 1px solid #bfdbfe;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1.25;
     }
 
     /* --- SEARCH BAR --- */
@@ -1288,30 +1313,31 @@
         height: 36px !important;
         min-width: 36px !important;
         max-width: 36px !important;
+        position: relative !important;
+        overflow: visible !important;
+        flex-shrink: 0 !important;
+    }
+
+    .user-avatar-circle {
+        width: 36px !important;
+        height: 36px !important;
         border-radius: 50% !important;
         overflow: hidden !important;
-        flex-shrink: 0 !important;
+        border: 1.5px solid var(--slate-200);
+        position: relative;
     }
 
     .user-avatar-img,
     img.user-avatar-img {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        max-width: 36px !important;
-        min-height: 36px !important;
-        max-height: 36px !important;
+        width: 100% !important;
+        height: 100% !important;
         object-fit: cover !important;
         display: block !important;
-        border-radius: 50% !important;
     }
 
     .user-avatar-initials {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        max-width: 36px !important;
-        border-radius: 50% !important;
+        width: 100% !important;
+        height: 100% !important;
         background: var(--slate-800);
         color: #ffffff;
         font-size: 13px;
@@ -1322,17 +1348,21 @@
     }
 
     .user-verified-badge {
+        position: absolute;
         bottom: -2px;
         right: -2px;
-        width: 13px;
-        height: 13px;
+        width: 15px;
+        height: 15px;
         background: #ffffff;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--primary-blue);
-        font-size: 11px;
+        font-size: 13px;
+        line-height: 1;
+        z-index: 5;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     }
 
     .user-pill-text {
@@ -1340,15 +1370,16 @@
     }
 
     .user-pill-name {
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 12.5px;
+        font-weight: 700;
         color: var(--slate-900);
     }
 
     .user-pill-role {
         font-size: 10px;
-        color: var(--slate-500);
-        text-transform: capitalize;
+        font-weight: 700;
+        color: var(--primary-blue);
+        letter-spacing: 0.04em;
     }
 
     .user-pill-chevron {
@@ -1382,46 +1413,88 @@
         width: 250px;
     }
 
+    .user-header-avatar-wrap {
+        width: 46px !important;
+        height: 46px !important;
+        min-width: 46px !important;
+        max-width: 46px !important;
+        position: relative !important;
+        overflow: visible !important;
+        flex-shrink: 0 !important;
+    }
+
+    .user-header-avatar-circle {
+        width: 46px !important;
+        height: 46px !important;
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+        position: relative;
+    }
+
     .user-header-avatar,
     img.user-header-avatar {
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        max-width: 44px !important;
-        min-height: 44px !important;
-        max-height: 44px !important;
+        width: 100% !important;
+        height: 100% !important;
         object-fit: cover !important;
         display: block !important;
-        border-radius: 50% !important;
     }
 
     .user-header-initials {
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        max-width: 44px !important;
+        width: 100% !important;
+        height: 100% !important;
         background: var(--slate-800);
         color: #ffffff;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 50% !important;
     }
 
     .user-header-verified {
+        position: absolute;
         bottom: -2px;
         right: -2px;
-        width: 15px;
-        height: 15px;
+        width: 18px;
+        height: 18px;
         background: #ffffff;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--primary-blue);
-        font-size: 12px;
+        font-size: 15px;
+        line-height: 1;
+        z-index: 5;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    }
+
+    .dropdown-role-badge {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 2.5px 8px;
+        border-radius: 6px;
+        background: #0f172a !important;
+        color: #ffffff !important;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1.25;
+    }
+
+    .dropdown-division-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2.5px 8px;
+        border-radius: 6px;
+        background: #eff6ff !important;
+        color: #1d4ed8 !important;
+        border: 1px solid #bfdbfe;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1.25;
     }
 
     .modern-dropdown-item {

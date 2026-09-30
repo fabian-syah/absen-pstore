@@ -294,10 +294,10 @@
     {{-- =================================== --}}
     <div class="sidebar-mobile-header d-flex d-lg-none align-items-center justify-content-between px-3 py-3 border-bottom bg-slate-50 flex-shrink-0">
         <div class="d-flex align-items-center gap-2">
-            <img src="{{ asset('assets/images/logo-pstore.png') }}?v=20260930c" alt="PStore" style="height: 32px; width: auto; object-fit: contain;">
+            <img src="{{ pstoreFaviconDataUri() }}" onerror="this.onerror=null; this.src='{{ asset('assets/images/logo-pstore.png') }}';" alt="PStore" style="height: 32px; width: 32px; border-radius: 8px; object-fit: cover;">
             <div>
                 <div class="fw-bold text-slate-900" style="font-size: 13px; line-height: 1.2;">PStore Absensi</div>
-                <span class="badge bg-primary text-white rounded-pill px-2 py-0.5" style="font-size: 9.5px; font-weight: 600;">{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}</span>
+                <span class="badge" style="font-size: 9.5px; font-weight: 700; background: #0f172a; color: #ffffff; padding: 2px 6px; border-radius: 4px;">{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}</span>
             </div>
         </div>
         <button type="button" class="sidebar-drawer-close-btn" id="sidebarDrawerCloseBtn" aria-label="Tutup Menu">
@@ -306,18 +306,27 @@
     </div>
 
     <div class="sidebar-mobile-user px-3 py-2.5 border-bottom bg-white d-flex d-lg-none align-items-center gap-2.5 flex-shrink-0">
-        <div class="position-relative flex-shrink-0" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden;">
-            @if (Auth::user()->profile_photo_path)
-                <img src="{{ \Illuminate\Support\Facades\Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 50%;">
-            @else
-                <div class="rounded-circle bg-slate-100 text-slate-700 d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 12px;">
-                    {{ getInitials(Auth::user()->name) }}
-                </div>
+        <div class="user-avatar-wrap position-relative flex-shrink-0" style="width: 36px; height: 36px; overflow: visible;">
+            <div class="user-avatar-circle" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; border: 1.5px solid #e2e8f0;">
+                @if (Auth::user()->profile_photo_path)
+                    <img src="{{ \Illuminate\Support\Facades\Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}" style="width: 36px; height: 36px; object-fit: cover;">
+                @else
+                    <div class="rounded-circle bg-slate-100 text-slate-700 d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 12px;">
+                        {{ getInitials(Auth::user()->name) }}
+                    </div>
+                @endif
+            </div>
+            @if(Auth::user()->is_verified)
+                <span class="user-verified-badge" style="position: absolute; bottom: -2px; right: -2px; width: 15px; height: 15px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: 13px; line-height: 1; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.25);" title="Verified Account">
+                    <i class="mdi mdi-check-decagram"></i>
+                </span>
             @endif
         </div>
         <div class="overflow-hidden flex-grow-1">
             <div class="fw-semibold text-slate-900 text-truncate" style="font-size: 12.5px;">{{ Auth::user()->name }}</div>
-            <div class="text-muted text-truncate" style="font-size: 11px;">{{ Auth::user()->division->name ?? 'Headquarters' }}</div>
+            <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                <span class="badge" style="font-size: 9.5px; font-weight: 700; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 1.5px 6px; border-radius: 4px;">{{ Auth::user()->division->name ?? 'Headquarters' }}</span>
+            </div>
         </div>
     </div>
 
