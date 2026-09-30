@@ -21,35 +21,45 @@
         .form-page-wrapper {
             padding-top: 1rem;
             padding-bottom: 3.5rem;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        @media (max-width: 991.98px) {
+            .form-page-wrapper {
+                padding-top: 0.5rem;
+                padding-bottom: 110px !important;
+            }
         }
 
         /* --- TOP PAGE HEADER BLOCK --- */
         .form-top-bar {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 20px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.75rem;
-            box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.04);
+            border-radius: 18px;
+            padding: 1.15rem 1.35rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         .btn-circle-back {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: #ffffff;
-            border: 1.5px solid #e2e8f0;
+            border: 1.5px solid #cbd5e1;
             color: #059669;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+            font-size: 19px;
+            box-shadow: 0 2px 5px rgba(15, 23, 42, 0.05);
             text-decoration: none;
             transition: all 0.2s ease;
             flex-shrink: 0;
@@ -63,16 +73,17 @@
         }
 
         .form-top-title {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 800;
-            color: #0f172a;
+            color: #0f172a !important;
             margin: 0;
             line-height: 1.2;
         }
 
         .form-top-subtitle {
-            font-size: 0.875rem;
-            color: #475569;
+            font-size: 0.8125rem;
+            color: #334155 !important;
+            font-weight: 500;
             margin: 0;
             margin-top: 2px;
         }
@@ -80,133 +91,152 @@
         .btn-history-link-cuti {
             background: #ecfdf5;
             border: 1.5px solid #a7f3d0;
-            color: #047857;
+            color: #047857 !important;
             border-radius: 9999px;
-            padding: 0.5rem 1.15rem;
-            font-size: 0.875rem;
+            padding: 0.45rem 1rem;
+            font-size: 0.8125rem;
             font-weight: 700;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: 0 1px 3px rgba(5, 150, 105, 0.08);
+            white-space: nowrap;
         }
 
         .btn-history-link-cuti:hover {
             background: #059669;
-            color: #ffffff;
+            color: #ffffff !important;
             border-color: #059669;
+        }
+
+        @media (max-width: 575.98px) {
+            .form-top-bar {
+                padding: 10px 12px;
+                border-radius: 14px;
+                margin-bottom: 12px;
+            }
+            .btn-circle-back {
+                width: 36px;
+                height: 36px;
+                font-size: 17px;
+            }
+            .form-top-title {
+                font-size: 1rem;
+            }
+            .form-top-subtitle {
+                display: none;
+            }
+            .btn-history-link-cuti {
+                padding: 4px 10px;
+                font-size: 11.5px;
+            }
         }
 
         /* --- CUTI HERO BENTO BALANCE CARD --- */
         .cuti-bento-hero {
             background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
-            border-radius: 22px;
-            padding: 1.75rem 2rem;
-            color: #ffffff;
-            margin-bottom: 1.75rem;
+            border-radius: 20px;
+            padding: 1.5rem 1.75rem;
+            color: #ffffff !important;
+            margin-bottom: 1.25rem;
             box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3), 0 4px 10px -2px rgba(5, 150, 105, 0.15);
             position: relative;
             overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .cuti-bento-hero::after {
-            content: '';
-            position: absolute;
-            top: -20%;
-            right: -10%;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
+        .cuti-year-tag {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff !important;
+            border-radius: 9999px;
+            padding: 3px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
         }
 
         .cuti-balance-val {
-            font-size: 2.75rem;
+            font-size: 2.5rem;
             font-weight: 900;
             line-height: 1;
             letter-spacing: -0.02em;
+            color: #ffffff !important;
         }
 
         /* --- MAIN FORM CARD --- */
         .leave-form-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
+            border-radius: 22px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
             overflow: hidden;
             margin-bottom: 2rem;
+            width: 100%;
         }
 
         .leave-form-card .card-body {
-            padding: 2.25rem 2rem;
+            padding: 2rem;
         }
 
         @media (max-width: 767.98px) {
-            .form-page-wrapper {
-                padding-top: 0.5rem;
-                padding-bottom: 4rem;
-            }
-            .form-top-bar {
-                padding: 1rem 1.15rem;
-                border-radius: 16px;
-            }
             .leave-form-card {
                 border-radius: 18px;
             }
             .leave-form-card .card-body {
-                padding: 1.35rem 1rem;
+                padding: 1.25rem 1rem;
             }
             .cuti-bento-hero {
-                padding: 1.35rem 1.25rem;
+                padding: 1.25rem 1.15rem;
+                border-radius: 16px;
             }
             .cuti-balance-val {
-                font-size: 2.25rem;
-            }
-            .form-top-title {
-                font-size: 1.1rem;
+                font-size: 2.15rem;
             }
         }
 
         /* --- SECTION STEP HEADERS --- */
         .form-section-head {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 1.25rem;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 1rem;
             margin-top: 0.25rem;
         }
 
         .form-section-step {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
             background: #059669;
-            color: #ffffff;
-            font-size: 14px;
+            color: #ffffff !important;
+            font-size: 13.5px;
             font-weight: 800;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+            margin-top: 1px;
         }
 
         .form-section-title {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 800;
-            color: #0f172a;
+            color: #0f172a !important;
             margin: 0;
-            letter-spacing: -0.01em;
+            line-height: 1.3;
         }
 
         .form-section-subtitle {
             font-size: 0.8125rem;
-            color: #475569;
+            color: #475569 !important;
             margin: 0;
             font-weight: 500;
+            line-height: 1.3;
         }
 
         /* --- NOTICES --- */
@@ -215,21 +245,31 @@
             border: 1.5px solid #fde68a;
             border-left: 5px solid #d97706;
             border-radius: 16px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.75rem;
+            padding: 1.15rem 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .pending-status-pill {
+            background: #fef3c7;
+            color: #92400e !important;
+            border: 1px solid #fcd34d;
+            border-radius: 9999px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 800;
         }
 
         .pending-chip {
             background: #ffffff;
             border: 1px solid #fcd34d;
             border-radius: 9999px;
-            padding: 5px 12px;
-            font-size: 12px;
+            padding: 4px 10px;
+            font-size: 11.5px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            color: #78350f;
-            font-weight: 600;
+            gap: 5px;
+            color: #78350f !important;
+            font-weight: 700;
         }
 
         .pending-chip-dot {
@@ -244,16 +284,16 @@
             border: 1.5px solid #fecdd3;
             border-left: 5px solid #e11d48;
             border-radius: 16px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.75rem;
+            padding: 1.15rem 1.25rem;
+            margin-bottom: 1.25rem;
         }
 
         /* --- HIGH-CONTRAST FORM CONTROLS --- */
         .form-label-custom {
-            font-size: 0.9375rem;
+            font-size: 0.9rem;
             font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 0.5rem;
+            color: #0f172a !important;
+            margin-bottom: 0.45rem;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -261,84 +301,89 @@
 
         .form-control-custom {
             border: 1.5px solid #cbd5e1;
-            border-radius: 14px;
-            padding: 0.8rem 1rem;
-            font-size: 0.9375rem;
+            border-radius: 13px;
+            padding: 0.75rem 1rem;
+            font-size: 15px;
             font-weight: 600;
-            color: #0f172a;
-            background-color: #ffffff;
+            color: #0f172a !important;
+            background-color: #ffffff !important;
             transition: all 0.2s ease;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
             width: 100%;
+            box-sizing: border-box;
         }
 
         .form-control-custom:focus {
-            border-color: #059669;
-            box-shadow: 0 0 0 3.5px rgba(5, 150, 105, 0.18);
+            border-color: #059669 !important;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.18) !important;
             outline: none;
-            background-color: #ffffff;
+            background-color: #ffffff !important;
         }
 
         .input-group-custom {
             position: relative;
             display: flex;
             align-items: center;
+            width: 100%;
         }
 
         .input-icon-left {
             position: absolute;
             left: 14px;
-            color: #059669;
-            font-size: 20px;
+            color: #059669 !important;
+            font-size: 19px;
             pointer-events: none;
             z-index: 4;
         }
 
         .form-control-custom.has-icon-left {
-            padding-left: 46px;
+            padding-left: 44px;
         }
 
         .form-helper-text {
             font-size: 0.8125rem;
-            color: #475569;
+            color: #334155 !important;
             font-weight: 500;
-            margin-top: 0.4rem;
+            margin-top: 0.35rem;
             display: flex;
             align-items: center;
             gap: 5px;
+            line-height: 1.3;
         }
 
         /* --- FRESH DROPZONE --- */
         .upload-dropzone {
             border: 2px dashed #6ee7b7;
-            border-radius: 18px;
+            border-radius: 16px;
             background: #f0fdf4;
-            padding: 2rem 1.5rem;
+            padding: 1.75rem 1.25rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .upload-dropzone:hover,
         .upload-dropzone.dragover {
             border-color: #059669;
             background: #ecfdf5;
-            box-shadow: 0 4px 16px rgba(5, 150, 105, 0.08);
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.08);
         }
 
         .upload-icon-circle {
-            width: 56px;
-            height: 56px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: #ffffff;
             color: #059669;
-            font-size: 28px;
+            font-size: 26px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 0.75rem;
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+            margin-bottom: 0.65rem;
+            box-shadow: 0 3px 10px rgba(5, 150, 105, 0.15);
             transition: transform 0.2s ease;
         }
 
@@ -348,13 +393,13 @@
 
         .upload-main-text {
             font-weight: 800;
-            color: #0f172a;
-            font-size: 0.95rem;
-            margin-bottom: 4px;
+            color: #0f172a !important;
+            font-size: 0.9375rem;
+            margin-bottom: 3px;
         }
 
         .upload-sub-text {
-            color: #475569;
+            color: #334155 !important;
             font-size: 0.8125rem;
             font-weight: 500;
             margin-bottom: 0;
@@ -365,24 +410,26 @@
             display: none;
             background: #ffffff;
             border: 1.5px solid #a7f3d0;
-            border-radius: 16px;
-            padding: 12px 16px;
-            margin-top: 12px;
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.06);
+            border-radius: 14px;
+            padding: 10px 14px;
+            margin-top: 10px;
+            box-shadow: 0 3px 10px rgba(5, 150, 105, 0.06);
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .preview-file-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             background: #ecfdf5;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             color: #059669;
             overflow: hidden;
             flex-shrink: 0;
@@ -402,8 +449,8 @@
 
         .preview-file-name {
             font-weight: 700;
-            font-size: 14px;
-            color: #0f172a;
+            font-size: 13.5px;
+            color: #0f172a !important;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -413,21 +460,22 @@
         .preview-file-size {
             font-size: 12px;
             font-weight: 600;
-            color: #475569;
+            color: #334155 !important;
         }
 
         .btn-remove-preview {
             background: #fff1f2;
             border: 1px solid #fecdd3;
             color: #e11d48;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.15s ease;
+            flex-shrink: 0;
         }
 
         .btn-remove-preview:hover {
@@ -437,22 +485,22 @@
 
         /* --- ACTION BUTTONS BAR --- */
         .form-actions-bar {
-            margin-top: 2.25rem;
-            padding-top: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 1.25rem;
             border-top: 1.5px solid #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
         }
 
         .btn-cancel-custom {
-            padding: 0.85rem 1.65rem;
-            border-radius: 14px;
+            padding: 0.8rem 1.5rem;
+            border-radius: 13px;
             border: 1.5px solid #cbd5e1;
             background: #ffffff;
-            color: #334155;
+            color: #334155 !important;
             font-weight: 700;
             font-size: 0.9375rem;
             transition: all 0.2s ease;
@@ -466,16 +514,16 @@
 
         .btn-cancel-custom:hover {
             background: #f1f5f9;
-            color: #0f172a;
+            color: #0f172a !important;
             border-color: #94a3b8;
         }
 
         .btn-submit-cuti {
-            padding: 0.85rem 2rem;
-            border-radius: 14px;
+            padding: 0.8rem 1.85rem;
+            border-radius: 13px;
             border: none;
             background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: #ffffff;
+            color: #ffffff !important;
             font-weight: 800;
             font-size: 0.95rem;
             box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
@@ -491,43 +539,49 @@
             background: linear-gradient(135deg, #047857 0%, #065f46 100%);
             box-shadow: 0 6px 18px rgba(5, 150, 105, 0.5);
             transform: translateY(-1px);
-            color: #ffffff;
+            color: #ffffff !important;
         }
 
         @media (max-width: 575.98px) {
             .form-actions-bar {
                 flex-direction: column-reverse;
-                gap: 12px;
+                gap: 10px;
             }
             .btn-cancel-custom,
             .btn-submit-cuti {
                 width: 100%;
                 justify-content: center;
-                padding: 0.9rem 1.5rem;
+                padding: 0.85rem 1.25rem;
             }
         }
 
         .char-counter {
             font-size: 12px;
             font-weight: 700;
-            color: #475569;
+            color: #334155 !important;
         }
         .char-counter.warning {
-            color: #e11d48;
+            color: #e11d48 !important;
         }
 
         .duration-pill {
-            background: #ecfdf5;
-            color: #047857;
-            border: 1.5px solid #a7f3d0;
+            background: #ecfdf5 !important;
+            color: #047857 !important;
+            border: 1.5px solid #a7f3d0 !important;
             border-radius: 9999px;
-            padding: 5px 12px;
-            font-size: 12px;
+            padding: 3px 10px;
+            font-size: 11.5px;
             font-weight: 800;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             box-shadow: 0 1px 2px rgba(5, 150, 105, 0.08);
+            white-space: nowrap;
+        }
+
+        .duration-pill span {
+            color: #047857 !important;
+            font-weight: 800;
         }
     </style>
 @endpush
@@ -539,13 +593,13 @@
 
                 {{-- 1. Top Page Navigation Bar --}}
                 <div class="form-top-bar">
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2.5">
                         <a href="{{ route('dashboard') }}" class="btn-circle-back" title="Kembali ke Dashboard">
                             <i class="mdi mdi-arrow-left"></i>
                         </a>
                         <div>
                             <h5 class="form-top-title">Formulir Pengajuan Cuti Tahunan</h5>
-                            <p class="form-top-subtitle">Silakan tentukan periode cuti dan lampirkan formulir yang diperlukan.</p>
+                            <p class="form-top-subtitle">Tentukan periode cuti dan lampirkan formulir yang diperlukan.</p>
                         </div>
                     </div>
                     <div>
@@ -561,7 +615,7 @@
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 position-relative" style="z-index: 2;">
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-1 font-monospace small fw-bold">
+                                <span class="cuti-year-tag font-monospace">
                                     <i class="mdi mdi-calendar-star me-1"></i>TAHUN {{ date('Y') }}
                                 </span>
                             </div>
@@ -588,11 +642,11 @@
                                 <i class="mdi mdi-clock-alert-outline fs-5 text-amber-600"></i>
                                 <h6 class="fw-bold mb-0 text-slate-900">Menunggu Verifikasi Audit</h6>
                             </div>
-                            <span class="badge bg-amber-100 text-amber-900 border border-amber-300 rounded-pill px-2.5 py-1 fw-bold">
+                            <span class="pending-status-pill">
                                 {{ $pendingLeaves->count() }} Pengajuan Aktif
                             </span>
                         </div>
-                        <p class="mb-2 text-slate-800 small font-medium">
+                        <p class="mb-2 text-slate-800 small fw-medium">
                             Anda saat ini memiliki <strong>{{ $pendingLeaves->count() }} pengajuan</strong> yang masih dalam antrean review oleh tim audit:
                         </p>
                         <div class="d-flex flex-wrap gap-2 mt-2">
@@ -639,15 +693,15 @@
                             <div class="mb-4 pb-2">
                                 <div class="form-section-head">
                                     <div class="form-section-step">1</div>
-                                    <div class="d-flex align-items-center justify-content-between flex-grow-1 flex-wrap gap-2">
-                                        <div>
-                                            <h6 class="form-section-title">Periode Tanggal Cuti <span class="text-danger">*</span></h6>
-                                            <p class="form-section-subtitle">Tentukan tanggal mulai dan selesai pengambilan cuti</p>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap mb-0.5">
+                                            <h6 class="form-section-title mb-0">Periode Tanggal Cuti <span class="text-danger">*</span></h6>
+                                            <span id="duration_indicator" class="duration-pill d-none">
+                                                <i class="mdi mdi-calendar-range"></i>
+                                                <span id="duration_text">1 Hari</span>
+                                            </span>
                                         </div>
-                                        <div id="duration_indicator" class="duration-pill d-none">
-                                            <i class="mdi mdi-calendar-range"></i>
-                                            <span id="duration_text">1 Hari</span>
-                                        </div>
+                                        <p class="form-section-subtitle mb-0">Tentukan tanggal mulai dan selesai pengambilan cuti</p>
                                     </div>
                                 </div>
 
@@ -782,6 +836,8 @@
             let start = document.getElementById('start_date').value;
             let end = document.getElementById('end_date').value;
 
+            if (!indicator || !text) return;
+
             if (!start) {
                 indicator.classList.add('d-none');
                 return;
@@ -810,11 +866,13 @@
         function updateCharCount(el) {
             let current = el.value.length;
             let counter = document.getElementById('charCount');
-            counter.innerText = current + " / 255";
-            if (current >= 240) {
-                counter.classList.add('warning');
-            } else {
-                counter.classList.remove('warning');
+            if (counter) {
+                counter.innerText = current + " / 255";
+                if (current >= 240) {
+                    counter.classList.add('warning');
+                } else {
+                    counter.classList.remove('warning');
+                }
             }
         }
 
@@ -846,9 +904,9 @@
                     };
                     reader.readAsDataURL(file);
                 } else if (file.type === 'application/pdf') {
-                    previewIcon.innerHTML = `<i class="mdi mdi-file-pdf-box text-danger" style="font-size: 32px;"></i>`;
+                    previewIcon.innerHTML = `<i class="mdi mdi-file-pdf-box text-danger" style="font-size: 30px;"></i>`;
                 } else {
-                    previewIcon.innerHTML = `<i class="mdi mdi-file-document-outline text-emerald-600" style="font-size: 28px;"></i>`;
+                    previewIcon.innerHTML = `<i class="mdi mdi-file-document-outline text-emerald-600" style="font-size: 26px;"></i>`;
                 }
 
                 previewBox.style.display = 'flex';

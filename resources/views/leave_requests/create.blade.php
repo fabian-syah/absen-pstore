@@ -11,45 +11,55 @@
 @push('styles')
     <style>
         /* ==========================================================
-           MODERN AESTHETIC FORM PENGAJUAN DESIGN SYSTEM (HIGH CONTRAST)
-           - No dull grey backgrounds (fresh, vibrant, clean surface)
-           - Sharp, high-contrast typography (anti-nyaru)
-           - Spacious layout with top breathing room (anti-mepet)
-           - 100% responsive across mobile, tablet, and desktop
+           ULTRA-RESPONSIVE AESTHETIC FORM PENGAJUAN (HIGH CONTRAST)
+           - 100% Anti-Nyaru: Explicit deep contrast on all text
+           - Zero broken .badge conflicts (no white-on-white text)
+           - Mobile-first layout with smart 2-col + span-2 last card
+           - Complete bottom navigation clearance (no obstructed buttons)
            ========================================================== */
 
         .form-page-wrapper {
             padding-top: 1rem;
             padding-bottom: 3.5rem;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        @media (max-width: 991.98px) {
+            .form-page-wrapper {
+                padding-top: 0.5rem;
+                padding-bottom: 110px !important; /* Aman di atas bottom nav */
+            }
         }
 
         /* --- TOP PAGE HEADER BLOCK --- */
         .form-top-bar {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 20px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.75rem;
-            box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.04);
+            border-radius: 18px;
+            padding: 1.15rem 1.35rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         .btn-circle-back {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: #ffffff;
-            border: 1.5px solid #e2e8f0;
+            border: 1.5px solid #cbd5e1;
             color: #2563eb;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+            font-size: 19px;
+            box-shadow: 0 2px 5px rgba(15, 23, 42, 0.05);
             text-decoration: none;
             transition: all 0.2s ease;
             flex-shrink: 0;
@@ -63,16 +73,17 @@
         }
 
         .form-top-title {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 800;
-            color: #0f172a;
+            color: #0f172a !important;
             margin: 0;
             line-height: 1.2;
         }
 
         .form-top-subtitle {
-            font-size: 0.875rem;
-            color: #475569;
+            font-size: 0.8125rem;
+            color: #334155 !important;
+            font-weight: 500;
             margin: 0;
             margin-top: 2px;
         }
@@ -80,96 +91,112 @@
         .btn-history-link {
             background: #eff6ff;
             border: 1.5px solid #bfdbfe;
-            color: #1d4ed8;
+            color: #1d4ed8 !important;
             border-radius: 9999px;
-            padding: 0.5rem 1.15rem;
-            font-size: 0.875rem;
+            padding: 0.45rem 1rem;
+            font-size: 0.8125rem;
             font-weight: 700;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+            white-space: nowrap;
         }
 
         .btn-history-link:hover {
             background: #2563eb;
-            color: #ffffff;
+            color: #ffffff !important;
             border-color: #2563eb;
+        }
+
+        @media (max-width: 575.98px) {
+            .form-top-bar {
+                padding: 10px 12px;
+                border-radius: 14px;
+                margin-bottom: 12px;
+            }
+            .btn-circle-back {
+                width: 36px;
+                height: 36px;
+                font-size: 17px;
+            }
+            .form-top-title {
+                font-size: 1rem;
+            }
+            .form-top-subtitle {
+                display: none; /* Hemat ruang di layar HP kecil */
+            }
+            .btn-history-link {
+                padding: 4px 10px;
+                font-size: 11.5px;
+            }
         }
 
         /* --- MAIN FORM CARD --- */
         .leave-form-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
+            border-radius: 22px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
             overflow: hidden;
             margin-bottom: 2rem;
+            width: 100%;
         }
 
         .leave-form-card .card-body {
-            padding: 2.25rem 2rem;
+            padding: 2rem;
         }
 
         @media (max-width: 767.98px) {
-            .form-page-wrapper {
-                padding-top: 0.5rem;
-                padding-bottom: 4rem;
-            }
-            .form-top-bar {
-                padding: 1rem 1.15rem;
-                border-radius: 16px;
-            }
             .leave-form-card {
                 border-radius: 18px;
             }
             .leave-form-card .card-body {
-                padding: 1.35rem 1rem;
-            }
-            .form-top-title {
-                font-size: 1.1rem;
+                padding: 1.25rem 1rem;
             }
         }
 
         /* --- SECTION STEP HEADERS --- */
         .form-section-head {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 1.25rem;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 1rem;
             margin-top: 0.25rem;
         }
 
         .form-section-step {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
             background: #2563eb;
-            color: #ffffff;
-            font-size: 14px;
+            color: #ffffff !important;
+            font-size: 13.5px;
             font-weight: 800;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+            margin-top: 1px;
         }
 
         .form-section-title {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 800;
-            color: #0f172a;
+            color: #0f172a !important;
             margin: 0;
-            letter-spacing: -0.01em;
+            line-height: 1.3;
         }
 
         .form-section-subtitle {
             font-size: 0.8125rem;
-            color: #475569;
+            color: #475569 !important;
             margin: 0;
             font-weight: 500;
+            line-height: 1.3;
         }
 
         /* --- NOTICES --- */
@@ -178,21 +205,31 @@
             border: 1.5px solid #fde68a;
             border-left: 5px solid #d97706;
             border-radius: 16px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.75rem;
+            padding: 1.15rem 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .pending-status-pill {
+            background: #fef3c7;
+            color: #92400e !important;
+            border: 1px solid #fcd34d;
+            border-radius: 9999px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 800;
         }
 
         .pending-chip {
             background: #ffffff;
             border: 1px solid #fcd34d;
             border-radius: 9999px;
-            padding: 5px 12px;
-            font-size: 12px;
+            padding: 4px 10px;
+            font-size: 11.5px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            color: #78350f;
-            font-weight: 600;
+            gap: 5px;
+            color: #78350f !important;
+            font-weight: 700;
         }
 
         .pending-chip-dot {
@@ -207,30 +244,30 @@
             border: 1.5px solid #fecdd3;
             border-left: 5px solid #e11d48;
             border-radius: 16px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.75rem;
+            padding: 1.15rem 1.25rem;
+            margin-bottom: 1.25rem;
         }
 
-        /* --- TYPE SELECTION CARDS GRID --- */
+        /* --- RESPONSIVE TYPE SELECTION CARDS GRID --- */
         .type-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 12px;
-            margin-bottom: 1rem;
+            gap: 10px;
+            margin-bottom: 0.75rem;
         }
 
         @media (max-width: 575.98px) {
             .type-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 9px;
+                gap: 8px;
             }
         }
 
         .type-card-btn {
             background: #ffffff;
             border: 1.5px solid #cbd5e1;
-            border-radius: 16px;
-            padding: 14px 10px;
+            border-radius: 15px;
+            padding: 12px 8px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -240,46 +277,48 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 102px;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            min-height: 96px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+            box-sizing: border-box;
         }
 
         .type-card-btn:hover {
             border-color: #94a3b8;
             transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
         }
 
         .type-card-btn.active {
-            border-color: #2563eb;
-            border-width: 2px;
-            background: #f0f7ff;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18), 0 6px 16px rgba(37, 99, 235, 0.12);
+            border-color: #2563eb !important;
+            border-width: 2px !important;
+            background: #f0f7ff !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18), 0 4px 14px rgba(37, 99, 235, 0.12) !important;
         }
 
         .type-card-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
-            margin-bottom: 8px;
+            font-size: 20px;
+            margin-bottom: 6px;
             transition: all 0.2s ease;
+            flex-shrink: 0;
         }
 
         .type-card-title {
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 2px;
+            color: #0f172a !important;
+            margin-bottom: 1px;
             line-height: 1.2;
         }
 
         .type-card-desc {
             font-size: 11px;
-            color: #475569;
+            color: #334155 !important;
             font-weight: 600;
             line-height: 1.15;
         }
@@ -294,19 +333,19 @@
         .type-card-btn[data-type="libur"] .type-card-icon { background: #ccfbf1; color: #0f766e; }
 
         .type-card-btn.active .type-card-title {
-            color: #1d4ed8;
+            color: #1d4ed8 !important;
         }
 
         .type-check-badge {
             position: absolute;
-            top: 7px;
-            right: 7px;
-            width: 20px;
-            height: 20px;
+            top: 6px;
+            right: 6px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: #2563eb;
-            color: #ffffff;
-            font-size: 12px;
+            color: #ffffff !important;
+            font-size: 11px;
             display: none;
             align-items: center;
             justify-content: center;
@@ -317,13 +356,40 @@
             display: flex;
         }
 
-        /* --- CUTI BENTO BALANCE CARD --- */
+        /* Mobile Optimization: Card ke-7 (Izin Libur) span 2 kolom agar seimbang */
+        @media (max-width: 575.98px) {
+            .type-card-btn {
+                padding: 10px 6px;
+                min-height: 86px;
+            }
+            .type-card-btn:last-child {
+                grid-column: span 2;
+                flex-direction: row;
+                gap: 12px;
+                min-height: 48px;
+                padding: 8px 14px;
+            }
+            .type-card-btn:last-child .type-card-icon {
+                margin-bottom: 0;
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+            }
+            .type-card-btn:last-child .type-card-title {
+                margin-bottom: 0;
+            }
+        }
+
+        /* --- CUTI BENTO BALANCE CARD (ANTI-NYARU & 100% RESPONSIVE) --- */
         .leave-balance-bento {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            border: 2px solid #6ee7b7;
+            background: #ecfdf5 !important;
+            border: 1.5px solid #6ee7b7 !important;
             border-radius: 18px;
-            padding: 1.25rem 1.5rem;
+            padding: 1.15rem 1.25rem;
             animation: fadeIn 0.25s ease-in-out;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         @keyframes fadeIn {
@@ -331,33 +397,100 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .bento-balance-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
         .bento-balance-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             background: #ffffff;
             color: #047857;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
-            box-shadow: 0 2px 8px rgba(4, 120, 87, 0.2);
+            font-size: 24px;
+            box-shadow: 0 2px 6px rgba(4, 120, 87, 0.15);
             flex-shrink: 0;
         }
 
+        .bento-balance-label {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: #065f46 !important;
+            text-transform: uppercase;
+        }
+
+        .bento-balance-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
         .bento-balance-number {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 900;
-            color: #064e3b;
+            color: #064e3b !important;
             line-height: 1;
+        }
+
+        .bento-balance-unit {
+            font-size: 14px;
+            font-weight: 800;
+            color: #065f46 !important;
+        }
+
+        .bento-balance-limit {
+            font-size: 12px;
+            font-weight: 600;
+            color: #047857 !important;
+        }
+
+        /* Notice Box pengganti .badge agar tidak white-on-white */
+        .bento-balance-note {
+            background: #ffffff !important;
+            border: 1px solid #a7f3d0 !important;
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #064e3b !important;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            width: 100% !important;
+            box-sizing: border-box;
+            white-space: normal !important;
+            word-break: break-word !important;
+            line-height: 1.4;
+            box-shadow: 0 1px 3px rgba(4, 120, 87, 0.06);
+        }
+
+        .bento-balance-note i {
+            color: #059669 !important;
+            font-size: 16px;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .bento-balance-note span {
+            color: #064e3b !important;
+            font-size: 12px;
+            font-weight: 700;
         }
 
         /* --- HIGH-CONTRAST FORM CONTROLS --- */
         .form-label-custom {
-            font-size: 0.9375rem;
+            font-size: 0.9rem;
             font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 0.5rem;
+            color: #0f172a !important;
+            margin-bottom: 0.45rem;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -365,84 +498,89 @@
 
         .form-control-custom {
             border: 1.5px solid #cbd5e1;
-            border-radius: 14px;
-            padding: 0.8rem 1rem;
-            font-size: 0.9375rem;
+            border-radius: 13px;
+            padding: 0.75rem 1rem;
+            font-size: 15px; /* Nyaman di mobile & desktop */
             font-weight: 600;
-            color: #0f172a;
-            background-color: #ffffff;
+            color: #0f172a !important;
+            background-color: #ffffff !important;
             transition: all 0.2s ease;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
             width: 100%;
+            box-sizing: border-box;
         }
 
         .form-control-custom:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.18);
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18) !important;
             outline: none;
-            background-color: #ffffff;
+            background-color: #ffffff !important;
         }
 
         .input-group-custom {
             position: relative;
             display: flex;
             align-items: center;
+            width: 100%;
         }
 
         .input-icon-left {
             position: absolute;
             left: 14px;
-            color: #2563eb;
-            font-size: 20px;
+            color: #2563eb !important;
+            font-size: 19px;
             pointer-events: none;
             z-index: 4;
         }
 
         .form-control-custom.has-icon-left {
-            padding-left: 46px;
+            padding-left: 44px;
         }
 
         .form-helper-text {
             font-size: 0.8125rem;
-            color: #475569;
+            color: #334155 !important;
             font-weight: 500;
-            margin-top: 0.4rem;
+            margin-top: 0.35rem;
             display: flex;
             align-items: center;
             gap: 5px;
+            line-height: 1.3;
         }
 
-        /* --- FRESH DROPZONE (NOT DULL GREY) --- */
+        /* --- FRESH DROPZONE --- */
         .upload-dropzone {
             border: 2px dashed #93c5fd;
-            border-radius: 18px;
+            border-radius: 16px;
             background: #f8fbff;
-            padding: 2rem 1.5rem;
+            padding: 1.75rem 1.25rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .upload-dropzone:hover,
         .upload-dropzone.dragover {
             border-color: #2563eb;
             background: #eff6ff;
-            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
         }
 
         .upload-icon-circle {
-            width: 56px;
-            height: 56px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: #ffffff;
             color: #2563eb;
-            font-size: 28px;
+            font-size: 26px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 0.75rem;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+            margin-bottom: 0.65rem;
+            box-shadow: 0 3px 10px rgba(37, 99, 235, 0.15);
             transition: transform 0.2s ease;
         }
 
@@ -452,13 +590,13 @@
 
         .upload-main-text {
             font-weight: 800;
-            color: #0f172a;
-            font-size: 0.95rem;
-            margin-bottom: 4px;
+            color: #0f172a !important;
+            font-size: 0.9375rem;
+            margin-bottom: 3px;
         }
 
         .upload-sub-text {
-            color: #475569;
+            color: #334155 !important;
             font-size: 0.8125rem;
             font-weight: 500;
             margin-bottom: 0;
@@ -469,24 +607,26 @@
             display: none;
             background: #ffffff;
             border: 1.5px solid #bfdbfe;
-            border-radius: 16px;
-            padding: 12px 16px;
-            margin-top: 12px;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
+            border-radius: 14px;
+            padding: 10px 14px;
+            margin-top: 10px;
+            box-shadow: 0 3px 10px rgba(37, 99, 235, 0.06);
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .preview-file-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             background: #eff6ff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             color: #2563eb;
             overflow: hidden;
             flex-shrink: 0;
@@ -506,8 +646,8 @@
 
         .preview-file-name {
             font-weight: 700;
-            font-size: 14px;
-            color: #0f172a;
+            font-size: 13.5px;
+            color: #0f172a !important;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -517,21 +657,22 @@
         .preview-file-size {
             font-size: 12px;
             font-weight: 600;
-            color: #475569;
+            color: #334155 !important;
         }
 
         .btn-remove-preview {
             background: #fff1f2;
             border: 1px solid #fecdd3;
             color: #e11d48;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.15s ease;
+            flex-shrink: 0;
         }
 
         .btn-remove-preview:hover {
@@ -541,22 +682,22 @@
 
         /* --- ACTION BUTTONS BAR --- */
         .form-actions-bar {
-            margin-top: 2.25rem;
-            padding-top: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 1.25rem;
             border-top: 1.5px solid #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
         }
 
         .btn-cancel-custom {
-            padding: 0.85rem 1.65rem;
-            border-radius: 14px;
+            padding: 0.8rem 1.5rem;
+            border-radius: 13px;
             border: 1.5px solid #cbd5e1;
             background: #ffffff;
-            color: #334155;
+            color: #334155 !important;
             font-weight: 700;
             font-size: 0.9375rem;
             transition: all 0.2s ease;
@@ -570,16 +711,16 @@
 
         .btn-cancel-custom:hover {
             background: #f1f5f9;
-            color: #0f172a;
+            color: #0f172a !important;
             border-color: #94a3b8;
         }
 
         .btn-submit-custom {
-            padding: 0.85rem 2rem;
-            border-radius: 14px;
+            padding: 0.8rem 1.85rem;
+            border-radius: 13px;
             border: none;
             background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff;
+            color: #ffffff !important;
             font-weight: 800;
             font-size: 0.95rem;
             box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
@@ -595,48 +736,55 @@
             background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
             box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5);
             transform: translateY(-1px);
-            color: #ffffff;
+            color: #ffffff !important;
         }
 
         @media (max-width: 575.98px) {
             .form-actions-bar {
                 flex-direction: column-reverse;
-                gap: 12px;
+                gap: 10px;
             }
             .btn-cancel-custom,
             .btn-submit-custom {
                 width: 100%;
                 justify-content: center;
-                padding: 0.9rem 1.5rem;
+                padding: 0.85rem 1.25rem;
             }
         }
 
         .char-counter {
             font-size: 12px;
             font-weight: 700;
-            color: #475569;
+            color: #334155 !important;
         }
         .char-counter.warning {
-            color: #e11d48;
+            color: #e11d48 !important;
         }
 
+        /* Duration Pill */
         .duration-pill {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1.5px solid #bfdbfe;
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border: 1.5px solid #bfdbfe !important;
             border-radius: 9999px;
-            padding: 5px 12px;
-            font-size: 12px;
+            padding: 3px 10px;
+            font-size: 11.5px;
             font-weight: 800;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
+            white-space: nowrap;
+        }
+
+        .duration-pill span {
+            color: #1d4ed8 !important;
+            font-weight: 800;
         }
 
         .type-error-feedback {
             display: none;
-            color: #e11d48;
+            color: #e11d48 !important;
             font-size: 12.5px;
             font-weight: 700;
             margin-top: 6px;
@@ -651,13 +799,13 @@
 
                 {{-- 1. Top Page Navigation Bar --}}
                 <div class="form-top-bar">
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2.5">
                         <a href="{{ route('dashboard') }}" class="btn-circle-back" title="Kembali ke Dashboard">
                             <i class="mdi mdi-arrow-left"></i>
                         </a>
                         <div>
                             <h5 class="form-top-title">Formulir Pengajuan Izin / Cuti / WFH</h5>
-                            <p class="form-top-subtitle">Silakan pilih jenis perizinan dan lengkapi data di bawah ini.</p>
+                            <p class="form-top-subtitle">Pilih jenis perizinan dan isi formulir dengan lengkap.</p>
                         </div>
                     </div>
                     <div>
@@ -676,11 +824,11 @@
                                 <i class="mdi mdi-clock-alert-outline fs-5 text-amber-600"></i>
                                 <h6 class="fw-bold mb-0 text-slate-900">Menunggu Verifikasi Audit</h6>
                             </div>
-                            <span class="badge bg-amber-100 text-amber-900 border border-amber-300 rounded-pill px-2.5 py-1 fw-bold">
+                            <span class="pending-status-pill">
                                 {{ $pendingLeaves->count() }} Pengajuan Aktif
                             </span>
                         </div>
-                        <p class="mb-2 text-slate-800 small font-medium">
+                        <p class="mb-2 text-slate-800 small fw-medium">
                             Anda saat ini memiliki <strong>{{ $pendingLeaves->count() }} pengajuan</strong> yang masih dalam antrean review oleh tim audit:
                         </p>
                         <div class="d-flex flex-wrap gap-2 mt-2">
@@ -791,26 +939,24 @@
                                 </div>
                             </div>
 
-                            {{-- BENTO CARD SALDO CUTI (Muncul Dinamis Saat Cuti Dipilih) --}}
+                            {{-- BENTO CARD SALDO CUTI (ANTI-NYARU & TANPA CLASS .BADGE) --}}
                             <div id="leave_balance_info" class="leave-balance-bento d-none mb-4">
-                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="bento-balance-icon">
-                                            <i class="mdi mdi-palm-tree"></i>
-                                        </div>
-                                        <div>
-                                            <span class="text-uppercase fw-bold text-emerald-900" style="font-size: 11px; letter-spacing: 0.05em;">Informasi Kuota Cuti</span>
-                                            <div class="d-flex align-items-baseline gap-2 mt-0.5">
-                                                <span class="bento-balance-number">{{ auth()->user()->leave_balance ?? 0 }}</span>
-                                                <span class="fw-bold text-emerald-950" style="font-size: 15px;">Hari Tersisa</span>
-                                                <span class="text-emerald-800 small fw-semibold">(Limit: {{ auth()->user()->yearly_leave_limit ?? 12 }} Hari / Tahun)</span>
-                                            </div>
+                                <div class="bento-balance-header">
+                                    <div class="bento-balance-icon">
+                                        <i class="mdi mdi-palm-tree"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="bento-balance-label">Informasi Kuota Cuti</div>
+                                        <div class="bento-balance-row">
+                                            <span class="bento-balance-number">{{ auth()->user()->leave_balance ?? 0 }}</span>
+                                            <span class="bento-balance-unit">Hari Tersisa</span>
+                                            <span class="bento-balance-limit">(Limit: {{ auth()->user()->yearly_leave_limit ?? 12 }} Hari / Tahun)</span>
                                         </div>
                                     </div>
-                                    <div class="badge bg-white text-emerald-900 border border-emerald-400 rounded-pill px-3 py-2 shadow-sm d-inline-flex align-items-center fw-bold">
-                                        <i class="mdi mdi-information-outline me-1.5 text-emerald-700 fs-6"></i>
-                                        <span style="font-size: 12px;">Pengajuan melebihi kuota akan diproses via penyesuaian payroll.</span>
-                                    </div>
+                                </div>
+                                <div class="bento-balance-note">
+                                    <i class="mdi mdi-information-outline"></i>
+                                    <span>Pengajuan melebihi kuota cuti tetap dapat diajukan (penyesuaian via payroll).</span>
                                 </div>
                             </div>
 
@@ -820,15 +966,15 @@
                             <div class="mb-4 pb-2">
                                 <div class="form-section-head">
                                     <div class="form-section-step">2</div>
-                                    <div class="d-flex align-items-center justify-content-between flex-grow-1 flex-wrap gap-2">
-                                        <div>
-                                            <h6 class="form-section-title">Waktu & Periode <span class="text-danger">*</span></h6>
-                                            <p class="form-section-subtitle">Tentukan tanggal atau waktu pelaksanaan perizinan</p>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap mb-0.5">
+                                            <h6 class="form-section-title mb-0">Waktu & Periode <span class="text-danger">*</span></h6>
+                                            <span id="duration_indicator" class="duration-pill d-none">
+                                                <i class="mdi mdi-calendar-range"></i>
+                                                <span id="duration_text">1 Hari</span>
+                                            </span>
                                         </div>
-                                        <div id="duration_indicator" class="duration-pill d-none">
-                                            <i class="mdi mdi-calendar-range"></i>
-                                            <span id="duration_text">1 Hari</span>
-                                        </div>
+                                        <p class="form-section-subtitle mb-0">Tentukan tanggal atau waktu pelaksanaan perizinan</p>
                                     </div>
                                 </div>
 
@@ -979,7 +1125,9 @@
             let hiddenInput = document.getElementById('type');
             hiddenInput.value = typeKey;
             
-            document.getElementById('typeErrorMsg').style.display = 'none';
+            let errEl = document.getElementById('typeErrorMsg');
+            if (errEl) errEl.style.display = 'none';
+
             syncActiveTypeCards(typeKey);
             toggleInputs();
         }
@@ -1013,7 +1161,7 @@
                 
                 labelDate.querySelector('span').innerText = "Tanggal Hari Ini";
                 startDateHelper.innerHTML = '<i class="mdi mdi-clock-alert-outline text-purple"></i><span>Izin terlambat hanya berlaku untuk hari ini.</span>';
-                durationIndicator.classList.add('d-none');
+                if (durationIndicator) durationIndicator.classList.add('d-none');
             } else {
                 endDateBox.classList.remove('d-none');
                 timeBox.classList.add('d-none');
@@ -1021,7 +1169,6 @@
                 
                 labelDate.querySelector('span').innerText = "Tanggal Mulai";
                 startDateHelper.innerHTML = '<i class="mdi mdi-information-outline text-primary"></i><span>Tanggal awal Anda mengajukan perizinan.</span>';
-                durationIndicator.classList.remove('d-none');
                 calculateDuration();
             }
 
@@ -1039,6 +1186,8 @@
             let text = document.getElementById('duration_text');
             let start = document.getElementById('start_date').value;
             let end = document.getElementById('end_date').value;
+
+            if (!indicator || !text) return;
 
             if (type === 'telat' || !start) {
                 indicator.classList.add('d-none');
@@ -1068,11 +1217,13 @@
         function updateCharCount(el) {
             let current = el.value.length;
             let counter = document.getElementById('charCount');
-            counter.innerText = current + " / 255";
-            if (current >= 240) {
-                counter.classList.add('warning');
-            } else {
-                counter.classList.remove('warning');
+            if (counter) {
+                counter.innerText = current + " / 255";
+                if (current >= 240) {
+                    counter.classList.add('warning');
+                } else {
+                    counter.classList.remove('warning');
+                }
             }
         }
 
@@ -1104,9 +1255,9 @@
                     };
                     reader.readAsDataURL(file);
                 } else if (file.type === 'application/pdf') {
-                    previewIcon.innerHTML = `<i class="mdi mdi-file-pdf-box text-danger" style="font-size: 32px;"></i>`;
+                    previewIcon.innerHTML = `<i class="mdi mdi-file-pdf-box text-danger" style="font-size: 30px;"></i>`;
                 } else {
-                    previewIcon.innerHTML = `<i class="mdi mdi-file-document-outline text-primary" style="font-size: 28px;"></i>`;
+                    previewIcon.innerHTML = `<i class="mdi mdi-file-document-outline text-primary" style="font-size: 26px;"></i>`;
                 }
 
                 previewBox.style.display = 'flex';
@@ -1166,7 +1317,7 @@
             if (!type) {
                 e.preventDefault();
                 let errorMsg = document.getElementById('typeErrorMsg');
-                errorMsg.style.display = 'block';
+                if (errorMsg) errorMsg.style.display = 'block';
                 document.getElementById('typeGrid').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return false;
             }
