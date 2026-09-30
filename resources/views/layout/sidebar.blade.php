@@ -1,223 +1,235 @@
-{{-- Modern Sidebar with Glassmorphism & Smooth Animations --}}
+{{-- =========================================================================
+     MODERN AESTHETIC CUSTOM SIDEBAR
+     - Solid clean white background (#ffffff) with 1px border (#e2e8f0)
+     - No gradients, no purple, no AI-cliché animations
+     - Smooth active state with soft blue tint and 3px blue indicator
+     - Seamless support for icon-only minimization & mobile drawer
+     ========================================================================= --}}
 <style>
-    /* Modern Sidebar Styling */
+    /* Modern Sidebar Base */
     .sidebar {
-        background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%) !important;
-        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05) !important;
-        border-right: 1px solid rgba(13, 110, 253, 0.1) !important;
+        background: #ffffff !important;
+        border-right: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
+        padding-top: 8px !important;
+        transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
     .sidebar .nav {
-        padding: 0.5rem 0;
+        padding: 4px 8px 30px 8px !important;
+        margin-bottom: 0 !important;
     }
 
-    /* Menu Category Headers */
+    /* Menu Category Header */
     .sidebar .nav-category {
-        color: #6c757d !important;
-        font-size: 0.7rem !important;
+        color: #94a3b8 !important;
+        font-size: 10px !important;
         font-weight: 700 !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 0.08em !important;
         text-transform: uppercase !important;
-        padding: 1.5rem 1.5rem 0.5rem 1.5rem !important;
-        margin-top: 0.5rem !important;
-        position: relative;
+        padding: 18px 12px 6px 12px !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        border: none !important;
     }
 
     .sidebar .nav-category::before {
-        content: '';
-        position: absolute;
-        left: 1.5rem;
-        bottom: -5px;
-        width: 30px;
-        height: 2px;
-        background: linear-gradient(90deg, #0d6efd, transparent);
-        border-radius: 2px;
+        display: none !important;
     }
 
-    /* Menu Items */
+    /* Nav Item Container */
     .sidebar .nav-item {
-        margin: 0.2rem 0.8rem;
-        border-radius: 12px;
-        overflow: hidden;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 2px 0 !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        list-style: none !important;
     }
 
+    /* Nav Link */
     .sidebar .nav-item .nav-link {
-        display: flex;
-        align-items: center;
-        padding: 0.85rem 1rem !important;
-        color: #495057 !important;
+        display: flex !important;
+        align-items: center !important;
+        padding: 8.5px 12px !important;
+        color: #475569 !important;
         font-weight: 500 !important;
-        font-size: 0.875rem !important;
-        border-radius: 12px;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: transparent;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        text-decoration: none !important;
+        transition: all 0.15s ease !important;
+        position: relative !important;
+        border-left: 3px solid transparent !important;
     }
 
-    /* Hover Effect with Gradient Background */
+    /* Nav Link Hover */
     .sidebar .nav-item .nav-link:hover {
-        background: linear-gradient(135deg, rgba(13, 110, 253, 0.08) 0%, rgba(13, 110, 253, 0.03) 100%) !important;
-        color: #0d6efd !important;
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1);
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        transform: none !important;
+        box-shadow: none !important;
     }
 
-    /* Active State with Gradient Accent */
-    .sidebar .nav-item .nav-link.active,
-    .sidebar .nav-item.active .nav-link {
-        background: linear-gradient(135deg, rgba(13, 110, 253, 0.12) 0%, rgba(13, 110, 253, 0.06) 100%) !important;
-        color: #0d6efd !important;
+    .sidebar .nav-item .nav-link:hover .menu-icon {
+        color: #0f172a !important;
+        transform: none !important;
+    }
+
+    /* Active State */
+    .sidebar .nav-item.active .nav-link,
+    .sidebar .nav-item .nav-link.active {
+        background: #eff6ff !important;
+        color: #2563eb !important;
         font-weight: 600 !important;
-        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+        border-left: 3px solid #2563eb !important;
+        box-shadow: none !important;
     }
 
-    .sidebar .nav-item .nav-link.active::before,
-    .sidebar .nav-item.active .nav-link::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: linear-gradient(180deg, #0d6efd, #0a58ca);
-        border-radius: 0 4px 4px 0;
-        box-shadow: 0 0 8px rgba(13, 110, 253, 0.4);
+    .sidebar .nav-item.active .nav-link::before,
+    .sidebar .nav-item .nav-link.active::before {
+        display: none !important;
+    }
+
+    .sidebar .nav-item.active .nav-link::after,
+    .sidebar .nav-item .nav-link.active::after {
+        display: none !important;
+    }
+
+    .sidebar .nav-item.active .nav-link .menu-icon,
+    .sidebar .nav-item .nav-link.active .menu-icon {
+        color: #2563eb !important;
+        transform: none !important;
     }
 
     /* Menu Icons */
     .sidebar .nav-item .menu-icon {
-        margin-right: 0.85rem !important;
-        font-size: 1.25rem !important;
-        color: #6c757d;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-    }
-
-    .sidebar .nav-item .nav-link:hover .menu-icon {
-        color: #0d6efd !important;
-        transform: scale(1.1) rotate(5deg);
-    }
-
-    .sidebar .nav-item .nav-link.active .menu-icon,
-    .sidebar .nav-item.active .nav-link .menu-icon {
-        color: #0d6efd !important;
-        transform: scale(1.05);
+        margin-right: 10px !important;
+        font-size: 18px !important;
+        color: #64748b !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 22px !important;
+        line-height: 1 !important;
+        flex-shrink: 0 !important;
+        transition: color 0.15s ease !important;
     }
 
     /* Menu Title */
     .sidebar .nav-item .menu-title {
-        font-size: 0.875rem;
-        line-height: 1.4;
-        transition: all 0.3s ease;
+        font-size: 13px !important;
+        line-height: 1.3 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        flex-grow: 1 !important;
     }
 
-    /* Badge Styling */
+    /* Clean Badges */
     .sidebar .badge {
-        font-size: 0.65rem !important;
-        padding: 0.25rem 0.5rem !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        padding: 2px 7px !important;
+        border-radius: 9999px !important;
         margin-left: auto !important;
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    @keyframes pulse {
-
-        0%,
-        100% {
-            opacity: 1;
-        }
-
-        50% {
-            opacity: 0.7;
-        }
+        line-height: 1.2 !important;
+        animation: none !important;
+        box-shadow: none !important;
     }
 
     .sidebar .badge-danger {
-        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
-        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        background: #ef4444 !important;
+        color: #ffffff !important;
     }
 
-    /* Ripple Effect on Click */
-    .sidebar .nav-item .nav-link::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0);
-        background: radial-gradient(circle, rgba(13, 110, 253, 0.3) 0%, transparent 70%);
-        border-radius: 50%;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.5s ease;
+    .sidebar .badge-primary,
+    .sidebar .badge-success {
+        background: #2563eb !important;
+        color: #ffffff !important;
     }
 
-    .sidebar .nav-item .nav-link:active::after {
-        transform: translate(-50%, -50%) scale(2);
-        opacity: 1;
-        transition: 0s;
+    .sidebar .badge-info {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #e2e8f0 !important;
     }
 
-    /* Sidebar Minimized State */
-    body.sidebar-icon-only .sidebar .nav-item .nav-link {
-        padding: 0.85rem 0.5rem !important;
-        justify-content: center;
+    .sidebar .badge-warning {
+        background: #fffbeb !important;
+        color: #b45309 !important;
+        border: 1px solid #fef3c7 !important;
     }
 
+    /* Sidebar Minimized (sidebar-icon-only) */
+    body.sidebar-icon-only .sidebar {
+        width: 70px !important;
+    }
+
+    body.sidebar-icon-only .sidebar .nav {
+        padding: 8px 4px !important;
+    }
+
+    body.sidebar-icon-only .sidebar .nav-category,
     body.sidebar-icon-only .sidebar .menu-title,
     body.sidebar-icon-only .sidebar .badge {
-        display: none;
+        display: none !important;
     }
 
-    body.sidebar-icon-only .sidebar .menu-icon {
+    body.sidebar-icon-only .sidebar .nav-item .nav-link {
+        padding: 10px 0 !important;
+        justify-content: center !important;
+        border-left: none !important;
+    }
+
+    body.sidebar-icon-only .sidebar .nav-item.active .nav-link,
+    body.sidebar-icon-only .sidebar .nav-item .nav-link.active {
+        background: #eff6ff !important;
+        border-left: none !important;
+    }
+
+    body.sidebar-icon-only .sidebar .nav-item .menu-icon {
         margin-right: 0 !important;
+        font-size: 20px !important;
     }
 
-    /* Mobile Responsiveness */
+    /* Mobile Drawer */
     @media (max-width: 991px) {
         .sidebar {
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1) !important;
+            background: #ffffff !important;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15) !important;
+            border-left: 1px solid #e2e8f0 !important;
         }
 
-        .sidebar .nav-item {
-            margin: 0.3rem 1rem;
+        .sidebar .nav {
+            padding: 10px !important;
         }
 
         .sidebar .nav-item .nav-link {
-            padding: 1rem 1.2rem !important;
-            font-size: 0.9rem !important;
+            padding: 11px 14px !important;
+            font-size: 13.5px !important;
         }
 
         .sidebar .menu-icon {
-            font-size: 1.4rem !important;
+            font-size: 20px !important;
+            margin-right: 12px !important;
         }
     }
 
     /* Smooth Scrollbar */
     .sidebar::-webkit-scrollbar {
-        width: 6px;
+        width: 4px;
     }
 
     .sidebar::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.02);
-        border-radius: 10px;
+        background: transparent;
     }
 
     .sidebar::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #0d6efd, #0a58ca);
-        border-radius: 10px;
-        transition: all 0.3s ease;
+        background: #cbd5e1;
+        border-radius: 9999px;
     }
 
     .sidebar::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #0a58ca, #084298);
+        background: #94a3b8;
     }
 </style>
 
@@ -236,9 +248,9 @@
         {{-- DZIKIR ONLINE (SEMUA ROLE) --}}
         <li class="nav-item">
             <a class="nav-link {{ request()->routeIs('dzikir*') ? 'active' : '' }}" href="{{ route('dzikir.index') }}">
-                <i class="mdi mdi-hands-pray menu-icon" style="color: #0d6efd;"></i>
+                <i class="mdi mdi-hands-pray menu-icon text-primary"></i>
                 <span class="menu-title">Dzikir Online</span>
-                <span class="badge badge-success rounded-pill ms-auto" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">New</span>
+                <span class="badge badge-primary rounded-pill ms-auto">New</span>
             </a>
         </li>
 
@@ -546,9 +558,9 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.artisan.index') ? 'active' : '' }}" href="{{ route('admin.artisan.index') }}">
-                    <i class="menu-icon mdi mdi-console" style="color: #0d6efd;"></i>
+                    <i class="menu-icon mdi mdi-console text-primary"></i>
                     <span class="menu-title">Artisan Web GUI</span>
-                    <span class="badge badge-success ms-2" style="font-size: 0.6rem; background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;">Dev</span>
+                    <span class="badge badge-info ms-2" style="font-size: 0.65rem;">Dev</span>
                 </a>
             </li>
         @endif

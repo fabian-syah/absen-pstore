@@ -15,10 +15,10 @@
             <button class="navbar-toggler modern-toggle-btn d-none d-lg-inline-flex" type="button" data-bs-toggle="minimize" title="Perkecil / Perbesar Menu" aria-label="Toggle Sidebar">
                 <i class="mdi mdi-menu"></i>
             </button>
-            <a class="navbar-brand brand-logo d-flex align-items-center" href="{{ route('dashboard') }}">
+            <a class="navbar-brand brand-logo" href="{{ route('dashboard') }}">
                 <img src="{{ asset('assets/images/logo-pstore.png') }}" alt="PStore Logo" class="brand-logo-img" />
             </a>
-            <a class="navbar-brand brand-logo-mini d-flex align-items-center" href="{{ route('dashboard') }}">
+            <a class="navbar-brand brand-logo-mini" href="{{ route('dashboard') }}">
                 <img src="{{ asset('assets/images/logo-pstore.png') }}" alt="PStore Logo" class="brand-logo-mini-img" />
             </a>
         </div>
@@ -170,11 +170,14 @@
             <div class="dropdown user-dropdown">
                 <button class="user-pill-btn d-flex align-items-center gap-2" type="button" id="UserDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="user-avatar-wrap position-relative">
+                    <div class="user-avatar-wrap position-relative" style="width: 36px; height: 36px; min-width: 36px; max-width: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
                         @if (Auth::user()->profile_photo_path)
-                            <img class="user-avatar-img rounded-circle" src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}">
+                            <img class="user-avatar-img rounded-circle"
+                                src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                alt="{{ Auth::user()->name }}"
+                                style="width: 36px !important; height: 36px !important; min-width: 36px !important; max-width: 36px !important; min-height: 36px !important; max-height: 36px !important; object-fit: cover !important; display: block !important; border-radius: 50% !important;">
                         @else
-                            <div class="user-avatar-initials rounded-circle">
+                            <div class="user-avatar-initials rounded-circle" style="width: 36px; height: 36px; border-radius: 50%;">
                                 {{ getInitials(Auth::user()->name) }}
                             </div>
                         @endif
@@ -196,11 +199,14 @@
                     aria-labelledby="UserDropdown">
                     <div class="user-dropdown-header p-3 border-bottom bg-slate-50">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="position-relative flex-shrink-0">
+                            <div class="position-relative flex-shrink-0" style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden;">
                                 @if (Auth::user()->profile_photo_path)
-                                    <img class="user-header-avatar rounded-circle" src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}">
+                                    <img class="user-header-avatar rounded-circle"
+                                        src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                        alt="{{ Auth::user()->name }}"
+                                        style="width: 44px !important; height: 44px !important; min-width: 44px !important; max-width: 44px !important; min-height: 44px !important; max-height: 44px !important; object-fit: cover !important; display: block !important; border-radius: 50% !important;">
                                 @else
-                                    <div class="user-header-initials rounded-circle">
+                                    <div class="user-header-initials rounded-circle" style="width: 44px; height: 44px; border-radius: 50%;">
                                         {{ getInitials(Auth::user()->name) }}
                                     </div>
                                 @endif
@@ -829,8 +835,8 @@
      ========================================================================= --}}
 <style>
     :root {
-        --header-height: 64px !important;
-        --modern-header-height: 64px;
+        --header-height: 70px !important;
+        --modern-header-height: 70px;
         --modern-sidebar-width: 245px;
         --slate-50: #f8fafc;
         --slate-100: #f1f5f9;
@@ -849,8 +855,8 @@
 
     @media (max-width: 991px) {
         :root {
-            --header-height: 56px !important;
-            --modern-header-height: 56px;
+            --header-height: 58px !important;
+            --modern-header-height: 58px;
         }
     }
 
@@ -891,7 +897,7 @@
         width: calc(100% - 70px) !important;
     }
 
-    /* Adjust main body and sidebar offsets to match the clean 64px/56px header */
+    /* Adjust main body and sidebar offsets to match the clean header */
     .page-body-wrapper {
         padding-top: var(--modern-header-height) !important;
         min-height: calc(100vh - var(--modern-header-height)) !important;
@@ -925,17 +931,35 @@
 
     /* --- BRAND LOGO STYLING --- */
     .brand-logo-img {
-        height: 30px;
-        width: auto;
-        object-fit: contain;
-        display: block;
+        height: 48px !important;
+        max-height: 48px !important;
+        width: auto !important;
+        object-fit: contain !important;
+        display: block !important;
     }
 
     .brand-logo-mini-img {
-        height: 28px;
-        width: auto;
-        object-fit: contain;
-        display: block;
+        height: 40px !important;
+        max-height: 40px !important;
+        width: auto !important;
+        object-fit: contain !important;
+        display: block !important;
+    }
+
+    .navbar-brand.brand-logo {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        text-decoration: none !important;
+    }
+
+    .navbar-brand.brand-logo-mini {
+        display: none !important;
+        align-items: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        text-decoration: none !important;
     }
 
     body.sidebar-icon-only .navbar-brand.brand-logo {
@@ -944,12 +968,6 @@
 
     body.sidebar-icon-only .navbar-brand.brand-logo-mini {
         display: inline-flex !important;
-    }
-
-    @media (min-width: 992px) {
-        body:not(.sidebar-icon-only) .navbar-brand.brand-logo-mini {
-            display: none !important;
-        }
     }
 
     @media (max-width: 991px) {
@@ -963,12 +981,12 @@
 
     /* --- TOGGLE BUTTONS --- */
     .modern-toggle-btn {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 6px;
+        border-radius: 8px;
         border: 1px solid transparent;
         background: transparent;
         color: var(--slate-600);
@@ -989,12 +1007,23 @@
     }
 
     /* --- HEADING AREA --- */
+    .header-heading-box {
+        min-width: 0;
+        max-width: 320px;
+        flex-shrink: 1;
+        overflow: hidden;
+    }
+
     .header-page-title {
-        font-size: 1.125rem !important;
+        font-size: 1.15rem !important;
         font-weight: 700 !important;
         color: var(--slate-900) !important;
         letter-spacing: -0.015em;
         line-height: 1.25;
+        margin: 0 !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .header-page-meta {
@@ -1195,24 +1224,37 @@
     }
 
     .user-avatar-wrap {
-        width: 32px;
-        height: 32px;
-        flex-shrink: 0;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        flex-shrink: 0 !important;
     }
 
-    .user-avatar-img {
-        width: 32px;
-        height: 32px;
-        object-fit: cover;
-        display: block;
+    .user-avatar-img,
+    img.user-avatar-img {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+        object-fit: cover !important;
+        display: block !important;
+        border-radius: 50% !important;
     }
 
     .user-avatar-initials {
-        width: 32px;
-        height: 32px;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        border-radius: 50% !important;
         background: var(--slate-800);
         color: #ffffff;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -1280,15 +1322,24 @@
         width: 250px;
     }
 
-    .user-header-avatar {
-        width: 42px;
-        height: 42px;
-        object-fit: cover;
+    .user-header-avatar,
+    img.user-header-avatar {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        object-fit: cover !important;
+        display: block !important;
+        border-radius: 50% !important;
     }
 
     .user-header-initials {
-        width: 42px;
-        height: 42px;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
         background: var(--slate-800);
         color: #ffffff;
         font-size: 15px;
@@ -1296,6 +1347,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 50% !important;
     }
 
     .user-header-verified {

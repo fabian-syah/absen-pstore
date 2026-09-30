@@ -371,22 +371,25 @@
 @endpush
 
 @section('heading')
-    <div class="d-flex justify-content-between align-items-center w-100">
+    Dashboard
+@endsection
+
+@section('content')
+    {{-- Greeting Header Bar --}}
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
         </div>
-        <div class="text-end d-none d-md-block">
-            @if(in_array(Auth::user()->role, ['audit', 'admin']))
-                <a href="{{ route('test.notification') }}" class="btn btn-sm btn-info text-white me-2">
-                    <i class="mdi mdi-bell-ring"></i> Test Notif
+        @if(in_array(Auth::user()->role, ['audit', 'admin']))
+            <div class="text-end d-none d-md-block">
+                <a href="{{ route('test.notification') }}" class="btn btn-sm btn-info text-white shadow-sm" style="border-radius: 8px;">
+                    <i class="mdi mdi-bell-ring me-1"></i> Test Notif
                 </a>
-            @endif
-        </div>
+            </div>
+        @endif
     </div>
-@endsection
 
-@section('content')
     {{-- RANK CARD PREMIUM - HIDDEN PER USER REQUEST
     <div class="row mb-4">
         <div class="col-12">
