@@ -12,9 +12,17 @@
     {{-- BRAND / LOGO & SIDEBAR MINIMIZE WRAPPER --}}
     <div class="navbar-brand-wrapper d-flex align-items-center justify-content-between">
         <div class="brand-inner d-flex align-items-center gap-2">
+            {{-- Mobile Sidebar Drawer Toggle (Left Hamburger) --}}
+            <button class="navbar-toggler modern-toggle-btn d-inline-flex d-lg-none" type="button" id="mobileHeaderSidebarToggle" title="Buka Menu" aria-label="Buka Menu">
+                <i class="mdi mdi-menu"></i>
+            </button>
+
+            {{-- Desktop Sidebar Minimize Toggle --}}
             <button class="navbar-toggler modern-toggle-btn d-none d-lg-inline-flex" type="button" data-bs-toggle="minimize" title="Perkecil / Perbesar Menu" aria-label="Toggle Sidebar">
                 <i class="mdi mdi-menu"></i>
             </button>
+
+            {{-- Brand Logos --}}
             <a class="navbar-brand brand-logo" href="{{ route('dashboard') }}">
                 <img src="{{ asset('assets/images/logo-pstore-horizontal.png') }}?v=20260930c" alt="PStore Logo" class="brand-logo-img" />
             </a>
@@ -258,11 +266,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- Mobile Sidebar Drawer Trigger --}}
-            <button class="navbar-toggler modern-action-btn d-lg-none" type="button" data-bs-toggle="offcanvas" title="Buka Menu" aria-label="Toggle Navigation">
-                <i class="mdi mdi-menu"></i>
-            </button>
         </div>
     </div>
 </nav>
@@ -923,9 +926,59 @@
             width: auto !important;
             padding: 0 0.75rem !important;
         }
-        .sidebar-offcanvas {
-            top: var(--modern-header-height) !important;
-            max-height: calc(100vh - var(--modern-header-height)) !important;
+    }
+
+    @media (max-width: 575px) {
+        .navbar.default-layout.modern-navbar .navbar-brand-wrapper {
+            padding: 0 0.5rem !important;
+        }
+        .navbar.default-layout.modern-navbar .navbar-menu-wrapper {
+            padding: 0 0.5rem !important;
+        }
+        .brand-logo-mini-img {
+            height: 38px !important;
+            max-height: 38px !important;
+        }
+        .header-actions-box {
+            gap: 6px !important;
+        }
+        .modern-action-btn {
+            width: 34px !important;
+            height: 34px !important;
+        }
+        .modern-action-btn i {
+            font-size: 18px !important;
+        }
+        .user-pill-btn {
+            padding: 2px !important;
+        }
+        .user-avatar-wrap {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+        }
+        .user-avatar-img,
+        img.user-avatar-img {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+        }
+        .broadcast-dropdown-pane,
+        .chat-dropdown-pane,
+        .user-dropdown-pane {
+            position: fixed !important;
+            top: 58px !important;
+            left: 10px !important;
+            right: 10px !important;
+            width: auto !important;
+            max-width: none !important;
+            transform: none !important;
+        }
+        .chat-dropdown-pane {
+            height: calc(100vh - 130px) !important;
+            max-height: 520px !important;
         }
     }
 

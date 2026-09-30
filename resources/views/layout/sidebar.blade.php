@@ -191,27 +191,82 @@
         font-size: 20px !important;
     }
 
-    /* Mobile Drawer */
+    /* Mobile Drawer (Clean Left-Sliding Offcanvas) */
     @media (max-width: 991px) {
-        .sidebar {
+        .sidebar.sidebar-offcanvas {
+            position: fixed !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: auto !important;
+            width: 290px !important;
+            max-width: 86vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
             background: #ffffff !important;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15) !important;
-            border-left: 1px solid #e2e8f0 !important;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22) !important;
+            border-right: 1px solid #e2e8f0 !important;
+            border-left: none !important;
+            z-index: 1060 !important;
+            transform: translateX(-105%) !important;
+            -webkit-transform: translateX(-105%) !important;
+            transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
         }
 
-        .sidebar .nav {
-            padding: 10px !important;
+        .sidebar.sidebar-offcanvas.active {
+            transform: translateX(0) !important;
+            -webkit-transform: translateX(0) !important;
         }
 
-        .sidebar .nav-item .nav-link {
+        .sidebar.sidebar-offcanvas .nav {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding: 10px 10px 90px 10px !important;
+            margin: 0 !important;
+        }
+
+        .sidebar.sidebar-offcanvas .nav-item .nav-link {
             padding: 11px 14px !important;
             font-size: 13.5px !important;
+            border-radius: 8px !important;
         }
 
-        .sidebar .menu-icon {
+        .sidebar.sidebar-offcanvas .menu-icon {
             font-size: 20px !important;
             margin-right: 12px !important;
         }
+    }
+
+    .sidebar-drawer-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        transition: all 0.15s ease;
+    }
+
+    .sidebar-drawer-close-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+
+    .sidebar-drawer-close-btn i {
+        font-size: 18px;
+        line-height: 1;
     }
 
     /* Smooth Scrollbar */
@@ -234,6 +289,38 @@
 </style>
 
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
+    {{-- =================================== --}}
+    {{-- MOBILE DRAWER HEADER & USER PROFILE --}}
+    {{-- =================================== --}}
+    <div class="sidebar-mobile-header d-flex d-lg-none align-items-center justify-content-between px-3 py-3 border-bottom bg-slate-50 flex-shrink-0">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{{ asset('assets/images/logo-pstore.png') }}?v=20260930c" alt="PStore" style="height: 32px; width: auto; object-fit: contain;">
+            <div>
+                <div class="fw-bold text-slate-900" style="font-size: 13px; line-height: 1.2;">PStore Absensi</div>
+                <span class="badge bg-primary text-white rounded-pill px-2 py-0.5" style="font-size: 9.5px; font-weight: 600;">{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}</span>
+            </div>
+        </div>
+        <button type="button" class="sidebar-drawer-close-btn" id="sidebarDrawerCloseBtn" aria-label="Tutup Menu">
+            <i class="mdi mdi-close"></i>
+        </button>
+    </div>
+
+    <div class="sidebar-mobile-user px-3 py-2.5 border-bottom bg-white d-flex d-lg-none align-items-center gap-2.5 flex-shrink-0">
+        <div class="position-relative flex-shrink-0" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden;">
+            @if (Auth::user()->profile_photo_path)
+                <img src="{{ \Illuminate\Support\Facades\Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 50%;">
+            @else
+                <div class="rounded-circle bg-slate-100 text-slate-700 d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 12px;">
+                    {{ getInitials(Auth::user()->name) }}
+                </div>
+            @endif
+        </div>
+        <div class="overflow-hidden flex-grow-1">
+            <div class="fw-semibold text-slate-900 text-truncate" style="font-size: 12.5px;">{{ Auth::user()->name }}</div>
+            <div class="text-muted text-truncate" style="font-size: 11px;">{{ Auth::user()->division->name ?? 'Headquarters' }}</div>
+        </div>
+    </div>
+
     <ul class="nav">
         {{-- =================================== --}}
         {{-- DASHBOARD (SEMUA ROLE) --}}

@@ -543,10 +543,33 @@
             .mobile-bottom-nav .nav-item.active span {
                 font-weight: 700;
             }
+        }
 
+        /* Mobile Sidebar Backdrop & Overflow Lock */
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1055;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
 
+        .sidebar-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
 
-
+        body.sidebar-drawer-open {
+            overflow: hidden !important;
         }
 
         /* Utility Classes */
@@ -769,6 +792,9 @@
 
         <div class="container-fluid page-body-wrapper">
 
+            {{-- Mobile Sidebar Backdrop Overlay --}}
+            <div class="sidebar-backdrop d-lg-none" id="sidebarBackdrop"></div>
+
             {{-- Include Sidebar --}}
             @include('layout.sidebar')
 
@@ -818,10 +844,101 @@
             <i class="mdi mdi-account{{ $isProfile ? '' : '-outline' }}"></i>
             <span>Profile</span>
         </a>
+
+        {{-- Menu (Drawer Trigger) --}}
+        <a href="javascript:void(0)" class="nav-item nav-item-menu" id="mobileBottomNavMenuBtn" role="button" aria-label="Buka Menu Lengkap">
+            <i class="mdi mdi-menu"></i>
+            <span>Menu</span>
+        </a>
     </nav>
 
+    {{-- ============================================ --}}
+    {{-- MOBILE SIDEBAR DRAWER CONTROLLER & BOTTOM NAV --}}
+    {{-- ============================================ --}}
     <script>
+        function openSidebarDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.add('active');
+            if (backdrop) backdrop.classList.add('show');
+            document.body.classList.add('sidebar-drawer-open');
+        }
+
+        function closeSidebarDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.remove('active');
+            if (backdrop) backdrop.classList.remove('show');
+            document.body.classList.remove('sidebar-drawer-open');
+        }
+
+        function toggleSidebarDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('active')) {
+                closeSidebarDrawer();
+            } else {
+                openSidebarDrawer();
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // 1. Mobile Header Left Toggle Button
+            const headerToggle = document.getElementById('mobileHeaderSidebarToggle');
+            if (headerToggle) {
+                headerToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleSidebarDrawer();
+                });
+            }
+
+            // 2. Mobile Drawer Close Button (inside sidebar header)
+            const drawerClose = document.getElementById('sidebarDrawerCloseBtn');
+            if (drawerClose) {
+                drawerClose.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeSidebarDrawer();
+                });
+            }
+
+            // 3. Backdrop Click to Close
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (backdrop) {
+                backdrop.addEventListener('click', function() {
+                    closeSidebarDrawer();
+                });
+            }
+
+            // 4. ESC Key to Close
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeSidebarDrawer();
+                }
+            });
+
+            // 5. Close when clicking standard navigation links on mobile
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.addEventListener('click', function(e) {
+                    const link = e.target.closest('a.nav-link');
+                    if (link && !link.hasAttribute('data-bs-toggle') && link.getAttribute('href') !== '#' && link.getAttribute('href') !== 'javascript:void(0)') {
+                        if (window.innerWidth < 992) {
+                            closeSidebarDrawer();
+                        }
+                    }
+                });
+            }
+
+            // 6. Auto close on resize to desktop (>= 992px)
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 992) {
+                    closeSidebarDrawer();
+                }
+            });
+
+            // ============================================
+            // MOBILE BOTTOM NAV LOGIC (SLIDING INDICATOR)
+            // ============================================
             const nav = document.getElementById('mobileBottomNav');
             if (!nav) return;
             const indicator = nav.querySelector('.nav-indicator');
@@ -838,15 +955,14 @@
                 }
                 const item = items[index];
                 if (item) {
-                    const pillWidth = item.offsetWidth - 20; // 10px margin on each side for balanced look
-                    const pillLeft = item.offsetLeft + 10;
+                    const pillWidth = item.offsetWidth - 16;
+                    const pillLeft = item.offsetLeft + 8;
                     indicator.style.width = `${pillWidth}px`;
                     indicator.style.left = `${pillLeft}px`;
                 }
             }
 
             // Set initial position
-            // Use setTimeout to ensure fonts/icons are loaded and layout is calculated
             setTimeout(() => {
                 items.forEach((item, index) => {
                     if (item.classList.contains('active')) {
@@ -854,24 +970,25 @@
                         updateIndicator(index, false);
                     }
                     
-                    // Add click event for sliding animation before page load
                     item.addEventListener('click', function(e) {
                         if (isDragging) {
                             e.preventDefault();
                             return;
                         }
+
+                        // Special handler for Menu button
+                        if (this.id === 'mobileBottomNavMenuBtn' || this.getAttribute('href') === 'javascript:void(0)') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleSidebarDrawer();
+                            return;
+                        }
                         
                         if (!this.classList.contains('active')) {
                             e.preventDefault();
-                            
-                            // Move Indicator instantly
                             updateIndicator(index, true);
-                            
-                            // Update Active Classes
                             items.forEach(i => i.classList.remove('active'));
                             this.classList.add('active');
-                            
-                            // Navigate natively to ensure ALL page CSS and JS load perfectly (100% reliable)
                             setTimeout(() => {
                                 window.location.href = this.href;
                             }, 150);
@@ -882,8 +999,6 @@
 
             // Handle back/forward buttons
             window.addEventListener('popstate', function(e) {
-                // Simplest way to handle back button without complex state management: 
-                // just reload the page instantly if they use browser back/forward
                 window.location.reload();
             });
 
@@ -910,26 +1025,20 @@
                 
                 const navRect = nav.getBoundingClientRect();
                 let relativeX = currentX - navRect.left;
-                
-                // Clamp
                 if (relativeX < 0) relativeX = 0;
                 if (relativeX > navRect.width) relativeX = navRect.width;
                 
-                // Move indicator without transition for instant follow
                 indicator.style.transition = 'none';
-                
                 const itemWidthPx = navRect.width / items.length;
-                const pillWidth = itemWidthPx - 20;
+                const pillWidth = itemWidthPx - 16;
                 let leftPos = relativeX - (pillWidth / 2);
                 
-                // Clamp indicator inside the nav
-                if (leftPos < 10) leftPos = 10;
-                if (leftPos > navRect.width - pillWidth - 10) leftPos = navRect.width - pillWidth - 10;
+                if (leftPos < 8) leftPos = 8;
+                if (leftPos > navRect.width - pillWidth - 8) leftPos = navRect.width - pillWidth - 8;
                 
                 indicator.style.width = `${pillWidth}px`;
                 indicator.style.left = `${leftPos}px`;
                 
-                // Prevent page scrolling while scrubbing the navbar
                 if (e.cancelable) {
                     e.preventDefault();
                 }
@@ -941,35 +1050,31 @@
                 if (hasMoved) {
                     const navRect = nav.getBoundingClientRect();
                     let relativeX = currentX - navRect.left;
-                    
                     if (relativeX < 0) relativeX = 0;
                     if (relativeX > navRect.width) relativeX = navRect.width;
                     
                     const itemWidthPx = navRect.width / items.length;
                     let targetIndex = Math.floor(relativeX / itemWidthPx);
-                    
                     if (targetIndex < 0) targetIndex = 0;
                     if (targetIndex >= items.length) targetIndex = items.length - 1;
                     
-                    // Snap to nearest with animation
-                    updateIndicator(targetIndex, true);
-                    
-                    // If changed, navigate
-                    if (targetIndex !== activeIndex) {
+                    const targetItem = items[targetIndex];
+                    if (targetItem.id === 'mobileBottomNavMenuBtn' || targetItem.getAttribute('href') === 'javascript:void(0)') {
+                        updateIndicator(activeIndex, true);
+                        toggleSidebarDrawer();
+                    } else if (targetIndex !== activeIndex) {
+                        updateIndicator(targetIndex, true);
                         setTimeout(() => {
-                            window.location.href = items[targetIndex].href;
-                        }, 150); // small delay to see the snap
+                            window.location.href = targetItem.href;
+                        }, 150);
                     } else {
-                        // Snap back
                         updateIndicator(activeIndex, true);
                     }
                     
-                    // Keep isDragging true for a moment to block the ghost click
                     setTimeout(() => {
                         isDragging = false;
                     }, 50);
                 } else {
-                    // It was just a tap! Reset immediately so click works
                     isDragging = false;
                 }
             });
