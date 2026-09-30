@@ -2,113 +2,108 @@
     use Illuminate\Support\Facades\Storage;
 @endphp
 
-<nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-top flex-row w-100">
-    <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
-        <div class="me-3">
-            <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-bs-toggle="minimize">
-                <span class="icon-menu"></span>
+{{-- =========================================================================
+     MODERN AESTHETIC RESPONSIVE HEADER
+     - Clean SaaS layout with 1px slate borders and solid white background
+     - Zero gradients, zero purple/violet, zero AI-cliché animations
+     - Fully responsive with auto-adapting mobile offcanvas & dropdown constraints
+     ========================================================================= --}}
+<nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-center flex-row w-100 modern-navbar">
+    {{-- BRAND / LOGO & SIDEBAR MINIMIZE WRAPPER --}}
+    <div class="navbar-brand-wrapper d-flex align-items-center justify-content-between">
+        <div class="brand-inner d-flex align-items-center gap-2">
+            <button class="navbar-toggler modern-toggle-btn d-none d-lg-inline-flex" type="button" data-bs-toggle="minimize" title="Perkecil / Perbesar Menu" aria-label="Toggle Sidebar">
+                <i class="mdi mdi-menu"></i>
             </button>
-        </div>
-        <div>
-            <a class="navbar-brand brand-logo" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/logo-pstore.png') }}" alt="logo"
-                    style="width: 150px; height: auto;" />
+            <a class="navbar-brand brand-logo d-flex align-items-center" href="{{ route('dashboard') }}">
+                <img src="{{ asset('assets/images/logo-pstore.png') }}" alt="PStore Logo" class="brand-logo-img" />
             </a>
-            <a class="navbar-brand brand-logo-mini" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/logo-pstore.png') }}" alt="logo" style="width: 45px; height: auto;" />
+            <a class="navbar-brand brand-logo-mini d-flex align-items-center" href="{{ route('dashboard') }}">
+                <img src="{{ asset('assets/images/logo-pstore.png') }}" alt="PStore Logo" class="brand-logo-mini-img" />
             </a>
         </div>
     </div>
-    <div class="navbar-menu-wrapper d-flex align-items-top">
-        <ul class="navbar-nav">
-            <li class="nav-item fw-semibold d-none d-lg-block ms-0">
-                <h1 class="welcome-text">@yield('heading')</h1>
-                <h3 class="welcome-sub-text">{{ Auth::user()->role }} - {{ Auth::user()->division->name ?? 'N/A' }}</h3>
-            </li>
-        </ul>
-        <ul class="navbar-nav ms-auto">
-            {{-- Fullscreen Button --}}
-            <li class="nav-item d-none d-lg-block">
-                <a class="nav-link" href="javascript:void(0)" onclick="toggleFullScreen()">
-                    <i class="mdi mdi-fullscreen"></i> Fullscreen
-                </a>
-            </li>
 
-            {{-- Search - Untuk Admin, Audit, LEADER, dan ADMIN GAJI --}}
+    {{-- NAVBAR MENU WRAPPER --}}
+    <div class="navbar-menu-wrapper d-flex align-items-center justify-content-between flex-grow-1">
+        {{-- HEADING / TITLE (DESKTOP) --}}
+        <div class="header-heading-box d-none d-lg-flex flex-column justify-content-center">
+            <h1 class="header-page-title mb-0">@yield('heading')</h1>
+            <div class="header-page-meta d-flex align-items-center gap-1 mt-0.5">
+                <span class="role-badge">{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}</span>
+                <span class="meta-dot text-muted">•</span>
+                <span class="division-text text-muted">{{ Auth::user()->division->name ?? 'Headquarters' }}</span>
+            </div>
+        </div>
+
+        {{-- ACTIONS & USER CONTROLS --}}
+        <div class="header-actions-box d-flex align-items-center gap-2 ms-auto">
+            {{-- Search Bar (Admin, Audit, Leader, Admin Gaji) --}}
             @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
-                <li class="nav-item">
-                    <div class="search-form position-relative">
-                        <i class="icon-search position-absolute search-icon"></i>
-                        <input type="search" class="form-control search-input" id="globalSearch"
-                            data-url="{{ route('search') }}" placeholder="Cari user..." autocomplete="off">
-                        <div class="search-results dropdown-menu" id="searchResults"></div>
-                    </div>
-                </li>
+                <div class="modern-search-box position-relative d-none d-md-block">
+                    <i class="mdi mdi-magnify search-icon"></i>
+                    <input type="search" class="form-control modern-search-input" id="globalSearch"
+                        data-url="{{ route('search') }}" placeholder="Cari user / data..." autocomplete="off">
+                    <kbd class="search-kbd-chip">Ctrl K</kbd>
+                    <div class="search-results dropdown-menu modern-dropdown-pane" id="searchResults"></div>
+                </div>
             @endif
 
+            {{-- Fullscreen Toggle (Desktop) --}}
+            <button class="modern-action-btn d-none d-lg-inline-flex" type="button" onclick="toggleFullScreen()" title="Mode Layar Penuh" aria-label="Toggle Fullscreen">
+                <i class="mdi mdi-fullscreen"></i>
+            </button>
+
             {{-- Broadcast Notifications --}}
-            <li class="nav-item dropdown notification-dropdown">
-                <a class="nav-link position-relative d-flex align-items-center justify-content-center"
-                    id="broadcastDropdown" href="#" data-bs-toggle="dropdown">
-                    <i class="icon-bell notification-icon"></i>
-                    <span class="notification-badge" id="broadcastCount" style="display: none;">0</span>
-                </a>
-                <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list pb-0"
-                    aria-labelledby="broadcastDropdown" style="min-width: 380px; max-width: 400px;">
-                    <div class="dropdown-header px-4 py-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0 fw-semibold">Broadcast Notifications</h6>
-                                <small class="text-muted" id="broadcastTotal">0 unread</small>
-                            </div>
-                            <i class="mdi mdi-bullhorn text-primary" style="font-size: 24px;"></i>
+            <div class="dropdown notification-dropdown">
+                <button class="modern-action-btn position-relative" type="button" id="broadcastDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false" title="Pemberitahuan Broadcast">
+                    <i class="mdi mdi-bell-outline"></i>
+                    <span class="modern-badge modern-badge-danger" id="broadcastCount" style="display: none;">0</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end modern-dropdown-pane broadcast-dropdown-pane shadow-sm p-0"
+                    aria-labelledby="broadcastDropdown">
+                    <div class="dropdown-header d-flex justify-content-between align-items-center px-3 py-2.5 border-bottom bg-white">
+                        <div>
+                            <h6 class="mb-0 fw-bold text-slate-900" style="font-size: 13px;">Broadcast Notifications</h6>
+                            <small class="text-muted" id="broadcastTotal" style="font-size: 11px;">0 unread</small>
                         </div>
+                        <span class="badge bg-slate-100 text-slate-700 rounded-pill px-2 py-0.5" style="font-size: 10px; font-weight: 600;">PStore Info</span>
                     </div>
-                    <div id="broadcastList" style="max-height: 400px; overflow-y: auto;">
+                    <div id="broadcastList" class="custom-dropdown-scroll" style="max-height: 380px; overflow-y: auto;">
                         <div class="dropdown-item text-center py-5">
-                            <div class="spinner-border text-primary mb-2" role="status"
-                                style="width: 2rem; height: 2rem;">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="text-muted mb-0">Loading broadcasts...</p>
+                            <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                            <p class="text-muted small mb-0">Memuat broadcast...</p>
                         </div>
                     </div>
-                    <div class="dropdown-divider m-0"></div>
-                    <a href="javascript:void(0)" class="dropdown-item text-center py-3 text-primary fw-medium"
-                        id="viewAllBroadcasts">
-                        <i class="mdi mdi-bullhorn-outline me-1"></i>View All Broadcasts
-                    </a>
+                    <div class="dropdown-footer border-top p-2 text-center bg-white">
+                        <a href="javascript:void(0)" class="text-primary small fw-semibold text-decoration-none d-inline-flex align-items-center gap-1" id="viewAllBroadcasts">
+                            <i class="mdi mdi-bullhorn-outline"></i> Lihat Semua Broadcast
+                        </a>
+                    </div>
                 </div>
-            </li>
+            </div>
 
-            {{-- FITUR CHAT MULTI-BRANCH (TEKS & FOTO) --}}
-            <li class="nav-item dropdown">
-                <a class="nav-link count-indicator dropdown-toggle" id="messageDropdown" href="#"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="icon-mail icon-lg"></i>
-                    {{-- Dot Merah Utama (Total Unread dari semua cabang) --}}
-                    <span class="notification-badge bg-danger" id="mainChatBadge"
-                        style="display: none; top: 5px; right: 5px;">0</span>
-                </a>
-
-                {{-- Dropdown Container --}}
-                <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list p-0"
-                    aria-labelledby="messageDropdown" style="width: 380px; min-width: 380px; height: 500px;">
-
-                    {{-- Wrapper untuk layout --}}
+            {{-- Multi-Branch Chat --}}
+            <div class="dropdown chat-dropdown">
+                <button class="modern-action-btn position-relative" type="button" id="messageDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false" title="Pesan Antar Cabang">
+                    <i class="mdi mdi-message-text-outline"></i>
+                    <span class="modern-badge modern-badge-danger" id="mainChatBadge" style="display: none;">0</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end modern-dropdown-pane chat-dropdown-pane shadow-sm p-0"
+                    aria-labelledby="messageDropdown">
                     <div class="d-flex flex-column h-100 w-100">
-
-                        {{-- =========================== --}}
                         {{-- VIEW 1: DAFTAR CABANG --}}
-                        {{-- =========================== --}}
                         <div id="branchListView" class="d-flex flex-column h-100 w-100">
-                            <div class="p-3 border-bottom bg-primary text-white">
-                                <h6 class="mb-0 fw-bold"><i class="mdi mdi-forum-outline me-2"></i>Pilih Grup Cabang
-                                </h6>
+                            <div class="px-3 py-2.5 border-bottom bg-white d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-slate-900" style="font-size: 13px;">Pesan Cabang</h6>
+                                    <small class="text-muted" style="font-size: 11px;">Pilih grup cabang untuk mengobrol</small>
+                                </div>
+                                <span class="badge bg-blue-50 text-blue-600 rounded-pill px-2 py-0.5" style="font-size: 10px; font-weight: 600; background: #eff6ff; color: #2563eb;">Live</span>
                             </div>
-
-                            {{-- Area ini akan SCROLLABLE jika cabangnya banyak --}}
-                            <div id="branchListBody" class="flex-grow-1" style="overflow-y: auto; background: #fff;">
+                            <div id="branchListBody" class="flex-grow-1 custom-dropdown-scroll" style="overflow-y: auto; background: #ffffff;">
                                 <div class="text-center text-muted mt-5 pt-3">
                                     <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                                     <p class="small mt-2">Memuat daftar cabang...</p>
@@ -116,218 +111,167 @@
                             </div>
                         </div>
 
-                        {{-- =========================== --}}
                         {{-- VIEW 2: ROOM CHAT --}}
-                        {{-- =========================== --}}
                         <div id="chatRoomView" class="d-none flex-column h-100 w-100">
-                            {{-- Header Chat Room --}}
-                            <div
-                                class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary text-white">
+                            <div class="px-3 py-2.5 border-bottom d-flex align-items-center justify-content-between bg-white">
                                 <div class="d-flex align-items-center gap-2">
-                                    <button type="button" id="backToBranchList"
-                                        class="btn btn-sm btn-outline-light border-0 p-1 me-1">
+                                    <button type="button" id="backToBranchList" class="btn btn-sm btn-icon-ghost" title="Kembali ke Daftar">
                                         <i class="mdi mdi-arrow-left fs-6"></i>
                                     </button>
                                     <div>
-                                        <h6 class="mb-0 fw-bold" id="activeBranchName">Loading...</h6>
-                                        <small style="font-size: 10px; opacity: 0.9;" id="activeBranchTimezone">
+                                        <h6 class="mb-0 fw-bold text-slate-900" id="activeBranchName" style="font-size: 13px;">Loading...</h6>
+                                        <small class="text-muted" style="font-size: 10px;" id="activeBranchTimezone">
                                             <i class="mdi mdi-clock-outline me-1"></i>Asia/Jakarta
                                         </small>
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- Body Chat --}}
-                            <div id="chatBody" class="p-3 flex-grow-1" style="overflow-y: auto; background: #eef1f6;">
-                                {{-- Pesan akan dirender disini via JS --}}
+                            <div id="chatBody" class="p-3 flex-grow-1 custom-dropdown-scroll" style="overflow-y: auto; background: #f8fafc;">
+                                {{-- Rendered by JS --}}
                             </div>
 
-                            {{-- Footer Input --}}
                             <div class="p-2 border-top bg-white">
-                                {{-- Preview File --}}
                                 <div id="filePreviewArea" class="px-2 pb-2 d-none">
-                                    <div
-                                        class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1">
-                                        <i class="mdi mdi-image text-success me-2"></i>
-                                        <span id="fileNamePreview" class="small text-muted"
-                                            style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">img.jpg</span>
-                                        <button type="button" id="cancelFileBtn"
-                                            class="btn btn-sm text-danger ms-2 p-0"><i
-                                                class="mdi mdi-close"></i></button>
+                                    <div class="d-inline-flex align-items-center bg-slate-100 border rounded-pill px-2.5 py-1">
+                                        <i class="mdi mdi-image text-emerald-600 me-1.5" style="color: #059669; font-size: 14px;"></i>
+                                        <span id="fileNamePreview" class="small text-muted" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px;">img.jpg</span>
+                                        <button type="button" id="cancelFileBtn" class="btn btn-sm text-danger ms-2 p-0 border-0 bg-transparent">
+                                            <i class="mdi mdi-close" style="font-size: 14px;"></i>
+                                        </button>
                                     </div>
                                 </div>
 
-                                <form id="chatForm" class="d-flex align-items-center gap-2"
-                                    enctype="multipart/form-data">
-                                    {{-- Hidden Inputs --}}
+                                <form id="chatForm" class="d-flex align-items-center gap-1.5" enctype="multipart/form-data">
                                     <input type="hidden" id="activeBranchId" name="branch_id">
                                     <input type="file" id="chatImageInput" name="image" accept="image/*" class="d-none">
 
-                                    {{-- Buttons --}}
-                                    <button type="button" id="triggerFileBtn"
-                                        class="btn btn-light btn-sm rounded-circle border p-2" title="Kirim Foto">
-                                        <i class="mdi mdi-paperclip text-muted" style="font-size: 16px;"></i>
+                                    <button type="button" id="triggerFileBtn" class="btn btn-sm btn-icon-ghost" title="Kirim Foto">
+                                        <i class="mdi mdi-paperclip text-slate-500" style="font-size: 18px;"></i>
                                     </button>
 
-                                    <input type="text" id="chatInput" name="message"
-                                        class="form-control form-control-sm border bg-light"
-                                        placeholder="Ketik pesan..." autocomplete="off" style="border-radius: 20px;">
+                                    <input type="text" id="chatInput" name="message" class="form-control form-control-sm modern-chat-input"
+                                        placeholder="Ketik pesan..." autocomplete="off">
 
-                                    <button type="submit" class="btn btn-primary btn-sm rounded-circle p-2 shadow-sm"
-                                        style="width: 36px; height: 36px;">
-                                        <i class="mdi mdi-send" style="font-size: 16px;"></i>
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-circle modern-chat-send-btn" title="Kirim">
+                                        <i class="mdi mdi-send" style="font-size: 14px;"></i>
                                     </button>
                                 </form>
                             </div>
                         </div>
-
                     </div>
                 </div>
-            </li>
+            </div>
 
-            {{-- User Profile --}}
-            {{-- Rank & XP Global Display - HIDDEN PER USER REQUEST
-            <li class="nav-item d-none d-sm-flex align-items-center me-3">
-                @php 
-                    $rankData = Auth::user()->calculateRank(); 
-                    $progress = Auth::user()->getRankProgress();
-                    $isDarkText = in_array($rankData['level'], [5, 7, 8, 12, 14, 16, 19]);
-                @endphp
-                <div class="rank-header-card d-flex align-items-center px-3 py-1 rounded-pill" 
-                     style="background: #f8f9fa; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
-                    <div class="rank-icon-circle me-2 d-flex align-items-center justify-content-center shadow-sm {{ $rankData['effect_class'] }}" 
-                         style="width: 28px; height: 28px; background: {{ $rankData['color'] }}; border-radius: 50%; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 14px; border: 2px solid #fff; overflow: hidden;">
-                        @if($rankData['rank_image'])
-                            <img src="{{ asset($rankData['rank_image']) }}" alt="{{ $rankData['name'] }}" style="width: 100%; height: 100%; object-fit: contain; transform: scale(1.2);">
-                        @else
-                            <i class="mdi {{ $rankData['icon'] }}"></i>
-                        @endif
-                    </div>
-                    <div class="rank-info-mini d-flex flex-column" style="min-width: 80px;">
-                        <div class="d-flex justify-content-between align-items-center line-height-1">
-                            <span class="fw-bold text-dark mb-0" style="font-size: 11px;">{{ Auth::user()->rank_title }}</span>
-                            <span class="text-muted fw-bold" style="font-size: 9px; opacity: 0.8;">{{ number_format(Auth::user()->xp) }} XP</span>
-                        </div>
-                        <div class="progress mt-1" style="height: 4px; background-color: #e9ecef; border-radius: 10px;">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                 style="width: {{ $progress }}%; background-color: {{ $rankData['color'] }};"></div>
-                        </div>
-                    </div>
-                </div>
-            </li>
-            --}}
+            {{-- Divider --}}
+            <div class="header-divider d-none d-sm-block"></div>
 
-            <li class="nav-item dropdown user-dropdown">
-                <a class="nav-link p-0" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="position-relative d-inline-block">
+            {{-- User Profile Pill Trigger --}}
+            <div class="dropdown user-dropdown">
+                <button class="user-pill-btn d-flex align-items-center gap-2" type="button" id="UserDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="user-avatar-wrap position-relative">
                         @if (Auth::user()->profile_photo_path)
-                            <img class="img-xs rounded-circle" src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                alt="Profile image"
-                                style="object-fit: cover; border: {{ Auth::user()->is_verified ? '2px solid #0d6efd' : 'none' }}; padding: 1px;">
+                            <img class="user-avatar-img rounded-circle" src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}">
                         @else
-                            <div class="profile-initial-nav"
-                                style="border: {{ Auth::user()->is_verified ? '2px solid #0d6efd' : 'none' }};">
+                            <div class="user-avatar-initials rounded-circle">
                                 {{ getInitials(Auth::user()->name) }}
                             </div>
                         @endif
 
                         @if(Auth::user()->is_verified)
-                            <span
-                                class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
-                                style="bottom: -2px; right: -2px; width: 14px; height: 14px; border: 1px solid white;">
-                                <i class="mdi mdi-check-decagram text-primary" style="font-size: 10px;"></i>
+                            <span class="user-verified-badge position-absolute" title="Verified Account">
+                                <i class="mdi mdi-check-decagram"></i>
                             </span>
                         @endif
                     </div>
-                </a>
+                    <div class="user-pill-text d-none d-xl-flex flex-column text-start">
+                        <span class="user-pill-name text-truncate">{{ Str::limit(Auth::user()->name, 15) }}</span>
+                        <span class="user-pill-role text-truncate">{{ Auth::user()->role }}</span>
+                    </div>
+                    <i class="mdi mdi-chevron-down user-pill-chevron d-none d-sm-inline-block"></i>
+                </button>
 
-                <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
-                    <div class="dropdown-header text-center">
-                        <div class="position-relative d-inline-block mb-2">
-                            @if (Auth::user()->profile_photo_path)
-                                <img class="img-md rounded-circle"
-                                    src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="Profile image"
-                                    style="width: 60px; height: 60px; object-fit: cover; border: {{ Auth::user()->is_verified ? '3px solid #0d6efd' : '3px solid white' }};">
-                            @else
-                                <div class="profile-initial-dropdown"
-                                    style="border: {{ Auth::user()->is_verified ? '3px solid #0d6efd' : '3px solid white' }};">
-                                    {{ getInitials(Auth::user()->name) }}
-                                </div>
-                            @endif
-
-                            @if(Auth::user()->is_verified)
-                                <span
-                                    class="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center"
-                                    style="bottom: 0; right: 0; width: 20px; height: 20px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                    <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
-                                </span>
-                            @endif
-                        </div>
-
-                        <p class="mb-1 mt-1 fw-semibold d-flex align-items-center justify-content-center gap-1">
-                            {{ Auth::user()->name }}
-                            @if(Auth::user()->is_verified)
-                                <i class="mdi mdi-check-decagram text-primary" title="Verified"
-                                    style="font-size: 14px;"></i>
-                            @endif
-                        </p>
-                        <p class="fw-light text-muted mb-0">{{ Auth::user()->email }}</p>
-                        <small class="text-muted d-block">{{ Auth::user()->role }} - {{ Auth::user()->division->name ?? 'N/A' }}</small>
-                        {{-- Rank Badge - HIDDEN PER USER REQUEST
-                        <div class="mt-2 text-center">
-                            @php $rank = Auth::user()->calculateRank(); @endphp
-                            <span class="badge shadow-sm {{ $rank['effect_class'] }}" 
-                                  style="background-color: {{ $rank['color'] }}; color: {{ in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]) ? '#000' : '#fff' }}; font-size: 10px; font-weight: 800; border: 1px solid #fff; padding: 5px 10px; display: inline-flex; align-items: center; gap: 5px;">
-                                @if($rank['rank_image'])
-                                    <img src="{{ asset($rank['rank_image']) }}" alt="{{ $rank['name'] }}" style="width: 16px; height: 16px; object-fit: contain;">
+                <div class="dropdown-menu dropdown-menu-end modern-dropdown-pane user-dropdown-pane shadow-sm p-0"
+                    aria-labelledby="UserDropdown">
+                    <div class="user-dropdown-header p-3 border-bottom bg-slate-50">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="position-relative flex-shrink-0">
+                                @if (Auth::user()->profile_photo_path)
+                                    <img class="user-header-avatar rounded-circle" src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}">
                                 @else
-                                    <i class="mdi {{ $rank['icon'] }}"></i>
+                                    <div class="user-header-initials rounded-circle">
+                                        {{ getInitials(Auth::user()->name) }}
+                                    </div>
                                 @endif
-                                @if(false)
-                                    <h6 class="mb-1 font-weight-bold" style="color: {{ $rank['color'] ?? '#000' }}; font-size: 13px;">
-                                        {{ Auth::user()->rank_title }} 
-                                        <span class="badge rounded-pill bg-dark text-white ms-1" style="font-size: 9px; vertical-align: middle;">Tier {{ $rank['level'] ?? 1 }}</span>
-                                    </h6>
+                                @if(Auth::user()->is_verified)
+                                    <span class="user-header-verified position-absolute">
+                                        <i class="mdi mdi-check-decagram"></i>
+                                    </span>
                                 @endif
-                            </span>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h6 class="mb-0 fw-bold text-slate-900 text-truncate d-flex align-items-center gap-1" style="font-size: 13px;">
+                                    {{ Auth::user()->name }}
+                                    @if(Auth::user()->is_verified)
+                                        <i class="mdi mdi-check-decagram text-primary" style="font-size: 14px;"></i>
+                                    @endif
+                                </h6>
+                                <small class="text-muted d-block text-truncate" style="font-size: 11px;">{{ Auth::user()->email }}</small>
+                                <span class="badge bg-white text-slate-700 border mt-1" style="font-size: 10px; font-weight: 600; border-color: #e2e8f0 !important;">
+                                    {{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }} • {{ Auth::user()->division->name ?? 'Headquarters' }}
+                                </span>
+                            </div>
                         </div>
-                        --}}
                     </div>
 
-                    <a href="{{ route('profile.edit') }}" class="dropdown-item">
-                        <i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile
-                    </a>
-                    <a class="dropdown-item">
-                        <i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages
-                    </a>
-                    <a class="dropdown-item">
-                        <i class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ
-                    </a>
+                    <div class="py-1">
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item modern-dropdown-item d-flex align-items-center gap-2.5 px-3 py-2">
+                            <i class="mdi mdi-account-outline text-slate-500" style="font-size: 18px;"></i>
+                            <span class="text-slate-700" style="font-size: 13px;">Profil Saya</span>
+                        </a>
+                        @if(Route::has('chat.index'))
+                            <a href="{{ route('chat.index') }}" class="dropdown-item modern-dropdown-item d-flex align-items-center gap-2.5 px-3 py-2">
+                                <i class="mdi mdi-message-text-outline text-slate-500" style="font-size: 18px;"></i>
+                                <span class="text-slate-700" style="font-size: 13px;">Pesan</span>
+                            </a>
+                        @endif
+                    </div>
 
-                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-divider my-0"></div>
 
-                    <a href="{{ route('logout') }}" class="dropdown-item"
-                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        <i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>Sign Out
-                    </a>
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                        @csrf
-                    </form>
+                    <div class="p-1">
+                        <a href="{{ route('logout') }}" class="dropdown-item modern-dropdown-item dropdown-item-danger text-danger d-flex align-items-center gap-2.5 px-3 py-2 rounded-2"
+                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            <i class="mdi mdi-logout text-danger" style="font-size: 18px;"></i>
+                            <span class="fw-semibold" style="font-size: 13px;">Keluar</span>
+                        </a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
+                    </div>
                 </div>
-            </li>
-        </ul>
-        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button"
-            data-bs-toggle="offcanvas">
-            <span class="mdi mdi-menu"></span>
-        </button>
+            </div>
+
+            {{-- Mobile Sidebar Drawer Trigger --}}
+            <button class="navbar-toggler modern-action-btn d-lg-none" type="button" data-bs-toggle="offcanvas" title="Buka Menu" aria-label="Toggle Navigation">
+                <i class="mdi mdi-menu"></i>
+            </button>
+        </div>
     </div>
 </nav>
 
-{{-- SCRIPT JAVASCRIPT --}}
+{{-- =========================================================================
+     JAVASCRIPT LOGIC
+     - Search with keyboard shortcut (Ctrl+K)
+     - Broadcast Notifications Polling & UI
+     - Multi-Branch Chat Polling & UI
+     - Fullscreen Toggle
+     ========================================================================= --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // ==========================================
-        // 1. GLOBAL SEARCH LOGIC
+        // 1. GLOBAL SEARCH LOGIC & SHORTCUT
         // ==========================================
         const searchInput = document.getElementById('globalSearch');
         const searchResults = document.getElementById('searchResults');
@@ -356,10 +300,10 @@
                         })
                         .catch(error => {
                             console.error('Search error:', error);
-                            searchResults.innerHTML = '<div class="dropdown-item text-danger">Error loading results</div>';
+                            searchResults.innerHTML = '<div class="dropdown-item text-danger py-2 small">Error loading results</div>';
                             searchResults.classList.add('show');
                         });
-                }, 500);
+                }, 400);
             });
 
             searchInput.addEventListener('focus', function () {
@@ -373,24 +317,30 @@
                     searchResults.classList.remove('show');
                 }
             });
+
+            // Keyboard Shortcut Ctrl+K / Cmd+K
+            window.addEventListener('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
         }
 
         function renderSearchResults(results) {
             if (!results || results.length === 0) {
-                searchResults.innerHTML = '<div class="dropdown-item text-muted py-3 text-center">No results found</div>';
+                searchResults.innerHTML = '<div class="dropdown-item text-muted py-3 text-center small">Tidak ada data ditemukan</div>';
             } else {
                 let html = '';
                 results.forEach(item => {
                     html += `
-                        <a href="${item.url}" class="dropdown-item py-2 border-bottom">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="mdi ${item.icon} text-primary" style="font-size: 20px;"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 text-dark" style="font-size: 14px; font-weight: 600;">${escapeHtml(item.title)}</h6>
-                                    <small class="text-muted" style="font-size: 12px; white-space: normal;">${escapeHtml(item.description)}</small>
-                                </div>
+                        <a href="${item.url}" class="dropdown-item modern-search-item px-3 py-2.5 d-flex align-items-center gap-2.5 border-bottom">
+                            <div class="search-item-icon-box d-flex align-items-center justify-content-center rounded-2">
+                                <i class="mdi ${item.icon || 'mdi-magnify'} text-primary" style="font-size: 18px;"></i>
+                            </div>
+                            <div class="overflow-hidden flex-grow-1">
+                                <div class="text-slate-900 fw-semibold text-truncate" style="font-size: 13px;">${escapeHtml(item.title)}</div>
+                                <div class="text-muted text-truncate" style="font-size: 11px;">${escapeHtml(item.description)}</div>
                             </div>
                         </a>
                     `;
@@ -435,7 +385,7 @@
 
             if (unreadCount > 0) {
                 broadcastCount.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                broadcastCount.style.display = 'flex';
+                broadcastCount.style.display = 'inline-flex';
                 broadcastTotal.textContent = unreadCount + ' unread';
             } else {
                 broadcastCount.style.display = 'none';
@@ -444,14 +394,14 @@
 
             if (broadcasts.length === 0) {
                 broadcastList.innerHTML = `
-                <div class="empty-state text-center py-5">
-                    <div class="empty-icon mb-3">
-                        <i class="mdi mdi-bullhorn-outline"></i>
+                    <div class="empty-state text-center py-5">
+                        <div class="empty-icon mb-2">
+                            <i class="mdi mdi-bullhorn-outline" style="font-size: 40px; color: #cbd5e1;"></i>
+                        </div>
+                        <h6 class="text-slate-700 mb-1 fw-semibold" style="font-size: 13px;">Belum Ada Broadcast</h6>
+                        <p class="text-muted small mb-0">Semua pengumuman telah Anda baca.</p>
                     </div>
-                    <h6 class="text-muted mb-1">No Broadcasts</h6>
-                    <p class="text-muted small mb-0">You're all caught up!</p>
-                </div>
-            `;
+                `;
             } else {
                 const baseUrl = "{{ route('broadcast.show', ':id') }}";
                 const broadcastItems = broadcasts.map(broadcast => {
@@ -462,26 +412,24 @@
                         : broadcast.message;
 
                     return `
-                    <a class="dropdown-item broadcast-item py-3 ${broadcast.is_read ? '' : 'unread'}" href="${detailUrl}">
-                        <div class="d-flex align-items-start">
-                            <div class="broadcast-icon me-3 ${broadcast.priority_color}">
-                                <i class="${broadcast.priority_icon}"></i>
-                            </div>
-                            <div class="flex-grow-1 overflow-hidden">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <h6 class="broadcast-title mb-0 fw-semibold">${escapeHtml(broadcast.title)}</h6>
-                                    ${broadcast.is_read ? '' : '<span class="unread-dot"></span>'}
+                        <a class="broadcast-item ${broadcast.is_read ? '' : 'unread'}" href="${detailUrl}">
+                            <div class="d-flex align-items-start gap-2.5">
+                                <div class="broadcast-icon ${broadcast.priority_color}">
+                                    <i class="${broadcast.priority_icon}"></i>
                                 </div>
-                                <p class="broadcast-message text-muted mb-2">${escapeHtml(shortMessage)}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="broadcast-read-more">
-                                        Read more <i class="mdi mdi-arrow-right"></i>
-                                    </span>
-                                    <small class="broadcast-time">${formatTimeAgo(broadcast.published_at)}</small>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="broadcast-title mb-0 text-truncate">${escapeHtml(broadcast.title)}</h6>
+                                        ${broadcast.is_read ? '' : '<span class="unread-dot"></span>'}
+                                    </div>
+                                    <p class="broadcast-message mb-1.5">${escapeHtml(shortMessage)}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="broadcast-read-more">Baca detail <i class="mdi mdi-arrow-right"></i></span>
+                                        <small class="broadcast-time">${formatTimeAgo(broadcast.published_at)}</small>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </a>
+                        </a>
                     `;
                 }).join('');
                 broadcastList.innerHTML = broadcastItems;
@@ -490,14 +438,14 @@
 
         function showBroadcastError() {
             broadcastList.innerHTML = `
-            <div class="empty-state text-center py-5">
-                <div class="empty-icon mb-3 text-danger">
-                    <i class="mdi mdi-alert-circle-outline"></i>
+                <div class="empty-state text-center py-5">
+                    <div class="empty-icon mb-2 text-danger">
+                        <i class="mdi mdi-alert-circle-outline" style="font-size: 36px;"></i>
+                    </div>
+                    <h6 class="text-danger mb-1 fw-semibold" style="font-size: 13px;">Gagal Memuat</h6>
+                    <p class="text-muted small mb-0">Silakan coba beberapa saat lagi</p>
                 </div>
-                <h6 class="text-danger mb-1">Failed to Load</h6>
-                <p class="text-muted small mb-0">Please try again later</p>
-            </div>
-        `;
+            `;
         }
 
         if (viewAllBroadcasts) {
@@ -510,11 +458,12 @@
             });
         }
 
-        // Defer initial notification load to allow main dashboard to render first
+        // Defer initial notification load
         setTimeout(function() {
             loadBroadcastNotifications();
             setInterval(loadBroadcastNotifications, 60000);
         }, 1500);
+
         if (broadcastDropdown) {
             broadcastDropdown.addEventListener('click', function () {
                 loadBroadcastNotifications();
@@ -548,18 +497,17 @@
 
         // State variables
         let isDropdownOpen = false;
-        let currentView = 'list'; // 'list' or 'room'
+        let currentView = 'list';
         let currentBranchId = null;
         let branchInterval = null;
         let messageInterval = null;
 
-        // --- HANDLER DROPDOWN ---
         if (messageDropdown) {
             messageDropdown.addEventListener('show.bs.dropdown', function () {
                 isDropdownOpen = true;
                 if (currentView === 'list') {
                     loadBranchList();
-                    branchInterval = setInterval(loadBranchList, 5000); // Polling list cabang
+                    branchInterval = setInterval(loadBranchList, 5000);
                 } else if (currentView === 'room' && currentBranchId) {
                     loadMessages(currentBranchId);
                     messageInterval = setInterval(() => loadMessages(currentBranchId), 3000);
@@ -573,7 +521,7 @@
             });
         }
 
-        // Prevent Close on Click Inside
+        // Prevent Close on Click Inside Chat Pane
         const msgDropdownMenu = document.querySelector('.dropdown-menu[aria-labelledby="messageDropdown"]');
         if (msgDropdownMenu) {
             msgDropdownMenu.addEventListener('click', function (e) {
@@ -595,34 +543,35 @@
         }
 
         function renderBranchList(branches) {
-            if (branches.length === 0) {
-                branchListBody.innerHTML = '<div class="text-center text-muted mt-5 pt-3"><i class="mdi mdi-office-building-remove fs-1"></i><p class="small">Anda tidak terhubung ke cabang manapun.</p></div>';
+            if (!branches || branches.length === 0) {
+                branchListBody.innerHTML = `
+                    <div class="text-center text-muted mt-5 pt-3">
+                        <i class="mdi mdi-office-building-remove fs-1 text-slate-300"></i>
+                        <p class="small mt-2">Anda tidak terhubung ke cabang manapun.</p>
+                    </div>
+                `;
                 return;
             }
 
             let html = '';
             branches.forEach(branch => {
-                // Badge Unread
                 let badgeHtml = '';
                 if (branch.unread_count > 0) {
-                    badgeHtml = `<span class="badge bg-danger rounded-pill ms-auto" style="font-size: 10px;">${branch.unread_count}</span>`;
+                    badgeHtml = `<span class="badge bg-danger rounded-pill ms-auto" style="font-size: 10px; font-weight: 700;">${branch.unread_count}</span>`;
                 }
 
                 html += `
                     <div class="p-3 border-bottom d-flex align-items-center branch-item" 
-                         onclick="openChatRoom(${branch.id}, '${escapeHtml(branch.name)}', '${branch.timezone}')"
-                         style="cursor: pointer; transition: background 0.2s;">
-                        
-                        <div class="bg-light text-primary rounded-circle d-flex align-items-center justify-content-center me-3 border" style="width: 40px; height: 40px;">
+                         onclick="openChatRoom(${branch.id}, '${escapeHtml(branch.name)}', '${branch.timezone}')">
+                        <div class="branch-avatar me-3">
                             <i class="mdi mdi-office-building"></i>
                         </div>
-                        
                         <div class="flex-grow-1 overflow-hidden">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 text-dark fw-bold text-truncate" style="max-width: 180px; font-size: 14px;">${escapeHtml(branch.name)}</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0 text-slate-900 fw-semibold text-truncate" style="max-width: 180px; font-size: 13px;">${escapeHtml(branch.name)}</h6>
                                 ${badgeHtml}
                             </div>
-                            <small class="text-muted text-truncate d-block" style="font-size: 12px;">${escapeHtml(branch.last_message)}</small>
+                            <small class="text-muted text-truncate d-block" style="font-size: 11px;">${escapeHtml(branch.last_message || 'Belum ada obrolan')}</small>
                         </div>
                     </div>
                 `;
@@ -633,45 +582,36 @@
         function updateMainBadge(count) {
             if (count > 0) {
                 mainChatBadge.textContent = count > 99 ? '99+' : count;
-                mainChatBadge.style.display = 'flex';
+                mainChatBadge.style.display = 'inline-flex';
             } else {
                 mainChatBadge.style.display = 'none';
             }
         }
 
         // --- 2. ROOM CHAT LOGIC ---
-
-        // Fungsi global agar bisa dipanggil dari HTML onclick
         window.openChatRoom = function (branchId, branchName, timezone) {
-            // Switch View
             currentView = 'room';
             currentBranchId = branchId;
 
-            // UI Updates
             branchListView.classList.remove('d-flex');
             branchListView.classList.add('d-none');
 
             chatRoomView.classList.remove('d-none');
             chatRoomView.classList.add('d-flex');
 
-            // Set Header Info
             activeBranchName.textContent = branchName;
             activeBranchTimezone.textContent = timezone;
             activeBranchId.value = branchId;
 
-            // Clear Old Chat & Load New
             chatBody.innerHTML = '<div class="text-center text-muted mt-5 pt-5"><div class="spinner-border spinner-border-sm text-primary"></div><p class="small mt-2">Memuat pesan...</p></div>';
 
-            // Stop List Interval, Start Message Interval
             clearInterval(branchInterval);
             loadMessages(branchId);
             messageInterval = setInterval(() => loadMessages(branchId), 3000);
         };
 
-        // Back Button Logic
         if (backToBranchList) {
             backToBranchList.addEventListener('click', function () {
-                // Switch View back to List
                 currentView = 'list';
                 currentBranchId = null;
 
@@ -681,9 +621,8 @@
                 branchListView.classList.remove('d-none');
                 branchListView.classList.add('d-flex');
 
-                // Stop Message Interval, Start List Interval
                 clearInterval(messageInterval);
-                loadBranchList(); // Immediate refresh to update unread counts
+                loadBranchList();
                 branchInterval = setInterval(loadBranchList, 5000);
             });
         }
@@ -700,8 +639,13 @@
         }
 
         function renderChat(messages) {
-            if (messages.length === 0) {
-                chatBody.innerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted small"><i class="mdi mdi-chat-processing-outline fs-1 mb-2"></i><p>Belum ada obrolan di cabang ini.</p></div>';
+            if (!messages || messages.length === 0) {
+                chatBody.innerHTML = `
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted small py-5">
+                        <i class="mdi mdi-chat-processing-outline fs-1 mb-2 text-slate-300"></i>
+                        <p class="mb-0">Belum ada obrolan di cabang ini.</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -712,7 +656,7 @@
                     imageHtml = `
                         <div class="mb-1">
                             <a href="${msg.image_url}" target="_blank">
-                                <img src="${msg.image_url}" class="rounded border shadow-sm" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                                <img src="${msg.image_url}" class="rounded border" style="max-width: 150px; max-height: 150px; object-fit: cover;">
                             </a>
                         </div>
                     `;
@@ -720,48 +664,42 @@
                 let textHtml = msg.message ? `<div>${escapeHtml(msg.message)}</div>` : '';
 
                 if (msg.is_me) {
-                    // PESAN SENDIRI
                     html += `
-                        <div class="d-flex justify-content-end mb-3">
+                        <div class="d-flex justify-content-end mb-2.5">
                             <div class="text-end" style="max-width: 85%;">
-                                <div class="bg-primary text-white px-3 py-2 rounded-3 shadow-sm text-start d-inline-block" style="border-bottom-right-radius: 4px !important;">
+                                <div class="chat-bubble-me text-start d-inline-block">
                                     ${imageHtml}
                                     ${textHtml}
                                 </div>
-                                <div class="small text-muted mt-1" style="font-size: 10px;">${msg.time}</div>
+                                <div class="chat-time-label mt-1 text-muted text-end">${msg.time}</div>
                             </div>
                         </div>
                     `;
                 } else {
-                    // PESAN ORANG LAIN
                     html += `
-                        <div class="d-flex justify-content-start mb-3">
-                            <div class="me-2 mt-1">
+                        <div class="d-flex justify-content-start mb-2.5">
+                            <div class="me-2 mt-0.5">
                                 ${msg.user_avatar
-                            ? `<img src="/storage/${msg.user_avatar}" class="rounded-circle border" style="width: 28px; height: 28px; object-fit: cover;">`
-                            : `<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 10px;">${msg.user_name.charAt(0)}</div>`
-                        }
+                                    ? `<img src="/storage/${msg.user_avatar}" class="rounded-circle border" style="width: 26px; height: 26px; object-fit: cover;">`
+                                    : `<div class="rounded-circle bg-slate-200 text-slate-700 d-flex align-items-center justify-content-center fw-bold" style="width: 26px; height: 26px; font-size: 10px;">${msg.user_name.charAt(0)}</div>`
+                                }
                             </div>
                             <div style="max-width: 85%;">
-                                <small class="d-block text-dark fw-bold mb-1" style="font-size: 11px;">${msg.user_name}</small>
-                                <div class="bg-white text-dark px-3 py-2 rounded-3 shadow-sm border d-inline-block" style="border-top-left-radius: 4px !important;">
+                                <small class="d-block text-slate-700 fw-semibold mb-1" style="font-size: 11px;">${msg.user_name}</small>
+                                <div class="chat-bubble-other d-inline-block">
                                     ${imageHtml}
                                     ${textHtml}
                                 </div>
-                                <div class="small text-muted mt-1" style="font-size: 10px;">${msg.time}</div>
+                                <div class="chat-time-label mt-1 text-muted">${msg.time}</div>
                             </div>
                         </div>
                     `;
                 }
             });
 
-            // Auto scroll logic (simple)
-            // Cek apakah user sedang scroll ke atas
             const isScrolledBottom = (chatBody.scrollHeight - chatBody.clientHeight - chatBody.scrollTop) < 150;
-
             chatBody.innerHTML = html;
 
-            // Scroll ke bawah jika di posisi bawah atau chat baru dibuka
             if (isScrolledBottom || messages.length <= 5) {
                 chatBody.scrollTop = chatBody.scrollHeight;
             }
@@ -775,7 +713,7 @@
                 if (this.files && this.files[0]) {
                     filePreviewArea.classList.remove('d-none');
                     fileNamePreview.textContent = this.files[0].name;
-                    chatInput.placeholder = "Tambahkan caption...";
+                    chatInput.placeholder = "Tambahkan keterangan foto...";
                 }
             });
         }
@@ -795,10 +733,8 @@
                 e.preventDefault();
                 const formData = new FormData(this);
 
-                // Validasi Client
                 if (!formData.get('message').trim() && (!formData.get('image') || formData.get('image').size === 0)) return;
 
-                // Optimistic Clear
                 chatInput.value = '';
                 resetFileInput();
 
@@ -817,12 +753,12 @@
                     })
                     .catch(err => {
                         console.error(err);
-                        alert("Gagal mengirim.");
+                        alert("Gagal mengirim pesan.");
                     });
             });
         }
 
-        // --- 4. UTILITIES ---
+        // Utilities
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -838,16 +774,15 @@
             const diffHours = Math.floor(diffMs / 3600000);
             const diffDays = Math.floor(diffMs / 86400000);
 
-            if (diffMins < 1) return 'Just now';
-            if (diffMins < 60) return `${diffMins}m ago`;
-            if (diffHours < 24) return `${diffHours}h ago`;
-            if (diffDays < 7) return `${diffDays}d ago`;
+            if (diffMins < 1) return 'Baru saja';
+            if (diffMins < 60) return `${diffMins}m lalu`;
+            if (diffHours < 24) return `${diffHours}j lalu`;
+            if (diffDays < 7) return `${diffDays}h lalu`;
 
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
         }
 
-        // --- 5. AUTO LOAD BADGE ON PAGE LOAD (DEFERRED) ---
-        // Panggil setelah halaman selesai dimuat agar tidak menghambat rendering utama
+        // Auto load badge
         setTimeout(function() {
             fetch('{{ route('chat.branches') }}')
                 .then(res => res.json())
@@ -885,485 +820,711 @@
     }
 </script>
 
+{{-- =========================================================================
+     MODERN AESTHETIC CSS STYLES
+     - Strict 1px slate-200 border system
+     - Solid clean white surfaces, no gradients
+     - No purple/violet tints, zero pulsating badge animations
+     - Modern compact height overrides for Star Admin template
+     ========================================================================= --}}
 <style>
-    /* =======================================================
-       MODERN HEADER NAVIGATION STYLING
-       ======================================================= */
-    
-    /* Navbar Base */
-    .navbar {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
-        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08) !important;
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(13, 110, 253, 0.1);
-        transition: all 0.3s ease;
+    :root {
+        --header-height: 64px !important;
+        --modern-header-height: 64px;
+        --modern-sidebar-width: 245px;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-300: #cbd5e1;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-600: #475569;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --primary-blue: #2563eb;
+        --primary-blue-hover: #1d4ed8;
+        --danger-red: #ef4444;
     }
 
-    .navbar-brand img {
-        transition: transform 0.3s ease;
+    @media (max-width: 991px) {
+        :root {
+            --header-height: 56px !important;
+            --modern-header-height: 56px;
+        }
     }
 
-    .navbar-brand:hover img {
-        transform: scale(1.05);
+    /* --- OVERRIDES FOR STAR ADMIN TEMPLATE BULKY HEIGHTS --- */
+    .navbar.default-layout.modern-navbar {
+        height: var(--modern-header-height) !important;
+        background: #ffffff !important;
+        border-bottom: 1px solid var(--slate-200) !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+        transition: none !important;
+        z-index: 1030;
     }
 
-    /* Welcome Text */
-    .welcome-text {
-        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+    .navbar.default-layout.modern-navbar .navbar-brand-wrapper {
+        height: var(--modern-header-height) !important;
+        width: var(--modern-sidebar-width) !important;
+        background: #ffffff !important;
+        border-right: 1px solid var(--slate-200) !important;
+        padding: 0 1.25rem !important;
+        transition: width 0.2s ease, padding 0.2s ease;
+    }
+
+    body.sidebar-icon-only .navbar.default-layout.modern-navbar .navbar-brand-wrapper {
+        width: 70px !important;
+        padding: 0 0.5rem !important;
+        justify-content: center !important;
+    }
+
+    .navbar.default-layout.modern-navbar .navbar-menu-wrapper {
+        height: var(--modern-header-height) !important;
+        width: calc(100% - var(--modern-sidebar-width)) !important;
+        background: #ffffff !important;
+        padding: 0 1.5rem !important;
+        transition: width 0.2s ease;
+    }
+
+    body.sidebar-icon-only .navbar.default-layout.modern-navbar .navbar-menu-wrapper {
+        width: calc(100% - 70px) !important;
+    }
+
+    /* Adjust main body and sidebar offsets to match the clean 64px/56px header */
+    .page-body-wrapper {
+        padding-top: var(--modern-header-height) !important;
+        min-height: calc(100vh - var(--modern-header-height)) !important;
+    }
+
+    @media (min-width: 992px) {
+        .sidebar {
+            top: var(--modern-header-height) !important;
+            height: calc(100vh - var(--modern-header-height)) !important;
+        }
+        .main-panel {
+            min-height: calc(100vh - var(--modern-header-height)) !important;
+        }
+    }
+
+    @media (max-width: 991px) {
+        .navbar.default-layout.modern-navbar .navbar-brand-wrapper {
+            width: auto !important;
+            border-right: none !important;
+            padding: 0 0.75rem !important;
+        }
+        .navbar.default-layout.modern-navbar .navbar-menu-wrapper {
+            width: auto !important;
+            padding: 0 0.75rem !important;
+        }
+        .sidebar-offcanvas {
+            top: var(--modern-header-height) !important;
+            max-height: calc(100vh - var(--modern-header-height)) !important;
+        }
+    }
+
+    /* --- BRAND LOGO STYLING --- */
+    .brand-logo-img {
+        height: 30px;
+        width: auto;
+        object-fit: contain;
+        display: block;
+    }
+
+    .brand-logo-mini-img {
+        height: 28px;
+        width: auto;
+        object-fit: contain;
+        display: block;
+    }
+
+    body.sidebar-icon-only .navbar-brand.brand-logo {
+        display: none !important;
+    }
+
+    body.sidebar-icon-only .navbar-brand.brand-logo-mini {
+        display: inline-flex !important;
+    }
+
+    @media (min-width: 992px) {
+        body:not(.sidebar-icon-only) .navbar-brand.brand-logo-mini {
+            display: none !important;
+        }
+    }
+
+    @media (max-width: 991px) {
+        .navbar-brand.brand-logo {
+            display: none !important;
+        }
+        .navbar-brand.brand-logo-mini {
+            display: inline-flex !important;
+        }
+    }
+
+    /* --- TOGGLE BUTTONS --- */
+    .modern-toggle-btn {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--slate-600);
+        padding: 0;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .modern-toggle-btn:hover {
+        background: var(--slate-100);
+        color: var(--slate-900);
+        border-color: var(--slate-200);
+    }
+
+    .modern-toggle-btn i {
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    /* --- HEADING AREA --- */
+    .header-page-title {
+        font-size: 1.125rem !important;
         font-weight: 700 !important;
-        font-size: 1.5rem !important;
-        margin: 0 !important;
+        color: var(--slate-900) !important;
+        letter-spacing: -0.015em;
+        line-height: 1.25;
     }
 
-    .welcome-sub-text {
-        color: #6c757d !important;
-        font-size: 0.875rem !important;
-        font-weight: 500 !important;
-        margin: 0.25rem 0 0 0 !important;
-        text-transform: capitalize;
+    .header-page-meta {
+        font-size: 11px;
     }
 
-    /* --- MODERN SEARCH STYLING --- */
-    .search-form { 
-        position: relative; 
-        margin-right: 20px; 
+    .role-badge {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: var(--slate-100);
+        color: var(--slate-700);
+        border: 1px solid var(--slate-200);
+        display: inline-block;
+        line-height: 1.3;
     }
-    
-    .search-icon { 
-        left: 16px; 
-        top: 50%; 
-        transform: translateY(-50%); 
-        color: #6c757d; 
-        z-index: 10; 
+
+    .division-text {
+        font-weight: 500;
+        max-width: 180px;
+    }
+
+    /* --- SEARCH BAR --- */
+    .modern-search-box {
+        width: 240px;
+        transition: width 0.2s ease;
+    }
+
+    .modern-search-input {
+        height: 36px;
+        border-radius: 8px !important;
+        border: 1px solid var(--slate-200) !important;
+        background: var(--slate-50) !important;
+        font-size: 12.5px !important;
+        color: var(--slate-900) !important;
+        padding: 0 48px 0 32px !important;
+        transition: all 0.15s ease !important;
+    }
+
+    .modern-search-input:focus {
+        background: #ffffff !important;
+        border-color: var(--primary-blue) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08) !important;
+        outline: none !important;
+        width: 280px;
+    }
+
+    .modern-search-box .search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--slate-400);
+        font-size: 16px;
         pointer-events: none;
-        transition: color 0.3s ease;
-    }
-    
-    .search-input { 
-        border-radius: 20px; 
-        border: 2px solid transparent;
-        padding: 10px 16px 10px 42px; 
-        background: #f8f9fa; 
-        width: 300px; 
-        height: 42px; 
-        font-size: 14px; 
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    }
-    
-    .search-input:focus { 
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1), 0 4px 12px rgba(0, 0, 0, 0.08);
-        background: white; 
-        outline: none;
-        transform: translateY(-1px);
     }
 
-    .search-input:focus + .search-icon {
-        color: #0d6efd;
+    .search-kbd-chip {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--slate-500);
+        background: #ffffff;
+        border: 1px solid var(--slate-200);
+        border-radius: 4px;
+        padding: 2px 4px;
+        line-height: 1;
+        pointer-events: none;
+        font-family: inherit;
     }
-    
-    .search-results { 
-        position: absolute; 
-        top: calc(100% + 8px); 
-        left: 0; 
-        right: 0; 
-        z-index: 1050; 
-        background: white; 
-        border: none;
-        border-radius: 12px; 
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12); 
-        max-height: 400px; 
-        overflow-y: auto; 
+
+    .modern-search-input:focus ~ .search-kbd-chip {
+        opacity: 0.4;
+    }
+
+    .search-results {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        width: 100%;
+        min-width: 280px;
+        background: #ffffff;
+        border: 1px solid var(--slate-200);
+        border-radius: 10px;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+        max-height: 360px;
+        overflow-y: auto;
         display: none;
-        animation: slideDown 0.3s ease-out;
+        z-index: 1050;
     }
 
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .search-results.show { display: block; }
-    
-    .search-results .dropdown-item { 
-        padding: 14px 18px; 
-        border-bottom: 1px solid #f1f3f5; 
-        white-space: normal;
-        transition: all 0.2s ease;
-    }
-    
-    .search-results .dropdown-item:last-child { border-bottom: none; }
-    
-    .search-results .dropdown-item:hover { 
-        background: linear-gradient(135deg, rgba(13, 110, 253, 0.08) 0%, rgba(13, 110, 253, 0.03) 100%);
-        transform: translateX(4px);
+    .search-results.show {
+        display: block;
     }
 
-    /* --- MODERN NOTIFICATION STYLING --- */
-    .notification-dropdown .nav-link { 
-        width: 44px; 
-        height: 44px; 
-        border-radius: 12px;
-        background: #f8f9fa; 
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
+    .modern-search-item {
+        transition: background 0.15s ease;
+        text-decoration: none;
+    }
+
+    .modern-search-item:hover {
+        background: var(--slate-50);
+    }
+
+    .search-item-icon-box {
+        width: 32px;
+        height: 32px;
+        background: var(--slate-100);
+        flex-shrink: 0;
+    }
+
+    /* --- ACTION BUTTONS (FULLSCREEN, BROADCAST, CHAT) --- */
+    .modern-action-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid var(--slate-200);
+        background: #ffffff;
+        color: var(--slate-600);
+        padding: 0;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-decoration: none;
+    }
+
+    .modern-action-btn:hover,
+    .modern-action-btn:focus {
+        background: var(--slate-50);
+        color: var(--slate-900);
+        border-color: var(--slate-300);
+    }
+
+    .modern-action-btn:active {
+        background: var(--slate-100);
+        transform: scale(0.97);
+    }
+
+    .modern-action-btn i {
+        font-size: 19px;
+        line-height: 1;
+    }
+
+    .modern-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        font-size: 9.5px;
+        font-weight: 700;
+        height: 17px;
+        min-width: 17px;
+        padding: 0 4px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ffffff;
+        line-height: 1;
+    }
+
+    .modern-badge-danger {
+        background: var(--danger-red);
+        color: #ffffff;
+    }
+
+    /* Divider */
+    .header-divider {
+        width: 1px;
+        height: 24px;
+        background: var(--slate-200);
+        margin: 0 4px;
+    }
+
+    /* --- USER PILL BUTTON --- */
+    .user-pill-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px 3px 3px;
+        border-radius: 9999px;
+        border: 1px solid var(--slate-200);
+        background: #ffffff;
+        color: var(--slate-900);
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .user-pill-btn:hover {
+        background: var(--slate-50);
+        border-color: var(--slate-300);
+    }
+
+    .user-avatar-wrap {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+    }
+
+    .user-avatar-img {
+        width: 32px;
+        height: 32px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .user-avatar-initials {
+        width: 32px;
+        height: 32px;
+        background: var(--slate-800);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    
-    .notification-dropdown .nav-link:hover { 
-        background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
-    }
-    
-    .notification-icon { 
-        font-size: 22px; 
-        color: #495057;
-        transition: color 0.3s ease;
-    }
 
-    .notification-dropdown .nav-link:hover .notification-icon {
-        color: #0d6efd;
-    }
-    
-    .notification-badge { 
-        position: absolute; 
-        top: -6px; 
-        right: -6px; 
-        background: linear-gradient(135deg, #ff4757 0%, #dc3545 100%); 
-        color: white; 
-        border-radius: 10px; 
-        padding: 3px 7px; 
-        font-size: 10px; 
-        font-weight: 700; 
-        min-width: 20px; 
-        height: 20px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4); 
-        border: 2px solid white; 
-        animation: badge-pulse 2s ease-in-out infinite;
-    }
-    
-    @keyframes badge-pulse { 
-        0%, 100% { transform: scale(1); opacity: 1; } 
-        50% { transform: scale(1.15); opacity: 0.9; } 
-    }
-    
-    /* Dropdown Styling */
-    .navbar-dropdown {
-        border: none !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-        overflow: hidden;
-        animation: slideDown 0.3s ease-out;
-    }
-
-    .dropdown-header { 
-        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
-        color: white !important;
-        padding: 1.25rem 1.5rem !important;
-    }
-    
-    .dropdown-header h6 { 
-        color: white !important;
-        font-weight: 700 !important;
-        margin: 0 !important;
-    }
-    
-    .dropdown-header small { 
-        color: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    .dropdown-header .mdi { 
-        color: white !important;
-        opacity: 0.95;
-    }
-    
-    /* Broadcast Items */
-    .broadcast-item { 
-        border-left: 3px solid transparent; 
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-    }
-    
-    .broadcast-item:hover { 
-        background: linear-gradient(90deg, rgba(13, 110, 253, 0.06) 0%, transparent 100%);
-        border-left-color: #0d6efd;
-        transform: translateX(2px);
-    }
-    
-    .broadcast-item.unread { 
-        background: linear-gradient(90deg, rgba(13, 110, 253, 0.08) 0%, rgba(13, 110, 253, 0.02) 100%);
-        border-left-color: #0d6efd;
-    }
-    
-    .broadcast-icon { 
-        width: 42px; 
-        height: 42px; 
-        border-radius: 10px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        font-size: 20px; 
-        flex-shrink: 0;
-        transition: transform 0.2s ease;
-    }
-
-    .broadcast-item:hover .broadcast-icon {
-        transform: scale(1.1);
-    }
-    
-    .broadcast-icon.text-danger { 
-        background: linear-gradient(135deg, #ffebee 0%, #ffe0e3 100%);
-        color: #dc3545;
-    }
-    
-    .broadcast-icon.text-warning { 
-        background: linear-gradient(135deg, #fff3e0 0%, #ffe8cc 100%);
-        color: #ff9800;
-    }
-    
-    .broadcast-icon.text-info { 
-        background: linear-gradient(135deg, #e3f2fd 0%, #d1e7fc 100%);
-        color: #2196f3;
-    }
-    
-    .broadcast-title { 
-        font-size: 14px; 
-        color: #212529; 
-        line-height: 1.5;
-        font-weight: 600;
-    }
-    
-    .broadcast-message { 
-        font-size: 13px; 
-        line-height: 1.5;
-        margin: 0; 
-        display: -webkit-box; 
-        -webkit-line-clamp: 2; 
-        -webkit-box-orient: vertical; 
-        overflow: hidden;
-        color: #6c757d;
-    }
-    
-    .broadcast-read-more { 
-        color: #0d6efd;
-        font-size: 12px; 
-        font-weight: 600; 
-        transition: all 0.2s ease;
-    }
-    
-    .broadcast-item:hover .broadcast-read-more { 
-        color: #0a58ca;
-        text-decoration: underline;
-    }
-    
-    .broadcast-time { 
-        color: #6c757d; 
-        font-size: 11px; 
-        white-space: nowrap;
-    }
-    
-    .unread-dot { 
-        width: 10px; 
-        height: 10px; 
-        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-        border-radius: 50%; 
-        display: inline-block; 
-        margin-left: 8px; 
-        flex-shrink: 0;
-        box-shadow: 0 0 8px rgba(13, 110, 253, 0.5);
-        animation: pulse-dot 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-dot {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-    }
-    
-    /* Empty States */
-    .empty-state { 
-        padding: 48px 24px;
-        text-align: center;
-    }
-    
-    .empty-icon { 
-        font-size: 72px; 
-        color: #dee2e6; 
-        line-height: 1;
-        margin-bottom: 16px;
-    }
-    
-    .empty-icon.text-danger { color: #dc3545; }
-    
-    .empty-state h6 { 
-        font-size: 16px; 
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #495057;
-    }
-    
-    .empty-state p { 
-        font-size: 13px;
-        color: #6c757d;
-    }
-    
-    /* Scrollbar for Dropdowns */
-    #broadcastList::-webkit-scrollbar { width: 6px; }
-    #broadcastList::-webkit-scrollbar-track { background: #f8f9fa; }
-    #broadcastList::-webkit-scrollbar-thumb { 
-        background: linear-gradient(180deg, #0d6efd, #0a58ca);
-        border-radius: 3px;
-    }
-    #broadcastList::-webkit-scrollbar-thumb:hover { 
-        background: linear-gradient(180deg, #0a58ca, #084298);
-    }
-
-    /* --- MODERN PROFILE STYLING --- */
-    .user-dropdown .nav-link {
-        transition: all 0.3s ease;
-        padding: 4px !important;
+    .user-verified-badge {
+        bottom: -2px;
+        right: -2px;
+        width: 13px;
+        height: 13px;
+        background: #ffffff;
         border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-blue);
+        font-size: 11px;
     }
 
-    .user-dropdown .nav-link:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+    .user-pill-text {
+        line-height: 1.2;
     }
 
-    .img-xs {
-        transition: transform 0.3s ease;
+    .user-pill-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--slate-900);
     }
 
-    .profile-initial-nav { 
-        width: 40px; 
-        height: 40px; 
-        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-        color: white; 
-        border-radius: 50%; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
+    .user-pill-role {
+        font-size: 10px;
+        color: var(--slate-500);
+        text-transform: capitalize;
+    }
+
+    .user-pill-chevron {
+        font-size: 14px;
+        color: var(--slate-400);
+        margin-left: 2px;
+    }
+
+    /* --- DROPDOWN MENUS --- */
+    .modern-dropdown-pane {
+        background: #ffffff !important;
+        border: 1px solid var(--slate-200) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+        margin-top: 6px !important;
+        overflow: hidden;
+    }
+
+    .broadcast-dropdown-pane {
+        width: 360px;
+        max-width: calc(100vw - 24px);
+    }
+
+    .chat-dropdown-pane {
+        width: 380px;
+        max-width: calc(100vw - 24px);
+        height: 480px;
+    }
+
+    .user-dropdown-pane {
+        width: 250px;
+    }
+
+    .user-header-avatar {
+        width: 42px;
+        height: 42px;
+        object-fit: cover;
+    }
+
+    .user-header-initials {
+        width: 42px;
+        height: 42px;
+        background: var(--slate-800);
+        color: #ffffff;
+        font-size: 15px;
         font-weight: 700;
-        font-size: 14px; 
-        cursor: pointer; 
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-sizing: border-box;
-        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
-    }
-    
-    .profile-initial-nav:hover { 
-        transform: scale(1.1);
-        box-shadow: 0 4px 16px rgba(13, 110, 253, 0.4);
-    }
-    
-    .profile-initial-dropdown { 
-        width: 64px; 
-        height: 64px; 
-        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-        color: white; 
-        border-radius: 50%; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        font-weight: 700;
-        font-size: 20px; 
-        margin: 0 auto; 
-        border: 3px solid #fff; 
-        box-shadow: 0 4px 16px rgba(13, 110, 253, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .dropdown-item {
-        transition: all 0.2s ease;
-        padding: 0.75rem 1.5rem !important;
+    .user-header-verified {
+        bottom: -2px;
+        right: -2px;
+        width: 15px;
+        height: 15px;
+        background: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-blue);
+        font-size: 12px;
     }
 
-    .dropdown-item:hover {
-        background: linear-gradient(90deg, rgba(13, 110, 253, 0.08) 0%, transparent 100%) !important;
-        transform: translateX(4px);
+    .modern-dropdown-item {
+        transition: background 0.15s ease;
+        padding: 8px 14px !important;
+        text-decoration: none;
     }
 
-    .dropdown-item-icon {
-        transition: transform 0.2s ease;
+    .modern-dropdown-item:hover {
+        background: var(--slate-50) !important;
     }
 
-    .dropdown-item:hover .dropdown-item-icon {
-        transform: scale(1.1);
+    .dropdown-item-danger:hover {
+        background: #fef2f2 !important;
+    }
+
+    /* --- BROADCAST ITEM STYLING --- */
+    .broadcast-item {
+        border-left: 3px solid transparent;
+        padding: 10px 14px !important;
+        transition: background 0.15s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+        border-bottom: 1px solid var(--slate-100);
+    }
+
+    .broadcast-item:hover {
+        background: var(--slate-50) !important;
+    }
+
+    .broadcast-item.unread {
+        background: var(--slate-50);
+        border-left-color: var(--primary-blue);
+    }
+
+    .broadcast-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .broadcast-icon.text-danger {
+        background: #fef2f2;
+        color: var(--danger-red) !important;
+    }
+
+    .broadcast-icon.text-warning {
+        background: #fffbeb;
+        color: #d97706 !important;
+    }
+
+    .broadcast-icon.text-info {
+        background: #eff6ff;
+        color: var(--primary-blue) !important;
+    }
+
+    .broadcast-title {
+        font-size: 12.5px;
+        color: var(--slate-900);
+        font-weight: 600;
+    }
+
+    .broadcast-message {
+        font-size: 11.5px;
+        color: var(--slate-500);
+        margin: 0;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .broadcast-read-more {
+        color: var(--primary-blue);
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .broadcast-time {
+        color: var(--slate-400);
+        font-size: 10.5px;
+    }
+
+    .unread-dot {
+        width: 7px;
+        height: 7px;
+        background: var(--primary-blue);
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
     }
 
     /* --- CHAT STYLING --- */
-    .branch-item { 
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    .branch-item {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--slate-100);
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .branch-item:hover {
+        background: var(--slate-50);
+    }
+
+    .branch-avatar {
+        width: 36px;
+        height: 36px;
         border-radius: 8px;
-        margin: 4px 8px;
+        background: var(--slate-100);
+        color: var(--primary-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+        border: 1px solid var(--slate-200);
     }
 
-    .branch-item:hover { 
-        background: linear-gradient(135deg, rgba(13, 110, 253, 0.06) 0%, rgba(13, 110, 253, 0.02) 100%);
-        transform: translateX(4px);
+    .btn-icon-ghost {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--slate-600);
     }
 
-    /* Fullscreen Button */
-    .nav-link {
-        transition: all 0.2s ease;
+    .btn-icon-ghost:hover {
+        background: var(--slate-100);
+        color: var(--slate-900);
     }
 
-    .nav-link:hover {
-        color: #0d6efd !important;
-        transform: translateY(-1px);
+    .modern-chat-input {
+        border-radius: 9999px !important;
+        border: 1px solid var(--slate-200) !important;
+        background: var(--slate-50) !important;
+        font-size: 12px !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        height: 34px !important;
     }
 
-    /* Mobile Responsiveness */
-    @media (max-width: 991px) {
-        .search-form { 
-            margin: 12px 0; 
-            width: 100%;
-        }
-        
-        .search-input { 
-            width: 100%;
-        }
-        
-        .notification-dropdown .dropdown-menu { 
-            min-width: 340px !important;
-            max-width: 90vw !important;
-        }
-
-        .welcome-text {
-            font-size: 1.25rem !important;
-        }
-
-        .welcome-sub-text {
-            font-size: 0.75rem !important;
-        }
+    .modern-chat-input:focus {
+        background: #ffffff !important;
+        border-color: var(--primary-blue) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08) !important;
     }
 
-    @media (max-width: 768px) {
-        .notification-dropdown .dropdown-menu { 
-            min-width: 320px !important;
-        }
-
-        .navbar {
-            padding: 0.75rem 1rem !important;
-        }
+    .modern-chat-send-btn {
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: var(--primary-blue) !important;
+        border-color: var(--primary-blue) !important;
+        color: #ffffff !important;
+        flex-shrink: 0;
     }
 
-    /* Smooth Transitions for All Interactive Elements */
-    .navbar * {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    .modern-chat-send-btn:hover {
+        background: var(--primary-blue-hover) !important;
+        border-color: var(--primary-blue-hover) !important;
+    }
+
+    .chat-bubble-me {
+        background: var(--primary-blue) !important;
+        color: #ffffff !important;
+        border-radius: 12px 12px 3px 12px !important;
+        padding: 7px 11px;
+        font-size: 12.5px;
+        line-height: 1.4;
+    }
+
+    .chat-bubble-other {
+        background: #ffffff !important;
+        color: var(--slate-900) !important;
+        border: 1px solid var(--slate-200);
+        border-radius: 12px 12px 12px 3px !important;
+        padding: 7px 11px;
+        font-size: 12.5px;
+        line-height: 1.4;
+    }
+
+    .chat-time-label {
+        font-size: 10px;
+    }
+
+    /* Scrollbars */
+    .custom-dropdown-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .custom-dropdown-scroll::-webkit-scrollbar-track {
+        background: var(--slate-50);
+    }
+
+    .custom-dropdown-scroll::-webkit-scrollbar-thumb {
+        background: var(--slate-300);
+        border-radius: 9999px;
+    }
+
+    .custom-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+        background: var(--slate-400);
     }
 </style>
