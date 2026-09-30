@@ -44,6 +44,7 @@ class Branch extends Model
             'AppleLux',
             'Arcis & Debs',
             'Cleaning service',
+            'Development',
             'Dokter Pstore',
             'Driver pstore',
             'Finance',
