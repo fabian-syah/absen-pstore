@@ -862,6 +862,9 @@
             if (sidebar) sidebar.classList.add('active');
             if (backdrop) backdrop.classList.add('show');
             document.body.classList.add('sidebar-drawer-open');
+            if (window.innerWidth < 992) {
+                document.body.classList.remove('sidebar-icon-only');
+            }
         }
 
         function closeSidebarDrawer() {
