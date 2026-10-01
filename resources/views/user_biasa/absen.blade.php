@@ -145,25 +145,39 @@
                         {{-- PHOTO RESULT PREVIEW OVERLAY --}}
                         <div class="viewfinder-overlay d-none" id="result-screen">
                             <img id="preview-image" src="#" alt="Pratinjau Foto Absensi">
-                            <div class="result-actions-bar d-flex align-items-center justify-content-between p-3">
-                                <button type="button" id="retake-btn" class="btn btn-sm btn-retake">
-                                    <i class="mdi mdi-refresh me-1"></i> Ambil Ulang Foto
-                                </button>
+                            
+                            {{-- Top Status on Photo --}}
+                            <div class="result-top-bar d-flex align-items-center justify-content-between p-3 position-absolute top-0 start-0 end-0 z-3">
                                 <span class="badge-verified-capture">
-                                    <i class="mdi mdi-check-circle me-1"></i> Foto Siap
+                                    <i class="mdi mdi-check-circle me-1"></i> Foto Siap Digunakan
                                 </span>
+                            </div>
+
+                            {{-- Bottom Floating Retake Action on Photo --}}
+                            <div class="result-actions-bar d-flex align-items-center justify-content-center p-3 position-absolute bottom-0 start-0 end-0 z-3">
+                                <button type="button" id="retake-btn" class="btn btn-sm btn-retake shadow-lg">
+                                    <i class="mdi mdi-camera-retake me-1.5"></i> Ambil Ulang Foto
+                                </button>
                             </div>
                         </div>
                     </div>
 
                     {{-- BOTTOM SHUTTER TRIGGER BAR --}}
                     <div class="shutter-trigger-section d-flex align-items-center justify-content-center p-3">
+                        {{-- Active Shutter Button when camera is running --}}
                         <button type="button" id="capture-btn" class="shutter-button" disabled title="Ambil Foto">
                             <span class="shutter-ring-outer"></span>
                             <span class="shutter-core">
                                 <i class="mdi mdi-camera"></i>
                             </span>
                         </button>
+
+                        {{-- Retake Button shown in place of shutter when photo has been taken --}}
+                        <div id="captured-action-group" class="d-none d-flex align-items-center justify-content-center w-100">
+                            <button type="button" id="bottom-retake-btn" class="btn btn-retake-primary shadow-sm">
+                                <i class="mdi mdi-camera-retake me-1.5"></i> Ambil Ulang Foto
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -276,6 +290,10 @@
                             <span class="info-badge" id="gps-accuracy-badge">
                                 <i class="mdi mdi-loading mdi-spin"></i>
                             </span>
+                        </div>
+
+                        <div class="d-none text-danger mt-1.5 small" id="gps-permission-help" style="font-size: 11px;">
+                            <i class="mdi mdi-alert-circle-outline me-1"></i> Izin lokasi ditolak. Silahkan aktifkan izin lokasi di ikon gembok browser (samping URL) lalu klik <strong>Perbarui</strong>.
                         </div>
                     </div>
 
@@ -668,27 +686,21 @@
         height: 100%;
         object-fit: cover;
     }
-    .result-actions-bar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(0deg, rgba(2, 6, 23, 0.9) 0%, transparent 100%);
-    }
     .btn-retake {
-        background: rgba(15, 23, 42, 0.75);
-        backdrop-filter: blur(6px);
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(8px);
         color: #ffffff;
         border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 12px;
-        padding: 6px 14px;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 12.5px;
+        padding: 8px 18px;
         transition: all 0.15s ease;
     }
     .btn-retake:hover {
         background: rgba(255, 255, 255, 0.2);
         color: #ffffff;
+        transform: scale(1.02);
     }
     .badge-verified-capture {
         background: #059669;
@@ -700,10 +712,11 @@
         box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
     }
 
-    /* Shutter Button */
+    /* Shutter Button & Bottom Trigger */
     .shutter-trigger-section {
         background: #090d16;
         border-top: 1px solid #1e293b;
+        min-height: 98px;
     }
     .shutter-button {
         position: relative;
@@ -751,6 +764,26 @@
     }
     .shutter-button.ready:active {
         transform: scale(0.92);
+    }
+
+    .btn-retake-primary {
+        background: #1e293b;
+        border: 1px solid #475569;
+        color: #ffffff;
+        font-size: 13.5px;
+        font-weight: 700;
+        padding: 10px 24px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .btn-retake-primary:hover {
+        background: #334155;
+        color: #ffffff;
+        border-color: #64748b;
+        transform: translateY(-1px);
     }
 
     /* --- RIGHT COLUMN / CONSOLE CARDS --- */
@@ -964,7 +997,9 @@
         const startBtn = document.getElementById('start-camera-btn');
         const loadingState = document.getElementById('loading-state');
         const captureBtn = document.getElementById('capture-btn');
+        const capturedActionGroup = document.getElementById('captured-action-group');
         const retakeBtn = document.getElementById('retake-btn');
+        const bottomRetakeBtn = document.getElementById('bottom-retake-btn');
         const previewImage = document.getElementById('preview-image');
         const photoInputHidden = document.getElementById('photo-input-hidden');
         const canvas = document.getElementById('capture-canvas');
@@ -974,6 +1009,7 @@
         const accInput = document.getElementById('accuracy');
         const coordDisplay = document.getElementById('coordinates-display');
         const accBadge = document.getElementById('gps-accuracy-badge');
+        const gpsPermissionHelp = document.getElementById('gps-permission-help');
 
         const faceStatus = document.getElementById('face-status');
         const faceFrame = document.getElementById('face-frame');
@@ -1166,6 +1202,12 @@
 
         // === CAPTURE PHOTO ===
         captureBtn.addEventListener('click', () => {
+            // Guard: If camera is already stopped or preview is active, trigger retake instead of capturing black screen!
+            if (!streamRef || videoFeed.paused || videoFeed.ended || !resultScreen.classList.contains('d-none')) {
+                triggerRetake();
+                return;
+            }
+
             if (useAI && !isFaceValid) return;
             getLocation(true);
 
@@ -1193,6 +1235,10 @@
                 stopCamera();
                 resultScreen.classList.remove('d-none');
 
+                // Toggle bottom shutter button to retake button
+                if (captureBtn) captureBtn.classList.add('d-none');
+                if (capturedActionGroup) capturedActionGroup.classList.remove('d-none');
+
                 // Update Step 1 Status
                 if (stepPhotoCircle) stepPhotoCircle.classList.add('done');
                 if (stepPhotoStatus) {
@@ -1212,8 +1258,15 @@
             }
         }
 
-        retakeBtn.addEventListener('click', () => {
+        // === TRIGGER RETAKE (AMBIL ULANG FOTO) ===
+        function triggerRetake() {
             resultScreen.classList.add('d-none');
+            if (capturedActionGroup) capturedActionGroup.classList.add('d-none');
+            if (captureBtn) {
+                captureBtn.classList.remove('d-none');
+                captureBtn.disabled = true;
+                captureBtn.classList.remove('ready');
+            }
             photoInputHidden.value = '';
             isFaceValid = false;
 
@@ -1226,7 +1279,10 @@
 
             initCamera(useAI && modelsLoaded);
             checkGlobalValidity();
-        });
+        }
+
+        if (retakeBtn) retakeBtn.addEventListener('click', triggerRetake);
+        if (bottomRetakeBtn) bottomRetakeBtn.addEventListener('click', triggerRetake);
 
         // === GPS GEOLOCATION ===
         function getLocation(highAccuracy = true) {
@@ -1238,6 +1294,7 @@
             coordDisplay.textContent = 'Mencari sinyal GPS...';
             accBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
             accBadge.className = 'info-badge';
+            if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
 
             navigator.geolocation.getCurrentPosition(
                 pos => {
@@ -1249,6 +1306,7 @@
                     coordDisplay.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
                     accBadge.textContent = `±${Math.round(accuracy)}m`;
                     accBadge.className = 'info-badge success';
+                    if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
 
                     // Update Step 2 Status
                     if (stepGpsCircle) stepGpsCircle.classList.add('done');
@@ -1264,12 +1322,19 @@
                         getLocation(false);
                         return;
                     }
-                    coordDisplay.textContent = err.code === 1 ? 'Izin GPS ditolak' : 'Gagal deteksi GPS';
-                    accBadge.textContent = 'Error';
-                    accBadge.className = 'info-badge error';
+                    if (err.code === 1) {
+                        coordDisplay.textContent = 'Izin GPS Ditolak di Browser';
+                        accBadge.textContent = 'Izin Ditolak';
+                        accBadge.className = 'info-badge error';
+                        if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
+                    } else {
+                        coordDisplay.textContent = 'Gagal mendeteksi lokasi GPS';
+                        accBadge.textContent = 'Error';
+                        accBadge.className = 'info-badge error';
+                    }
 
                     if (stepGpsStatus) {
-                        stepGpsStatus.textContent = 'Gagal';
+                        stepGpsStatus.textContent = err.code === 1 ? 'Izin Ditolak' : 'Gagal';
                         stepGpsStatus.className = 'badge-step-status text-danger';
                     }
                 },
@@ -1301,7 +1366,7 @@
         // === DIRECT SUBMIT FALLBACK ===
         window.submitAttendanceNow = function() {
             if (latInput.value === '') {
-                alert('Lokasi GPS belum terkunci. Klik tombol "Perbarui" pada kotak lokasi.');
+                alert('Lokasi GPS belum terkunci. Klik tombol "Perbarui" pada kotak lokasi atau izinkan GPS browser.');
                 return;
             }
             if (!photoInputHidden.files || photoInputHidden.files.length === 0) {
