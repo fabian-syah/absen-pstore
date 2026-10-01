@@ -7,8 +7,8 @@
 <div class="profile-page-wrapper">
     {{-- ALERT NOTIFIKASI --}}
     @if (session('success'))
-        <div class="alert profile-alert profile-alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
-            <div class="alert-icon-box text-success flex-shrink-0">
+        <div class="alert profile-alert profile-alert-success alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+            <div class="alert-icon-box text-success flex-shrink-0 me-2.5">
                 <i class="mdi mdi-check-circle-outline"></i>
             </div>
             <div class="flex-grow-1">
@@ -19,8 +19,8 @@
     @endif
 
     @if (session('error'))
-        <div class="alert profile-alert profile-alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
-            <div class="alert-icon-box text-danger flex-shrink-0">
+        <div class="alert profile-alert profile-alert-danger alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+            <div class="alert-icon-box text-danger flex-shrink-0 me-2.5">
                 <i class="mdi mdi-alert-circle-outline"></i>
             </div>
             <div class="flex-grow-1">
@@ -32,8 +32,8 @@
 
     @if ($errors->any())
         <div class="alert profile-alert profile-alert-danger alert-dismissible fade show mb-4" role="alert">
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="mdi mdi-alert-circle-outline text-danger fs-5"></i>
+            <div class="d-flex align-items-center mb-2">
+                <i class="mdi mdi-alert-circle-outline text-danger fs-5 me-2"></i>
                 <span class="fw-bold text-slate-900" style="font-size: 13px;">Terdapat beberapa kesalahan input:</span>
             </div>
             <ul class="mb-0 ps-3 text-danger small">
@@ -101,27 +101,27 @@
                         <h2 class="profile-name mb-0">{{ $user->name }}</h2>
                         @if($user->is_verified)
                             <span class="badge-status-pill badge-verified">
-                                <i class="mdi mdi-shield-check me-1"></i>Akun Terverifikasi
+                                <i class="mdi mdi-shield-check me-1.5"></i>Akun Terverifikasi
                             </span>
                         @else
                             <span class="badge-status-pill badge-unverified">
-                                <i class="mdi mdi-shield-outline me-1"></i>User Biasa
+                                <i class="mdi mdi-shield-outline me-1.5"></i>User Biasa
                             </span>
                         @endif
                     </div>
 
                     <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mt-2">
                         <span class="badge-role-pill">
-                            <i class="mdi mdi-badge-account-horizontal-outline me-1"></i>{{ strtoupper(str_replace('_', ' ', $user->role)) }}
+                            <i class="mdi mdi-badge-account-horizontal-outline me-1.5"></i>{{ strtoupper(str_replace('_', ' ', $user->role)) }}
                         </span>
                         <span class="badge-meta-pill">
-                            <i class="mdi mdi-office-building-marker me-1"></i>{{ $user->branch->name ?? 'Pusat / Semua Cabang' }}
+                            <i class="mdi mdi-office-building-marker me-1.5"></i>{{ $user->branch->name ?? 'Pusat / Semua Cabang' }}
                         </span>
                         <span class="badge-meta-pill">
-                            <i class="mdi mdi-sitemap me-1"></i>{{ $user->division->name ?? 'Headquarters' }}
+                            <i class="mdi mdi-sitemap me-1.5"></i>{{ $user->division->name ?? 'Headquarters' }}
                         </span>
                         <span class="badge-meta-pill">
-                            <i class="mdi mdi-calendar-check me-1"></i>Bergabung {{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->translatedFormat('d M Y') : '-' }}
+                            <i class="mdi mdi-calendar-check me-1.5"></i>Bergabung {{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->translatedFormat('d M Y') : '-' }}
                         </span>
                     </div>
                 </div>
@@ -130,7 +130,7 @@
                 <div class="profile-hero-actions d-flex flex-wrap align-items-center justify-content-center gap-2 mt-3 mt-md-0">
                     @if(!$user->profile_photo_path)
                         <label for="profile_photo_btn" class="btn btn-sm btn-profile-action" style="cursor: pointer;">
-                            <i class="mdi mdi-camera-plus me-1 text-primary"></i> Upload Foto
+                            <i class="mdi mdi-camera-plus me-1.5 text-primary"></i> Upload Foto
                         </label>
                         <form id="heroPhotoForm" action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data" class="d-none">
                             @csrf @method('PUT')
@@ -139,21 +139,21 @@
                     @else
                         @if($user->photo_request_status == 'pending')
                             <button type="button" class="btn btn-sm btn-profile-action text-warning border-warning" disabled>
-                                <i class="mdi mdi-clock-outline me-1"></i> Foto Diproses
+                                <i class="mdi mdi-clock-outline me-1.5"></i> Foto Diproses
                             </button>
                         @else
                             <button type="button" class="btn btn-sm btn-profile-action" data-bs-toggle="modal" data-bs-target="#changeProfilePhotoModal">
-                                <i class="mdi mdi-camera-retake-outline me-1 text-primary"></i> Ganti Foto
+                                <i class="mdi mdi-camera-retake-outline me-1.5 text-primary"></i> Ganti Foto
                             </button>
                         @endif
                     @endif
 
                     <a href="{{ route('attendance.history') }}" class="btn btn-sm btn-profile-action">
-                        <i class="mdi mdi-calendar-clock me-1 text-primary"></i> Riwayat Absen
+                        <i class="mdi mdi-calendar-clock me-1.5 text-primary"></i> Riwayat Absen
                     </a>
 
                     <a href="{{ route('inventory.index') }}" class="btn btn-sm btn-profile-action">
-                        <i class="mdi mdi-package-variant-closed me-1 text-success"></i> Riwayat Inventaris
+                        <i class="mdi mdi-package-variant-closed me-1.5 text-success"></i> Riwayat Inventaris
                     </a>
                 </div>
             </div>
@@ -173,7 +173,7 @@
                 {{-- CARD A: DOKUMEN KTP --}}
                 <div class="modern-card">
                     <div class="modern-card-header d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center">
                             <div class="card-header-icon bg-blue-50 text-primary">
                                 <i class="mdi mdi-card-account-details-outline"></i>
                             </div>
@@ -205,8 +205,8 @@
                                 <p class="text-muted small mb-3" style="font-size: 11.5px;">Unggah foto KTP Anda untuk keperluan validasi identitas dan kepegawaian resmi.</p>
                                 <form action="{{ route('profile.ktp.update') }}" method="POST" enctype="multipart/form-data">
                                     @csrf @method('PUT')
-                                    <label for="ktp_photo_first" class="btn btn-sm btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-1.5 py-2" style="font-size: 12.5px; cursor: pointer;">
-                                        <i class="mdi mdi-upload"></i> Unggah KTP Sekarang
+                                    <label for="ktp_photo_first" class="btn btn-sm btn-primary w-100 d-inline-flex align-items-center justify-content-center py-2" style="font-size: 12.5px; cursor: pointer;">
+                                        <i class="mdi mdi-upload me-1.5"></i> Unggah KTP Sekarang
                                     </label>
                                     <input type="file" name="ktp_photo" id="ktp_photo_first" class="d-none" accept="image/*" onchange="this.form.submit()">
                                 </form>
@@ -215,8 +215,8 @@
                             {{-- State: Sudah Ada KTP --}}
                             <div class="ktp-preview-card p-3 rounded-3 mb-3 position-relative overflow-hidden">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <div class="d-flex align-items-center gap-1.5 text-slate-700 fw-semibold" style="font-size: 11.5px; letter-spacing: 0.02em;">
-                                        <i class="mdi mdi-shield-account text-primary"></i> KARTU TANDA PENDUDUK
+                                    <div class="d-flex align-items-center text-slate-700 fw-semibold" style="font-size: 11.5px; letter-spacing: 0.02em;">
+                                        <i class="mdi mdi-shield-account text-primary me-1.5"></i> KARTU TANDA PENDUDUK
                                     </div>
                                     <i class="mdi mdi-chip text-warning" style="font-size: 22px;"></i>
                                 </div>
@@ -236,21 +236,21 @@
                             </div>
 
                             <div class="d-flex flex-column gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center gap-1.5 py-2" data-bs-toggle="modal" data-bs-target="#ktpModal" style="font-size: 12.5px;">
-                                    <i class="mdi mdi-eye-outline"></i> Lihat KTP Saya
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100 d-inline-flex align-items-center justify-content-center py-2" data-bs-toggle="modal" data-bs-target="#ktpModal" style="font-size: 12.5px;">
+                                    <i class="mdi mdi-eye-outline me-1.5"></i> Lihat KTP Saya
                                 </button>
 
                                 @if ($user->ktp_request_status == 'pending')
-                                    <button class="btn btn-sm btn-secondary w-100 py-2" disabled style="font-size: 12.5px;">
-                                        <i class="mdi mdi-clock-outline me-1"></i> Menunggu Verifikasi Admin
+                                    <button class="btn btn-sm btn-secondary w-100 py-2 d-inline-flex align-items-center justify-content-center" disabled style="font-size: 12.5px;">
+                                        <i class="mdi mdi-clock-outline me-1.5"></i> Menunggu Verifikasi Admin
                                     </button>
                                 @elseif ($user->ktp_request_status == 'rejected')
-                                    <button type="button" class="btn btn-sm btn-outline-danger w-100 py-2 d-inline-flex align-items-center justify-content-center gap-1.5" data-bs-toggle="modal" data-bs-target="#changeKtpModal" style="font-size: 12.5px;">
-                                        <i class="mdi mdi-refresh"></i> Ajukan Ulang KTP
+                                    <button type="button" class="btn btn-sm btn-outline-danger w-100 py-2 d-inline-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#changeKtpModal" style="font-size: 12.5px;">
+                                        <i class="mdi mdi-refresh me-1.5"></i> Ajukan Ulang KTP
                                     </button>
                                 @else
-                                    <button type="button" class="btn btn-sm btn-outline-secondary w-100 py-2 d-inline-flex align-items-center justify-content-center gap-1.5" data-bs-toggle="modal" data-bs-target="#changeKtpModal" style="font-size: 12.5px;">
-                                        <i class="mdi mdi-file-replace-outline"></i> Ajukan Ganti KTP
+                                    <button type="button" class="btn btn-sm btn-outline-secondary w-100 py-2 d-inline-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#changeKtpModal" style="font-size: 12.5px;">
+                                        <i class="mdi mdi-file-replace-outline me-1.5"></i> Ajukan Ganti KTP
                                     </button>
                                 @endif
                             </div>
@@ -260,9 +260,16 @@
 
                 {{-- CARD B: PENGHARGAAN & HALL OF FAME (IF AVAILABLE) --}}
                 @if(isset($achievements) && $achievements->count() > 0)
+                    @php
+                        $indonesianMonths = [
+                            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                        ];
+                    @endphp
                     <div class="modern-card">
                         <div class="modern-card-header d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center">
                                 <div class="card-header-icon bg-amber-50 text-warning">
                                     <i class="mdi mdi-trophy-outline"></i>
                                 </div>
@@ -277,14 +284,18 @@
                         </div>
 
                         <div class="modern-card-body p-3">
-                            <div class="achievements-scroll-area custom-dropdown-scroll" style="max-height: 280px; overflow-y: auto;">
+                            <div class="achievements-scroll-area custom-dropdown-scroll" style="max-height: 320px; overflow-y: auto;">
                                 @foreach($achievements as $year => $items)
-                                    <div class="d-flex align-items-center gap-2 my-2">
-                                        <span class="badge bg-slate-100 text-slate-700 border border-slate-200" style="font-size: 10px; font-weight: 700;">{{ $year }}</span>
+                                    <div class="d-flex align-items-center gap-2 my-2.5">
+                                        <span class="badge bg-slate-100 text-slate-700 border border-slate-200" style="font-size: 10px; font-weight: 700; padding: 4px 8px;">{{ $year }}</span>
                                         <div class="border-top flex-grow-1"></div>
                                     </div>
                                     @foreach($items as $award)
-                                        <div class="modern-award-item rank-{{ $award->rank }} p-2.5 rounded-3 mb-2 d-flex align-items-center gap-3">
+                                        @php
+                                            $monthNum = (int)$award->month;
+                                            $monthName = $indonesianMonths[$monthNum] ?? ('Bulan ' . $award->month);
+                                        @endphp
+                                        <div class="modern-award-item rank-{{ $award->rank }} d-flex align-items-center">
                                             <div class="award-medal-box rank-{{ $award->rank }}-bg flex-shrink-0">
                                                 @if($award->rank == 1)
                                                     <i class="mdi mdi-trophy text-amber-500"></i>
@@ -295,17 +306,17 @@
                                                 @endif
                                             </div>
                                             <div class="flex-grow-1 overflow-hidden">
-                                                <div class="d-flex align-items-center justify-content-between gap-1">
-                                                    <h6 class="mb-0 fw-bold text-slate-900" style="font-size: 13px;">
+                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                    <h6 class="mb-0 fw-bold text-slate-900 award-title">
                                                         Juara {{ $award->rank }}
                                                     </h6>
-                                                    <span class="text-muted" style="font-size: 11px;">
-                                                        Bulan {{ \Carbon\Carbon::create()->month($award->month)->translatedFormat('F') }}
+                                                    <span class="award-month-pill">
+                                                        <i class="mdi mdi-calendar-blank-outline"></i>{{ $monthName }}
                                                     </span>
                                                 </div>
-                                                <div class="text-muted small mt-0.5 d-flex align-items-center gap-1" style="font-size: 11px;">
-                                                    <i class="mdi mdi-check-circle-outline text-success"></i>
-                                                    <span>{{ $award->total_attendance }} Kehadiran Tepat Waktu</span>
+                                                <div class="award-attendance-meta text-muted small d-flex align-items-center">
+                                                    <i class="mdi mdi-check-circle text-success attendance-check-icon"></i>
+                                                    <span><strong>{{ $award->total_attendance }}</strong> Kehadiran Tepat Waktu</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -318,7 +329,7 @@
 
                 {{-- CARD C: TAUTAN CEPAT & RIWAYAT --}}
                 <div class="modern-card">
-                    <div class="modern-card-header d-flex align-items-center gap-2">
+                    <div class="modern-card-header d-flex align-items-center">
                         <div class="card-header-icon bg-slate-100 text-slate-700">
                             <i class="mdi mdi-compass-outline"></i>
                         </div>
@@ -328,27 +339,27 @@
                         </div>
                     </div>
 
-                    <div class="p-2">
-                        <a href="{{ route('attendance.history') }}" class="modern-quick-link d-flex align-items-center justify-content-between p-2.5 rounded-2 text-decoration-none">
-                            <div class="d-flex align-items-center gap-2.5">
+                    <div class="p-2.5">
+                        <a href="{{ route('attendance.history') }}" class="modern-quick-link d-flex align-items-center justify-content-between text-decoration-none">
+                            <div class="d-flex align-items-center">
                                 <div class="quick-link-icon bg-blue-50 text-primary">
                                     <i class="mdi mdi-calendar-clock"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-semibold text-slate-900" style="font-size: 13px;">Riwayat Absensi</div>
+                                    <div class="fw-semibold text-slate-900" style="font-size: 13.5px;">Riwayat Absensi</div>
                                     <small class="text-muted" style="font-size: 11px;">Catatan presensi harian & jam kerja</small>
                                 </div>
                             </div>
                             <i class="mdi mdi-chevron-right text-slate-400 fs-5"></i>
                         </a>
 
-                        <a href="{{ route('inventory.index') }}" class="modern-quick-link d-flex align-items-center justify-content-between p-2.5 rounded-2 text-decoration-none mt-1">
-                            <div class="d-flex align-items-center gap-2.5">
+                        <a href="{{ route('inventory.index') }}" class="modern-quick-link d-flex align-items-center justify-content-between text-decoration-none mt-2">
+                            <div class="d-flex align-items-center">
                                 <div class="quick-link-icon bg-emerald-50 text-emerald-600">
                                     <i class="mdi mdi-package-variant-closed"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-semibold text-slate-900" style="font-size: 13px;">Riwayat Inventaris</div>
+                                    <div class="fw-semibold text-slate-900" style="font-size: 13.5px;">Riwayat Inventaris</div>
                                     <small class="text-muted" style="font-size: 11px;">Barang & perangkat operasional</small>
                                 </div>
                             </div>
@@ -373,7 +384,7 @@
                     {{-- SECTION 1: DATA DIRI & LOGIN --}}
                     <div class="modern-card">
                         <div class="modern-card-header d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center">
                                 <div class="card-header-icon bg-blue-50 text-primary">
                                     <i class="mdi mdi-account-circle-outline"></i>
                                 </div>
@@ -391,7 +402,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label modern-label d-flex align-items-center justify-content-between">
                                         <span>Nama Lengkap (Sesuai KTP)</span>
-                                        <span class="badge bg-slate-100 text-slate-500 rounded-pill px-2 py-0.5" style="font-size: 9.5px;"><i class="mdi mdi-lock-outline"></i> Terkunci</span>
+                                        <span class="badge bg-slate-100 text-slate-500 rounded-pill px-2 py-0.5" style="font-size: 9.5px;"><i class="mdi mdi-lock-outline me-1"></i>Terkunci</span>
                                     </label>
                                     <div class="input-group modern-input-group">
                                         <span class="input-group-text"><i class="mdi mdi-account-outline"></i></span>
@@ -404,7 +415,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label modern-label d-flex align-items-center justify-content-between">
                                         <span>Tanggal Lahir</span>
-                                        <span class="badge bg-slate-100 text-slate-500 rounded-pill px-2 py-0.5" style="font-size: 9.5px;"><i class="mdi mdi-lock-outline"></i> Terkunci</span>
+                                        <span class="badge bg-slate-100 text-slate-500 rounded-pill px-2 py-0.5" style="font-size: 9.5px;"><i class="mdi mdi-lock-outline me-1"></i>Terkunci</span>
                                     </label>
                                     <div class="input-group modern-input-group">
                                         <span class="input-group-text"><i class="mdi mdi-calendar-month-outline"></i></span>
@@ -437,7 +448,7 @@
                     {{-- SECTION 2: INFORMASI PEKERJAAN & PENUGASAN (TILES) --}}
                     <div class="modern-card">
                         <div class="modern-card-header d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center">
                                 <div class="card-header-icon bg-indigo-50 text-indigo-600">
                                     <i class="mdi mdi-briefcase-outline"></i>
                                 </div>
@@ -454,8 +465,8 @@
                                 {{-- Cabang --}}
                                 <div class="col-sm-6 col-md-6">
                                     <div class="info-tile p-3 rounded-3 border bg-slate-50">
-                                        <div class="d-flex align-items-center gap-2 text-muted mb-1" style="font-size: 11px; font-weight: 600;">
-                                            <i class="mdi mdi-store-marker-outline text-primary fs-6"></i>
+                                        <div class="d-flex align-items-center text-muted mb-1" style="font-size: 11px; font-weight: 600;">
+                                            <i class="mdi mdi-store-marker-outline text-primary fs-6 me-1.5"></i>
                                             <span class="text-uppercase">Lokasi Cabang</span>
                                         </div>
                                         <div class="fw-bold text-slate-900" style="font-size: 13.5px;">
@@ -467,8 +478,8 @@
                                 {{-- Divisi --}}
                                 <div class="col-sm-6 col-md-6">
                                     <div class="info-tile p-3 rounded-3 border bg-slate-50">
-                                        <div class="d-flex align-items-center gap-2 text-muted mb-1" style="font-size: 11px; font-weight: 600;">
-                                            <i class="mdi mdi-sitemap-outline text-primary fs-6"></i>
+                                        <div class="d-flex align-items-center text-muted mb-1" style="font-size: 11px; font-weight: 600;">
+                                            <i class="mdi mdi-sitemap-outline text-primary fs-6 me-1.5"></i>
                                             <span class="text-uppercase">Divisi Kerja</span>
                                         </div>
                                         <div class="fw-bold text-slate-900" style="font-size: 13.5px;">
@@ -480,8 +491,8 @@
                                 {{-- Tanggal Bergabung --}}
                                 <div class="col-sm-6 col-md-6">
                                     <div class="info-tile p-3 rounded-3 border bg-slate-50">
-                                        <div class="d-flex align-items-center gap-2 text-muted mb-1" style="font-size: 11px; font-weight: 600;">
-                                            <i class="mdi mdi-calendar-check-outline text-primary fs-6"></i>
+                                        <div class="d-flex align-items-center text-muted mb-1" style="font-size: 11px; font-weight: 600;">
+                                            <i class="mdi mdi-calendar-check-outline text-primary fs-6 me-1.5"></i>
                                             <span class="text-uppercase">Tanggal Bergabung</span>
                                         </div>
                                         <div class="fw-bold text-slate-900" style="font-size: 13.5px;">
@@ -493,11 +504,11 @@
                                 {{-- Status Akun --}}
                                 <div class="col-sm-6 col-md-6">
                                     <div class="info-tile p-3 rounded-3 border bg-slate-50">
-                                        <div class="d-flex align-items-center gap-2 text-muted mb-1" style="font-size: 11px; font-weight: 600;">
-                                            <i class="mdi mdi-shield-check-outline text-primary fs-6"></i>
+                                        <div class="d-flex align-items-center text-muted mb-1" style="font-size: 11px; font-weight: 600;">
+                                            <i class="mdi mdi-shield-check-outline text-primary fs-6 me-1.5"></i>
                                             <span class="text-uppercase">Status Akun</span>
                                         </div>
-                                        <div class="d-flex align-items-center gap-2 mt-0.5">
+                                        <div class="d-flex align-items-center mt-1">
                                             @if($user->is_active)
                                                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1" style="font-size: 11px; font-weight: 700;">
                                                     <i class="mdi mdi-check-circle me-1"></i> AKTIF BEKERJA
@@ -517,7 +528,7 @@
                     {{-- SECTION 3: KONTAK & MEDIA SOSIAL --}}
                     <div class="modern-card">
                         <div class="modern-card-header d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center">
                                 <div class="card-header-icon bg-emerald-50 text-emerald-600">
                                     <i class="mdi mdi-share-variant-outline"></i>
                                 </div>
@@ -589,7 +600,7 @@
                     {{-- SECTION 4: KEAMANAN & GANTI PASSWORD --}}
                     <div class="modern-card">
                         <div class="modern-card-header d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center">
                                 <div class="card-header-icon bg-rose-50 text-rose-600">
                                     <i class="mdi mdi-shield-lock-outline"></i>
                                 </div>
@@ -600,13 +611,13 @@
                             </div>
 
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-toggle-password" style="font-size: 12px; font-weight: 600;">
-                                <i class="mdi mdi-lock-reset me-1"></i> Ganti Password
+                                <i class="mdi mdi-lock-reset me-1.5"></i> Ganti Password
                             </button>
                         </div>
 
                         <div class="modern-card-body p-4 d-none" id="password-container">
-                            <div class="password-notice p-3 rounded-3 bg-amber-50 border border-amber-200 mb-3 text-amber-900 d-flex align-items-start gap-2">
-                                <i class="mdi mdi-information-outline fs-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                            <div class="password-notice p-3 rounded-3 bg-amber-50 border border-amber-200 mb-3 text-amber-900 d-flex align-items-start">
+                                <i class="mdi mdi-information-outline fs-5 text-amber-600 flex-shrink-0 me-2 mt-0.5"></i>
                                 <div style="font-size: 12px;">
                                     Gunakan kata sandi baru minimal 8 karakter. Kosongkan formulir ini jika Anda tidak ingin mengubah kata sandi akun saat ini.
                                 </div>
@@ -641,14 +652,14 @@
                     {{-- ACTIONS FOOTER BAR --}}
                     <div class="profile-actions-bar d-flex align-items-center justify-content-between p-3 rounded-3 bg-white border">
                         <span class="text-muted small d-none d-sm-inline" style="font-size: 12px;">
-                            <i class="mdi mdi-information-outline me-1"></i>Pastikan seluruh informasi yang Anda ubah sudah sesuai.
+                            <i class="mdi mdi-information-outline me-1.5"></i>Pastikan seluruh informasi yang Anda ubah sudah sesuai.
                         </span>
                         <div class="d-flex align-items-center gap-2 ms-auto">
                             <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-secondary px-3 py-2" style="font-size: 13px; font-weight: 600;">
                                 Batal
                             </a>
-                            <button type="submit" class="btn btn-sm btn-primary px-4 py-2 d-inline-flex align-items-center gap-1.5 shadow-sm" style="font-size: 13px; font-weight: 600;">
-                                <i class="mdi mdi-check"></i> Simpan Perubahan
+                            <button type="submit" class="btn btn-sm btn-primary px-4 py-2 d-inline-flex align-items-center shadow-sm" style="font-size: 13px; font-weight: 600;">
+                                <i class="mdi mdi-check me-1.5"></i> Simpan Perubahan
                             </button>
                         </div>
                     </div>
@@ -689,7 +700,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content modern-modal-card">
             <div class="modal-header border-bottom px-4 py-3 bg-slate-50">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center">
                     <div class="card-header-icon bg-blue-50 text-primary">
                         <i class="mdi mdi-camera"></i>
                     </div>
@@ -716,21 +727,21 @@
                         <input type="file" name="profile_photo" id="modalProfilePhotoInput" class="d-none" accept="image/*" required onchange="previewImage(this, 'photoPreviewImg', 'photoPreviewContainer', 'photoUploadIcon')">
                     </div>
                     <div class="alert alert-info py-2 px-3 small rounded-3 mb-0" style="font-size: 11.5px;">
-                        <i class="mdi mdi-information-outline me-1"></i> Setelah diajukan, foto akan ditinjau oleh Admin sebelum tampil secara publik.
+                        <i class="mdi mdi-information-outline me-1.5"></i> Setelah diajukan, foto akan ditinjau oleh Admin sebelum tampil secara publik.
                     </div>
                 </div>
                 <div class="modal-footer border-top px-4 py-3 bg-slate-50 d-flex justify-content-between align-items-center">
                     <div>
                         @if($user->profile_photo_path)
                             <button type="button" class="btn btn-sm btn-outline-danger" onclick="if(confirm('Apakah Anda yakin ingin menghapus foto profil?')) { document.getElementById('deletePhotoForm').submit(); }">
-                                <i class="mdi mdi-delete-outline me-1"></i> Hapus Foto
+                                <i class="mdi mdi-delete-outline me-1.5"></i> Hapus Foto
                             </button>
                         @endif
                     </div>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-sm btn-primary px-3">
-                            <i class="mdi mdi-upload me-1"></i> Kirim Pengajuan Foto
+                            <i class="mdi mdi-upload me-1.5"></i> Kirim Pengajuan Foto
                         </button>
                     </div>
                 </div>
@@ -763,7 +774,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content modern-modal-card">
             <div class="modal-header border-bottom px-4 py-3 bg-slate-50">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center">
                     <div class="card-header-icon bg-amber-50 text-warning">
                         <i class="mdi mdi-card-account-details-outline"></i>
                     </div>
@@ -790,13 +801,13 @@
                         <input type="file" name="ktp_photo" id="modalKtpPhotoInput" class="d-none" accept="image/*" required onchange="previewImage(this, 'ktpPreviewImg', 'ktpPreviewContainer', 'ktpUploadIcon')">
                     </div>
                     <div class="alert alert-warning py-2 px-3 small rounded-3 mb-0" style="font-size: 11.5px;">
-                        <i class="mdi mdi-shield-alert-outline me-1"></i> Data KTP bersifat rahasia dan hanya digunakan untuk validasi legal kepegawaian.
+                        <i class="mdi mdi-shield-alert-outline me-1.5"></i> Data KTP bersifat rahasia dan hanya digunakan untuk validasi legal kepegawaian.
                     </div>
                 </div>
                 <div class="modal-footer border-top px-4 py-3 bg-slate-50 d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-sm btn-primary px-3">
-                        <i class="mdi mdi-upload me-1"></i> Ajukan KTP Baru
+                        <i class="mdi mdi-upload me-1.5"></i> Ajukan KTP Baru
                     </button>
                 </div>
             </form>
@@ -856,6 +867,21 @@
     .bg-warning-subtle { background-color: #fef9c3 !important; color: #a16207 !important; }
     .bg-danger-subtle { background-color: #fee2e2 !important; color: #b91c1c !important; }
     .rounded-4 { border-radius: 1rem !important; }
+
+    /* Explicit Gap & Margin Spacing Classes */
+    .gap-1 { gap: 0.25rem !important; }
+    .gap-1\.5, .gap-1-5 { gap: 0.375rem !important; }
+    .gap-2 { gap: 0.5rem !important; }
+    .gap-2\.5, .gap-2-5 { gap: 0.625rem !important; }
+    .gap-3 { gap: 1rem !important; }
+    .gap-4 { gap: 1.5rem !important; }
+
+    .me-1 { margin-right: 0.25rem !important; }
+    .me-1\.5, .me-1-5 { margin-right: 0.375rem !important; }
+    .me-2 { margin-right: 0.5rem !important; }
+    .me-2\.5, .me-2-5 { margin-right: 0.625rem !important; }
+    .me-3 { margin-right: 1rem !important; }
+    .me-4 { margin-right: 1.5rem !important; }
 
     .profile-page-wrapper {
         width: 100%;
@@ -1095,14 +1121,15 @@
     }
 
     .card-header-icon {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 17px;
+        font-size: 18px;
         flex-shrink: 0;
+        margin-right: 11px !important;
     }
 
     .card-header-title {
@@ -1182,46 +1209,133 @@
     /* Quick Links */
     .modern-quick-link {
         transition: all 0.15s ease;
-        border: 1px solid transparent;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
     .modern-quick-link:hover {
         background: #f8fafc;
-        border-color: var(--profile-border);
+        border-color: #cbd5e1;
+        transform: translateX(2px);
     }
     .quick-link-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 17px;
+        font-size: 19px;
         flex-shrink: 0;
+        margin-right: 13px !important;
     }
 
-    /* Awards */
+    /* --- AWARDS & HALL OF FAME STYLING --- */
     .modern-award-item {
-        background: #f8fafc;
-        border: 1px solid var(--profile-border);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
         transition: all 0.15s ease;
     }
     .modern-award-item:hover {
-        border-color: #cbd5e1;
-        background: #ffffff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border-color: #94a3b8;
+        box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+        transform: translateY(-1px);
     }
+    .modern-award-item.rank-1 {
+        border-left: 4px solid #f59e0b;
+    }
+    .modern-award-item.rank-2 {
+        border-left: 4px solid #94a3b8;
+    }
+    .modern-award-item.rank-3 {
+        border-left: 4px solid #d97706;
+    }
+
     .award-medal-box {
-        width: 34px;
-        height: 34px;
-        border-radius: 8px;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 20px;
+        margin-right: 13px !important;
+        flex-shrink: 0;
     }
-    .rank-1-bg { background: #fffbeb; }
-    .rank-2-bg { background: #f1f5f9; }
-    .rank-3-bg { background: #fef3c7; }
+    .rank-1-bg { background: #fefce8; border: 1px solid #fef08a; }
+    .rank-2-bg { background: #f1f5f9; border: 1px solid #e2e8f0; }
+    .rank-3-bg { background: #fff7ed; border: 1px solid #ffedd5; }
+
+    .award-title {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .award-month-pill {
+        display: inline-flex;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 9999px;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        letter-spacing: 0.02em;
+        line-height: 1.25;
+    }
+
+    .award-month-pill i {
+        font-size: 12px;
+        margin-right: 4px !important;
+        color: #64748b;
+    }
+
+    .modern-award-item.rank-1 .award-month-pill {
+        background: #fefce8;
+        color: #92400e;
+        border-color: #fde047;
+    }
+    .modern-award-item.rank-1 .award-month-pill i {
+        color: #d97706;
+    }
+
+    .modern-award-item.rank-2 .award-month-pill {
+        background: #f8fafc;
+        color: #334155;
+        border-color: #cbd5e1;
+    }
+    .modern-award-item.rank-2 .award-month-pill i {
+        color: #64748b;
+    }
+
+    .modern-award-item.rank-3 .award-month-pill {
+        background: #fff7ed;
+        color: #9a3412;
+        border-color: #fdba74;
+    }
+    .modern-award-item.rank-3 .award-month-pill i {
+        color: #ea580c;
+    }
+
+    .attendance-check-icon {
+        font-size: 15px;
+        margin-right: 7px !important;
+        flex-shrink: 0;
+    }
+
+    .award-attendance-meta {
+        font-size: 11.5px;
+        color: #475569;
+    }
 
     /* Modals */
     .modern-modal-card {
@@ -1351,14 +1465,14 @@
             btnToggle.addEventListener('click', function() {
                 container.classList.toggle('d-none');
                 if (container.classList.contains('d-none')) {
-                    btnToggle.innerHTML = '<i class="mdi mdi-lock-reset me-1"></i> Ganti Password';
+                    btnToggle.innerHTML = '<i class="mdi mdi-lock-reset me-1.5"></i> Ganti Password';
                     btnToggle.classList.replace('btn-outline-danger', 'btn-outline-secondary');
                     const pwd = document.getElementById('input-password');
                     const pwdConfirm = document.getElementById('input-password-confirm');
                     if (pwd) pwd.value = '';
                     if (pwdConfirm) pwdConfirm.value = '';
                 } else {
-                    btnToggle.innerHTML = '<i class="mdi mdi-close me-1"></i> Batal Ganti Password';
+                    btnToggle.innerHTML = '<i class="mdi mdi-close me-1.5"></i> Batal Ganti Password';
                     btnToggle.classList.replace('btn-outline-secondary', 'btn-outline-danger');
                     const firstPwd = document.getElementById('input-password');
                     if (firstPwd) firstPwd.focus();
