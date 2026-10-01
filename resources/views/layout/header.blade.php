@@ -70,6 +70,11 @@
                     <kbd class="search-kbd-chip">Ctrl K</kbd>
                     <div class="search-results dropdown-menu modern-dropdown-pane" id="searchResults"></div>
                 </div>
+
+                {{-- Mobile Search Trigger Button --}}
+                <button class="modern-action-btn d-inline-flex d-md-none" type="button" id="mobileSearchTrigger" title="Cari user / data..." aria-label="Cari user atau data">
+                    <i class="mdi mdi-magnify"></i>
+                </button>
             @endif
 
             {{-- Fullscreen Toggle (Desktop) --}}
@@ -297,6 +302,60 @@
 </nav>
 
 {{-- =========================================================================
+     MOBILE SEARCH OVERLAY
+     - Modern full-width sliding search for mobile/tablet devices
+     ========================================================================= --}}
+@if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
+    <div class="mobile-search-overlay" id="mobileSearchOverlay" aria-modal="true" role="dialog">
+        <div class="mobile-search-header d-flex align-items-center gap-2 px-3 py-2 border-bottom bg-white">
+            <button type="button" class="modern-action-btn mobile-search-back-btn flex-shrink-0" id="mobileSearchClose" aria-label="Tutup pencarian" title="Kembali">
+                <i class="mdi mdi-arrow-left"></i>
+            </button>
+            <div class="position-relative flex-grow-1">
+                <i class="mdi mdi-magnify mobile-search-icon"></i>
+                <input type="search" class="form-control mobile-search-input" id="mobileGlobalSearch"
+                    data-url="{{ route('search') }}" placeholder="Cari user, divisi, cabang..." autocomplete="off">
+                <button type="button" class="mobile-search-clear-btn" id="mobileSearchClear" aria-label="Hapus teks" title="Hapus">
+                    <i class="mdi mdi-close"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="mobile-search-body" id="mobileSearchBody">
+            {{-- Initial State --}}
+            <div class="mobile-search-state py-5 px-3 text-center" id="mobileSearchInitialState">
+                <div class="mobile-search-state-icon mb-2">
+                    <i class="mdi mdi-magnify text-slate-300" style="font-size: 38px;"></i>
+                </div>
+                <div class="fw-semibold text-slate-700" style="font-size: 13.5px;">Cari Data Sistem</div>
+                <p class="text-muted small mb-0 mt-1" style="font-size: 11.5px;">Ketik minimal 2 karakter untuk mencari nama user, email, pengumuman, divisi, atau cabang.</p>
+            </div>
+
+            {{-- Loading State --}}
+            <div class="mobile-search-state py-5 px-3 text-center d-none" id="mobileSearchLoadingState">
+                <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                <p class="text-muted small mb-0">Mencari data...</p>
+            </div>
+
+            {{-- Empty State --}}
+            <div class="mobile-search-state py-5 px-3 text-center d-none" id="mobileSearchEmptyState">
+                <div class="mobile-search-state-icon mb-2">
+                    <i class="mdi mdi-account-search-outline text-slate-300" style="font-size: 38px;"></i>
+                </div>
+                <div class="fw-semibold text-slate-700" style="font-size: 13.5px;">Tidak Ada Data Ditemukan</div>
+                <p class="text-muted small mb-0 mt-1" style="font-size: 11.5px;">Tidak ditemukan data yang sesuai dengan kata kunci Anda.</p>
+            </div>
+
+            {{-- Results Container --}}
+            <div class="mobile-search-results-list d-none" id="mobileSearchResultsList">
+                {{-- Populated by JS --}}
+            </div>
+        </div>
+    </div>
+    <div class="mobile-search-backdrop" id="mobileSearchBackdrop"></div>
+@endif
+
+{{-- =========================================================================
      JAVASCRIPT LOGIC
      - Search with keyboard shortcut (Ctrl+K)
      - Broadcast Notifications Polling & UI
@@ -306,12 +365,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // ==========================================
-        // 1. GLOBAL SEARCH LOGIC & SHORTCUT
+        // 1. GLOBAL SEARCH LOGIC (DESKTOP & MOBILE)
         // ==========================================
         const searchInput = document.getElementById('globalSearch');
         const searchResults = document.getElementById('searchResults');
         let searchTimeout = null;
 
+        // Desktop Search
         if (searchInput && searchResults) {
             searchInput.addEventListener('input', function () {
                 const query = this.value;
@@ -352,29 +412,26 @@
                     searchResults.classList.remove('show');
                 }
             });
-
-            // Keyboard Shortcut Ctrl+K / Cmd+K
-            window.addEventListener('keydown', function (e) {
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-                    e.preventDefault();
-                    searchInput.focus();
-                }
-            });
         }
 
         function renderSearchResults(results) {
+            if (!searchResults) return;
             if (!results || results.length === 0) {
                 searchResults.innerHTML = '<div class="dropdown-item text-muted py-3 text-center small">Tidak ada data ditemukan</div>';
             } else {
                 let html = '';
                 results.forEach(item => {
+                    const typeLabel = item.type ? item.type.toUpperCase() : 'DATA';
                     html += `
                         <a href="${item.url}" class="dropdown-item modern-search-item px-3 py-2.5 d-flex align-items-center gap-2.5 border-bottom">
                             <div class="search-item-icon-box d-flex align-items-center justify-content-center rounded-2">
                                 <i class="mdi ${item.icon || 'mdi-magnify'} text-primary" style="font-size: 18px;"></i>
                             </div>
                             <div class="overflow-hidden flex-grow-1">
-                                <div class="text-slate-900 fw-semibold text-truncate" style="font-size: 13px;">${escapeHtml(item.title)}</div>
+                                <div class="d-flex align-items-center justify-content-between gap-1">
+                                    <span class="text-slate-900 fw-semibold text-truncate" style="font-size: 13px;">${escapeHtml(item.title)}</span>
+                                    <span class="badge bg-slate-100 text-slate-600 rounded-pill" style="font-size: 9px; font-weight: 600;">${escapeHtml(typeLabel)}</span>
+                                </div>
                                 <div class="text-muted text-truncate" style="font-size: 11px;">${escapeHtml(item.description)}</div>
                             </div>
                         </a>
@@ -384,6 +441,201 @@
             }
             searchResults.classList.add('show');
         }
+
+        // ==========================================
+        // 1.1 MOBILE SEARCH LOGIC
+        // ==========================================
+        const mobileSearchTrigger = document.getElementById('mobileSearchTrigger');
+        const mobileSearchOverlay = document.getElementById('mobileSearchOverlay');
+        const mobileSearchBackdrop = document.getElementById('mobileSearchBackdrop');
+        const mobileSearchClose = document.getElementById('mobileSearchClose');
+        const mobileSearchInput = document.getElementById('mobileGlobalSearch');
+        const mobileSearchClear = document.getElementById('mobileSearchClear');
+        const mobileSearchResultsList = document.getElementById('mobileSearchResultsList');
+        const mobileSearchInitialState = document.getElementById('mobileSearchInitialState');
+        const mobileSearchLoadingState = document.getElementById('mobileSearchLoadingState');
+        const mobileSearchEmptyState = document.getElementById('mobileSearchEmptyState');
+        const sidebarMobileSearchTrigger = document.getElementById('sidebarMobileSearchTrigger');
+        let mobileSearchTimeout = null;
+
+        function openMobileSearch() {
+            if (!mobileSearchOverlay) return;
+            mobileSearchOverlay.classList.add('active');
+            if (mobileSearchBackdrop) mobileSearchBackdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Tutup sidebar mobile jika sedang terbuka
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.remove('active');
+            if (backdrop) backdrop.classList.remove('show');
+            document.body.classList.remove('sidebar-drawer-open');
+
+            setTimeout(() => {
+                if (mobileSearchInput) {
+                    mobileSearchInput.focus();
+                }
+            }, 100);
+        }
+
+        function closeMobileSearch() {
+            if (!mobileSearchOverlay) return;
+            mobileSearchOverlay.classList.remove('active');
+            if (mobileSearchBackdrop) mobileSearchBackdrop.classList.remove('active');
+            document.body.style.overflow = '';
+            if (mobileSearchInput) {
+                mobileSearchInput.blur();
+            }
+        }
+
+        // Expose globally
+        window.openMobileSearch = openMobileSearch;
+        window.closeMobileSearch = closeMobileSearch;
+
+        if (mobileSearchTrigger) {
+            mobileSearchTrigger.addEventListener('click', openMobileSearch);
+        }
+
+        if (sidebarMobileSearchTrigger) {
+            sidebarMobileSearchTrigger.addEventListener('click', openMobileSearch);
+        }
+
+        if (mobileSearchClose) {
+            mobileSearchClose.addEventListener('click', closeMobileSearch);
+        }
+
+        if (mobileSearchBackdrop) {
+            mobileSearchBackdrop.addEventListener('click', closeMobileSearch);
+        }
+
+        if (mobileSearchClear && mobileSearchInput) {
+            mobileSearchClear.addEventListener('click', function () {
+                mobileSearchInput.value = '';
+                mobileSearchClear.style.display = 'none';
+                if (mobileSearchInitialState) mobileSearchInitialState.classList.remove('d-none');
+                if (mobileSearchLoadingState) mobileSearchLoadingState.classList.add('d-none');
+                if (mobileSearchEmptyState) mobileSearchEmptyState.classList.add('d-none');
+                if (mobileSearchResultsList) {
+                    mobileSearchResultsList.classList.add('d-none');
+                    mobileSearchResultsList.innerHTML = '';
+                }
+                mobileSearchInput.focus();
+            });
+        }
+
+        if (mobileSearchInput) {
+            mobileSearchInput.addEventListener('input', function () {
+                const query = this.value.trim();
+                const url = this.getAttribute('data-url');
+                clearTimeout(mobileSearchTimeout);
+
+                if (query.length > 0) {
+                    if (mobileSearchClear) mobileSearchClear.style.display = 'inline-flex';
+                } else {
+                    if (mobileSearchClear) mobileSearchClear.style.display = 'none';
+                }
+
+                if (query.length < 2) {
+                    if (mobileSearchInitialState) mobileSearchInitialState.classList.remove('d-none');
+                    if (mobileSearchLoadingState) mobileSearchLoadingState.classList.add('d-none');
+                    if (mobileSearchEmptyState) mobileSearchEmptyState.classList.add('d-none');
+                    if (mobileSearchResultsList) {
+                        mobileSearchResultsList.classList.add('d-none');
+                        mobileSearchResultsList.innerHTML = '';
+                    }
+                    return;
+                }
+
+                if (mobileSearchInitialState) mobileSearchInitialState.classList.add('d-none');
+                if (mobileSearchEmptyState) mobileSearchEmptyState.classList.add('d-none');
+                if (mobileSearchResultsList) mobileSearchResultsList.classList.add('d-none');
+                if (mobileSearchLoadingState) mobileSearchLoadingState.classList.remove('d-none');
+
+                mobileSearchTimeout = setTimeout(() => {
+                    fetch(`${url}?q=${encodeURIComponent(query)}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network error');
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (mobileSearchLoadingState) mobileSearchLoadingState.classList.add('d-none');
+                            renderMobileSearchResults(data.results);
+                        })
+                        .catch(error => {
+                            console.error('Mobile search error:', error);
+                            if (mobileSearchLoadingState) mobileSearchLoadingState.classList.add('d-none');
+                            if (mobileSearchEmptyState) {
+                                mobileSearchEmptyState.classList.remove('d-none');
+                                const p = mobileSearchEmptyState.querySelector('p');
+                                if (p) p.textContent = 'Terjadi kesalahan saat memuat data.';
+                            }
+                        });
+                }, 350);
+            });
+        }
+
+        function renderMobileSearchResults(results) {
+            if (!mobileSearchResultsList) return;
+
+            if (!results || results.length === 0) {
+                if (mobileSearchEmptyState) {
+                    mobileSearchEmptyState.classList.remove('d-none');
+                    const p = mobileSearchEmptyState.querySelector('p');
+                    if (p) p.textContent = 'Tidak ditemukan data yang sesuai dengan kata kunci Anda.';
+                }
+                mobileSearchResultsList.classList.add('d-none');
+                mobileSearchResultsList.innerHTML = '';
+                return;
+            }
+
+            if (mobileSearchEmptyState) mobileSearchEmptyState.classList.add('d-none');
+
+            let html = '';
+            results.forEach(item => {
+                const typeLabel = item.type ? item.type.toUpperCase() : 'DATA';
+                html += `
+                    <a href="${item.url}" class="mobile-search-result-item">
+                        <div class="mobile-search-icon-box">
+                            <i class="mdi ${item.icon || 'mdi-magnify'}"></i>
+                        </div>
+                        <div class="overflow-hidden flex-grow-1">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-0.5">
+                                <div class="text-slate-900 fw-semibold text-truncate" style="font-size: 13px;">${escapeHtml(item.title)}</div>
+                                <span class="badge" style="font-size: 9.5px; font-weight: 700; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 1.5px 6px; border-radius: 4px;">${escapeHtml(typeLabel)}</span>
+                            </div>
+                            <div class="text-muted text-truncate" style="font-size: 11px;">${escapeHtml(item.description)}</div>
+                        </div>
+                        <i class="mdi mdi-chevron-right text-slate-400" style="font-size: 18px; flex-shrink: 0;"></i>
+                    </a>
+                `;
+            });
+
+            mobileSearchResultsList.innerHTML = html;
+            mobileSearchResultsList.classList.remove('d-none');
+        }
+
+        // Global Shortcut Ctrl+K / Cmd+K
+        window.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                if (window.innerWidth < 768) {
+                    openMobileSearch();
+                } else if (searchInput) {
+                    searchInput.focus();
+                }
+            } else if (e.key === 'Escape') {
+                if (mobileSearchOverlay && mobileSearchOverlay.classList.contains('active')) {
+                    closeMobileSearch();
+                }
+            }
+        });
+
+        // Close mobile search on resize to desktop
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 768 && mobileSearchOverlay && mobileSearchOverlay.classList.contains('active')) {
+                closeMobileSearch();
+            }
+        });
 
         // ==========================================
         // 2. BROADCAST NOTIFICATIONS LOGIC
@@ -1237,6 +1489,151 @@
         height: 32px;
         background: var(--slate-100);
         flex-shrink: 0;
+    }
+
+    /* --- MOBILE SEARCH OVERLAY & RESULTS --- */
+    .mobile-search-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 85vh;
+        background: #ffffff;
+        z-index: 1070;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+        border-bottom: 1px solid var(--slate-200);
+        display: flex;
+        flex-direction: column;
+        transform: translateY(-105%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, visibility 0.2s ease;
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .mobile-search-overlay.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .mobile-search-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 1065;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .mobile-search-backdrop.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .mobile-search-header {
+        height: 56px;
+        min-height: 56px;
+    }
+
+    .mobile-search-input {
+        height: 38px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--slate-200) !important;
+        background: var(--slate-50) !important;
+        font-size: 13px !important;
+        color: var(--slate-900) !important;
+        padding-left: 36px !important;
+        padding-right: 36px !important;
+        transition: all 0.15s ease !important;
+    }
+
+    .mobile-search-input:focus {
+        background: #ffffff !important;
+        border-color: var(--primary-blue) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08) !important;
+        outline: none !important;
+    }
+
+    .mobile-search-icon {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--slate-400);
+        font-size: 18px;
+        pointer-events: none;
+        line-height: 1;
+    }
+
+    .mobile-search-clear-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 22px;
+        height: 22px;
+        border: none;
+        background: var(--slate-200);
+        color: var(--slate-600);
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+        transition: all 0.15s ease;
+    }
+
+    .mobile-search-clear-btn:hover {
+        background: var(--slate-300);
+        color: var(--slate-900);
+    }
+
+    .mobile-search-body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: calc(85vh - 56px);
+        background: #ffffff;
+    }
+
+    .mobile-search-result-item {
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--slate-100);
+        text-decoration: none !important;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: background 0.15s ease;
+    }
+
+    .mobile-search-result-item:hover,
+    .mobile-search-result-item:active {
+        background: var(--slate-50);
+    }
+
+    .mobile-search-icon-box {
+        width: 36px;
+        height: 36px;
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 19px;
     }
 
     /* --- ACTION BUTTONS (FULLSCREEN, BROADCAST, CHAT) --- */

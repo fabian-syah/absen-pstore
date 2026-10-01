@@ -194,7 +194,8 @@
 
         /* 3. Critical Mobile Sidebar Drawer Anti-FOUC */
         .sidebar-mobile-header,
-        .sidebar-mobile-user {
+        .sidebar-mobile-user,
+        .sidebar-mobile-search {
             display: none !important;
         }
 

@@ -413,24 +413,42 @@
         background: #94a3b8;
     }
 
-    /* Sidebar Mobile Drawer Header & Profile Card */
+    /* Sidebar Mobile Drawer Header, Profile Card & Search */
     .sidebar-mobile-header,
-    .sidebar-mobile-user {
+    .sidebar-mobile-user,
+    .sidebar-mobile-search {
         display: none !important;
     }
 
     @media (max-width: 991px) {
         .sidebar.sidebar-offcanvas.active .sidebar-mobile-header,
-        .sidebar.sidebar-offcanvas.active .sidebar-mobile-user {
+        .sidebar.sidebar-offcanvas.active .sidebar-mobile-user,
+        .sidebar.sidebar-offcanvas.active .sidebar-mobile-search {
             display: flex !important;
         }
     }
 
     @media (min-width: 992px) {
         .sidebar-mobile-header,
-        .sidebar-mobile-user {
+        .sidebar-mobile-user,
+        .sidebar-mobile-search {
             display: none !important;
         }
+    }
+
+    .sidebar-mobile-search-btn {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 7px 12px !important;
+        transition: all 0.15s ease !important;
+        cursor: pointer;
+    }
+
+    .sidebar-mobile-search-btn:hover,
+    .sidebar-mobile-search-btn:active {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
     }
 </style>
 
@@ -475,6 +493,19 @@
             </div>
         </div>
     </div>
+
+    {{-- MOBILE DRAWER SEARCH BAR (Admin, Audit, Leader, Admin Gaji) --}}
+    @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
+        <div class="sidebar-mobile-search px-3 py-2 border-bottom bg-slate-50 flex-shrink-0" style="display: none;">
+            <button type="button" class="btn btn-sm w-100 d-flex align-items-center justify-content-between text-start sidebar-mobile-search-btn" id="sidebarMobileSearchTrigger" onclick="if(typeof window.openMobileSearch === 'function') window.openMobileSearch();">
+                <span class="d-flex align-items-center gap-2 text-muted" style="font-size: 12.5px;">
+                    <i class="mdi mdi-magnify text-slate-400" style="font-size: 16px;"></i>
+                    <span>Cari user / data...</span>
+                </span>
+                <span class="badge bg-white text-slate-500 border border-slate-200" style="font-size: 9.5px; font-weight: 600;">Cari</span>
+            </button>
+        </div>
+    @endif
 
     <ul class="nav">
         {{-- =================================== --}}

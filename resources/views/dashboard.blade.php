@@ -375,8 +375,8 @@
 @endsection
 
 @section('content')
-    {{-- Greeting Header Bar --}}
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    {{-- Greeting Header Bar (Desktop Only) --}}
+    <div class="d-none d-lg-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
             <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
@@ -460,6 +460,22 @@
             <span class="text-muted small d-block mb-1 greeting-text-mobile">Selamat Datang,</span>
             <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
         </div>
+
+        {{-- Quick Search Bar khusus Mobile Dashboard (Admin, Audit, Leader, Admin Gaji) --}}
+        @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
+            <div class="d-block d-md-none mb-3">
+                <button type="button" class="btn btn-sm w-100 d-flex align-items-center justify-content-between text-start p-2.5 bg-white border rounded-3 shadow-none"
+                    style="border-color: #e2e8f0 !important;"
+                    onclick="if(typeof window.openMobileSearch === 'function') window.openMobileSearch();"
+                    aria-label="Cari user atau data">
+                    <span class="d-flex align-items-center gap-2 text-muted" style="font-size: 13px;">
+                        <i class="mdi mdi-magnify text-slate-400" style="font-size: 18px;"></i>
+                        <span>Cari user / data...</span>
+                    </span>
+                    <span class="badge bg-slate-100 text-slate-600 rounded-pill px-2.5 py-1" style="font-size: 10px; font-weight: 600;">Cari</span>
+                </button>
+            </div>
+        @endif
 
         @if(isset($attendancePercentageMonth))
             <div class="d-flex align-items-center gap-2 flex-wrap">
