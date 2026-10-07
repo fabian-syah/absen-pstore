@@ -335,6 +335,13 @@
         }
 
         /* Modal Stacking & Backdrop Fix */
+        .modal {
+            z-index: 1065 !important;
+        }
+        .modal .modal-dialog {
+            z-index: 1066 !important;
+            position: relative;
+        }
         #modalKoreksiDashboard {
             z-index: 1065 !important;
         }
@@ -342,7 +349,8 @@
             z-index: 1066 !important;
             max-width: 500px;
         }
-        body.modal-open .modal-backdrop {
+        body.modal-open .modal-backdrop,
+        .modal-backdrop {
             z-index: 1055 !important;
         }
 
@@ -3101,9 +3109,10 @@
     </div>
 
     {{-- MODAL POPUP QR CODE (Untuk Scan Security) --}}
-    <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+    <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true" style="z-index: 1065 !important;">
+        <div class="modal-dialog modal-dialog-centered modal-sm" style="z-index: 1066 !important;">
+            <div class="modal-content border-0 shadow-lg position-relative" style="border-radius: 20px;">
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
                 <div class="modal-header border-0 pb-0 justify-content-center">
                     <h5 class="modal-title fw-bold mt-3">QR Code Saya</h5>
                 </div>
@@ -3119,7 +3128,7 @@
                         </div>
                     </div>
                     <p class="text-muted small mb-3">Tunjukkan ke Security untuk Scan</p>
-                    <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-dismiss="modal" data-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -4882,16 +4891,25 @@
                     });
 
                     var qrModal = document.getElementById('qrModal');
-                    if(qrModal) document.body.appendChild(qrModal); // Fix modal backdrop overlay issue
-                    qrModal.addEventListener('show.bs.modal', function (event) {
-                        var qrContainer = document.getElementById('qrcode-modal-display');
-                        qrContainer.innerHTML = '';
-                        new QRCode(qrContainer, {
-                            text: qrValue,
-                            width: 256,
-                            height: 256,
+                    if (qrModal && qrModal.parentElement !== document.body) {
+                        document.body.appendChild(qrModal); // Fix modal backdrop overlay issue
+                    }
+                    if (qrModal) {
+                        qrModal.addEventListener('show.bs.modal', function (event) {
+                            if (qrModal.parentElement !== document.body) {
+                                document.body.appendChild(qrModal);
+                            }
+                            var qrContainer = document.getElementById('qrcode-modal-display');
+                            if (qrContainer) {
+                                qrContainer.innerHTML = '';
+                                new QRCode(qrContainer, {
+                                    text: qrValue,
+                                    width: 256,
+                                    height: 256,
+                                });
+                            }
                         });
-                    });
+                    }
                 @endif
 
                                                                                                                                                                                                                 // --- SCRIPT CHART ---
@@ -5224,11 +5242,14 @@
             const modalEl = document.getElementById('modalKoreksiDashboard');
             const delForm = document.getElementById('formDeleteAttendanceDay');
 
-            // 1. PINDAHKAN MODAL & FORM KE <body>
+            // 1. PINDAHKAN SEMUA MODAL & FORM KE <body>
             // Ini WAJIB untuk mengatasi isu backdrop modal menutupi (niban) modal dan membuatnya abu-abu
-            if (modalEl && modalEl.parentElement !== document.body) {
-                document.body.appendChild(modalEl);
-            }
+            ['qrModal', 'profilePhotoModal', 'galleryPreviewModal', 'modalKoreksiDashboard'].forEach(function(mId) {
+                var el = document.getElementById(mId);
+                if (el && el.parentElement !== document.body) {
+                    document.body.appendChild(el);
+                }
+            });
             if (delForm && delForm.parentElement !== document.body) {
                 document.body.appendChild(delForm);
             }
