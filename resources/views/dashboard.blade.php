@@ -6,110 +6,15 @@
 
 @push('styles')
     <style>
-        /* =======================================================================
-           MODERN AESTHETIC DASHBOARD DESIGN SYSTEM (ANTISLOP COMPLIANT)
-           Clean enterprise aesthetic, refined tokens, high contrast WCAG AA,
-           fluid responsive grids, and zero generic AI slop.
-           ======================================================================= */
-        :root {
-            --db-bg: #f8fafc;
-            --db-card: #ffffff;
-            --db-border: #e2e8f0;
-            --db-border-hover: #cbd5e1;
-            --db-text-primary: #0f172a;
-            --db-text-secondary: #475569;
-            --db-text-muted: #94a3b8;
-            --db-primary: #2563eb;
-            --db-emerald: #10b981;
-            --db-amber: #f59e0b;
-            --db-rose: #f43f5e;
-            --db-indigo: #6366f1;
-            --db-radius-lg: 20px;
-            --db-radius-md: 14px;
-            --db-radius-sm: 8px;
-            --db-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-            --db-shadow-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-        }
-
-        /* Animations */
-        @keyframes enterUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-enter {
-            animation: enterUp 0.35s ease forwards;
-        }
-
-        /* Typography & Tabular Digits */
-        .tabular-nums {
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* Section Headers */
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 1.75rem;
-            margin-bottom: 1.25rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--db-border);
-        }
-        .section-header h3 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--db-text-primary);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            letter-spacing: -0.02em;
-        }
-        .section-subtitle {
-            font-size: 0.85rem;
-            color: var(--db-text-muted);
-            margin: 0.25rem 0 0 0;
-        }
+        /* Override Section Icons */
         .section-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            box-shadow: none !important;
-            flex-shrink: 0;
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3) !important;
         }
 
-        /* Floating Tooltip for Status Cells */
-        #calFloatingTooltip {
-            position: fixed;
-            display: none;
-            padding: 8px 14px;
-            background: rgba(15, 23, 42, 0.95);
-            color: #ffffff;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            z-index: 99999;
-            pointer-events: none;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            white-space: nowrap;
-        }
-
-        /* Document Warning Modal Overlay */
+        /* DOCUMENT WARNING POPUP STYLES */
+        /* ============================================ */
         .document-warning-overlay {
             position: fixed;
             top: 0;
@@ -118,545 +23,352 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            animation: fadeInOverlay 0.3s ease;
         }
+
+        @keyframes fadeInOverlay {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
         .document-warning-modal {
             background: #ffffff;
-            border-radius: var(--db-radius-md);
-            padding: 28px;
+            border-radius: 16px;
+            padding: 30px;
             max-width: 480px;
             width: 100%;
             position: relative;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            animation: slideInModal 0.4s ease;
         }
 
-        /* Birthday Celebration Card */
-        .birthday-card {
-            background: linear-gradient(135deg, #f43f5e 0%, #fb923c 50%, #f59e0b 100%) !important;
-            position: relative;
-            color: #ffffff !important;
-            border-radius: var(--db-radius-lg) !important;
-            overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.3) !important;
-        }
-        .glass-box {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 8px 12px;
+        @keyframes slideInModal {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
-        /* Motivational Quote Card */
-        .quote-card {
-            background: #ffffff;
-            border: 1px solid var(--db-border);
-            border-radius: var(--db-radius-lg);
-            overflow: hidden;
-            box-shadow: var(--db-shadow-sm);
-            position: relative;
-        }
-
-        /* Modern KPI Stat Cards */
-        .kpi-card {
-            background: var(--db-card);
-            border: 1px solid var(--db-border);
-            border-radius: var(--db-radius-md);
-            padding: 1.25rem 1.25rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: var(--db-shadow-sm);
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--db-shadow-hover);
-            border-color: var(--db-border-hover);
-        }
-        .kpi-icon-box {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin-bottom: 0.875rem;
-            flex-shrink: 0;
-        }
-        .kpi-icon-blue { background: #eff6ff; color: #2563eb; }
-        .kpi-icon-emerald { background: #ecfdf5; color: #059669; }
-        .kpi-icon-sky { background: #f0f9ff; color: #0284c7; }
-        .kpi-icon-rose { background: #fef2f2; color: #dc2626; }
-        .kpi-icon-amber { background: #fffbeb; color: #d97706; }
-        .kpi-icon-slate { background: #f1f5f9; color: #475569; }
-
-        .kpi-label {
-            font-size: 0.725rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            color: var(--db-text-muted);
-            margin-bottom: 0.25rem;
-        }
-        .kpi-value {
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: var(--db-text-primary);
-            line-height: 1.1;
-            margin-bottom: 0.25rem;
-            font-variant-numeric: tabular-nums;
-        }
-        .kpi-desc {
-            font-size: 0.75rem;
-            color: var(--db-text-secondary);
-            margin: 0;
-        }
-
-        /* Modern ID Card (Executive Enterprise Badge) */
-        .card-id {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            border-radius: var(--db-radius-lg) !important;
-            padding: 1.5rem !important;
-            color: #ffffff !important;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2) !important;
-        }
-        .card-id::before {
-            content: '';
+        .document-warning-close {
             position: absolute;
-            top: -50px;
-            right: -50px;
-            width: 180px;
-            height: 180px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f1f1f1;
             border-radius: 50%;
-            pointer-events: none;
-        }
-        .card-id-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.25rem;
-        }
-        .card-id-photo-wrapper {
-            position: relative;
-        }
-        .card-id-img {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
-            object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .card-id-img:hover {
-            transform: scale(1.04);
-        }
-        .card-id-img-placeholder {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: #ffffff;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-        .card-id-logo {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
-            font-weight: 600;
-        }
-        .card-id-logo i {
             font-size: 18px;
+            color: #333;
+            transition: all 0.2s ease;
         }
-        .card-id-label {
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5) !important;
-            margin-bottom: 2px;
+
+        .document-warning-close:hover {
+            background: #e0e0e0;
+            transform: rotate(90deg);
         }
-        .card-id-name {
-            font-size: 1.15rem;
+
+        .document-warning-icon {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .document-warning-icon i {
+            font-size: 64px;
+            color: #dc3545;
+            animation: pulse-warning 2s infinite;
+        }
+
+        @keyframes pulse-warning {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .document-warning-title {
+            text-align: center;
             font-weight: 700;
-            color: #ffffff !important;
-            margin-bottom: 0.75rem;
-            letter-spacing: -0.01em;
-        }
-        .card-id-division {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #93c5fd !important;
-            margin: 0;
-            display: inline-block;
-            background: rgba(37, 99, 235, 0.2);
-            padding: 3px 10px;
-            border-radius: 6px;
-        }
-        .card-id-card-number {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-            font-size: 1.15rem !important;
-            letter-spacing: 2px !important;
-            font-weight: 700 !important;
-            color: rgba(255, 255, 255, 0.9) !important;
-        }
-
-        /* Modern Attendance Status Hub */
-        .card-status {
-            background: var(--db-card) !important;
-            border: 1px solid var(--db-border) !important;
-            border-radius: var(--db-radius-lg) !important;
-            box-shadow: var(--db-shadow-sm) !important;
-            transition: box-shadow 0.2s ease;
-        }
-        .soft-green-bg {
-            background-color: var(--db-card) !important;
-        }
-        #realtime-clock {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-            font-size: 2rem !important;
-            font-weight: 800 !important;
-            color: var(--db-text-primary) !important;
-            letter-spacing: -0.02em !important;
-            font-variant-numeric: tabular-nums !important;
-            line-height: 1 !important;
-        }
-
-        /* Modern Overtime Slide Track */
-        .overtime-slide-track {
-            position: relative;
-            height: 56px;
-            background: #0f172a !important;
-            border-radius: 28px !important;
-            overflow: hidden;
-            user-select: none;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .overtime-slide-track .slide-text {
-            color: rgba(255, 255, 255, 0.8) !important;
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            letter-spacing: 0.02em !important;
-            pointer-events: none;
-            z-index: 1;
-        }
-        #slide-thumb {
-            position: absolute;
-            top: 4px;
-            left: 4px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50% !important;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-            color: #ffffff !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            cursor: grab;
-            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4) !important;
-            transition: box-shadow 0.2s ease;
-            z-index: 2;
-        }
-        #slide-thumb:active {
-            cursor: grabbing;
-            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.6) !important;
-        }
-
-        /* Modern Quick Action Tiles */
-        .quick-action-tile {
-            background: var(--db-card);
-            border: 1px solid var(--db-border);
-            border-radius: var(--db-radius-md);
-            padding: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            text-decoration: none !important;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: var(--db-shadow-sm);
-        }
-        .quick-action-tile:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--db-shadow-hover);
-            border-color: var(--db-border-hover);
-            text-decoration: none !important;
-        }
-        .quick-action-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            color: #1a1a1a;
+            margin-bottom: 20px;
             font-size: 24px;
-            flex-shrink: 0;
         }
-        .icon-emerald-gradient { background: #ecfdf5; color: #059669; }
-        .icon-blue-gradient { background: #eff6ff; color: #2563eb; }
 
-        /* Modern Team Calendar Styling */
+        .document-warning-content {
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .document-warning-content p {
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .document-warning-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            background: #fff5f5;
+            border: 1px solid #ffcccc;
+            border-radius: 10px;
+            padding: 15px 20px;
+        }
+
+        .document-warning-list li {
+            padding: 8px 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .document-warning-list li+li {
+            border-top: 1px dashed #ffcccc;
+        }
+
+        .document-warning-alert {
+            background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+            color: #fff;
+            padding: 15px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            line-height: 1.5;
+        }
+
+        .document-warning-alert i {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .document-warning-alert .text-danger {
+            color: #FFD700 !important;
+            font-weight: bold;
+        }
+
+        /* TEAM CALENDAR STYLES (ENHANCED AESTHETICS) */
         .calendar-container {
-            border-radius: var(--db-radius-lg) !important;
-            border: 1px solid var(--db-border) !important;
-            background: #ffffff !important;
+            background: #ffffff;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
         }
+
+        .calendar-header {
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
         .calendar-matrix-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            border-radius: 0 0 var(--db-radius-lg) var(--db-radius-lg);
+            max-height: 600px;
+            overflow: auto;
+            position: relative;
+            background: #f8fafc;
+            padding: 15px;
         }
+
         .calendar-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0;
-            min-width: 950px;
+            border-spacing: 0; /* Remove gap so sticky background works flawlessly */
+            table-layout: fixed;
+            background: #ffffff;
         }
+
         .calendar-table th, .calendar-table td {
-            border-bottom: 1px solid #f1f5f9;
-            border-right: 1px solid #f1f5f9;
+            width: 48px;
+            min-width: 48px;
+            height: 48px;
             text-align: center;
             vertical-align: middle;
+            font-size: 13px;
+            padding: 3px; /* Creates the gap effect internally */
+            border: none;
+            background: #ffffff; /* Solid background prevents scroll overlap */
+            border-bottom: 1px solid #f1f5f9;
+            border-right: 1px solid #f1f5f9;
         }
+
         .calendar-table th {
-            background: #f8fafc;
-            font-size: 11px;
-            font-weight: 600;
+            background: #ffffff;
+            font-weight: 700;
             color: #475569;
-            padding: 8px 4px;
+            position: sticky;
+            top: 0;
+            z-index: 40; /* High z-index for header */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
+
         .calendar-table .user-col {
+            width: 220px;
+            min-width: 220px;
+            text-align: left;
+            padding: 0 20px;
             position: sticky;
             left: 0;
-            background: #ffffff !important;
-            z-index: 2;
-            text-align: left;
-            padding: 10px 14px;
-            min-width: 160px;
-            max-width: 190px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.02);
-            font-size: 13px;
+            background: #ffffff;
+            z-index: 30; /* Sticky left column */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             font-weight: 600;
+            color: #1e293b;
+            font-size: 12px;
+            box-shadow: 4px 0 6px -1px rgba(0,0,0,0.05);
         }
+
+        .calendar-table th.user-col {
+            z-index: 50; /* Top-left corner needs highest z-index */
+            background: #ffffff;
+        }
+
         .status-cell {
-            width: 28px;
-            height: 28px;
-            margin: 3px auto;
-            border-radius: 6px;
+            width: 100%;
+            height: 100%;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            transition: transform 0.15s ease;
+            color: white;
+            font-weight: 800;
+            position: relative;
+            font-size: 14px;
+            border-radius: 12px;
+            background-color: #f1f5f9;
+            color: transparent; /* Hide text by default for clean look, show color only */
         }
+
+        .status-cell:not(.empty) {
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+        }
+
+        .calendar-table td.weekend-day .status-cell.empty {
+            background-color: #fee2e2; /* light red for weekend */
+            opacity: 0.7;
+        }
+
         .status-cell:hover {
-            transform: scale(1.18);
-            z-index: 3;
+            transform: scale(1.15) translateY(-2px);
+            z-index: 20;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
-        .status-cell.present { background: #dcfce7 !important; color: #15803d !important; }
-        .status-cell.out { background: #dbeafe !important; color: #1d4ed8 !important; }
-        .status-cell.leave { background: #fef3c7 !important; color: #b45309 !important; }
-        .status-cell.permit { background: #e0e7ff !important; color: #4338ca !important; }
-        .status-cell.sick { background: #fce7f3 !important; color: #be185d !important; }
-        .status-cell.wfh { background: #ccfbf1 !important; color: #0f766e !important; }
-        .status-cell.off { background: #f1f5f9 !important; color: #64748b !important; }
-        .status-cell.alpha { background: #fee2e2 !important; color: #b91c1c !important; }
-        .status-cell.telat { border: 2px solid #f59e0b !important; }
+
+        /* Modern Gradient Colors for Statuses & Legends */
+        .status-cell.present, .legend-color.present { background: linear-gradient(135deg, #10b981 0%, #059669 100%); } /* Emerald */
+        .status-cell.out, .legend-color.out { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); } /* Blue */
+        .status-cell.leave, .legend-color.leave { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); } /* Amber */
+        .status-cell.permit, .legend-color.permit { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); } /* Orange */
+        .status-cell.wfh, .legend-color.wfh { background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); } /* Purple */
+        .status-cell.sick, .legend-color.sick { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); } /* Red */
+        .status-cell.off, .legend-color.off { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); } /* Slate */
+        .status-cell.telat, .legend-color.telat { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); box-shadow: 0 0 0 2px #fff inset; } /* Rose */
+        .status-cell.alpha, .legend-color.alpha { background: linear-gradient(135deg, #334155 0%, #0f172a 100%); } /* Slate Dark */
+        .js-koreksi-cell { cursor: pointer !important; }
+        .js-koreksi-cell:hover { outline: 2px solid #0dcaf0; outline-offset: 1px; }
 
         .calendar-legend {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            padding: 12px 20px;
-            background: #f8fafc;
-            border-top: 1px solid #f1f5f9;
-            font-size: 12px;
+            gap: 15px;
+            padding: 20px 30px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            justify-content: center;
         }
+
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 6px;
-            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #f8fafc;
+            transition: all 0.2s;
         }
+        
+        .legend-item:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
         .legend-color {
             width: 14px;
             height: 14px;
             border-radius: 4px;
-        }
-
-        /* Leaderboard & Podium Modernization */
-        .luxury-bg-glow {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60%;
-            height: 100%;
-            background: radial-gradient(ellipse at top, rgba(251, 191, 36, 0.08), transparent 70%);
-            pointer-events: none;
-        }
-        .podium-luxury-container {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            gap: 16px;
-            width: 100%;
-            max-width: 650px;
-            margin: 0 auto;
-            padding-top: 20px;
-        }
-        .podium-step-container {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-        .podium-avatar-wrapper {
-            position: relative;
-            margin-bottom: 12px;
-        }
-        .luxury-avatar {
-            width: 72px;
-            height: 72px;
-            border-radius: 50% !important;
-            object-fit: cover;
-            border: 3px solid #ffffff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        .luxury-avatar-placeholder {
-            width: 72px;
-            height: 72px;
-            border-radius: 50% !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: #ffffff;
-            border: 3px solid #ffffff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        .rank-circle {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            font-size: 12px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #ffffff;
+            margin-right: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .rank-circle.gold { background: #fbbf24; color: #78350f; }
-        .rank-circle.silver { background: #94a3b8; color: #0f172a; }
-        .rank-circle.bronze { background: #d97706; color: #ffffff; }
 
-        .podium-block {
-            width: 100%;
-            border-radius: 16px 16px 0 0 !important;
-            padding: 16px 8px;
-            position: relative;
+        /* Modal Stacking & Backdrop Fix */
+        #modalKoreksiDashboard {
+            z-index: 1065 !important;
         }
-        .gold-block {
-            height: 180px;
-            background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%) !important;
-            border: 1px solid #fcd34d !important;
-            border-bottom: none !important;
+        #modalKoreksiDashboard .modal-dialog {
+            z-index: 1066 !important;
+            max-width: 500px;
         }
-        .silver-block {
-            height: 140px;
-            background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%) !important;
-            border: 1px solid #cbd5e1 !important;
-            border-bottom: none !important;
-        }
-        .bronze-block {
-            height: 110px;
-            background: linear-gradient(180deg, #ffedd5 0%, #fed7aa 100%) !important;
-            border: 1px solid #fdba74 !important;
-            border-bottom: none !important;
-        }
-        .stat-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 3px 8px;
-            border-radius: 9999px;
-            font-size: 11px;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.7);
-            color: #334155;
-            backdrop-filter: blur(4px);
+        body.modal-open .modal-backdrop {
+            z-index: 1055 !important;
         }
 
-        /* Glass effect for modals */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-        }
-
-        /* Mobile Responsive Tweaks */
-        @media (max-width: 576px) {
-            .podium-luxury-container {
-                gap: 8px;
-                padding-top: 15px;
-            }
-            .luxury-avatar, .luxury-avatar-placeholder {
-                width: 50px;
-                height: 50px;
-                font-size: 16px;
-            }
-            .gold-block { height: 150px; padding: 10px 4px; }
-            .silver-block { height: 115px; padding: 10px 4px; }
-            .bronze-block { height: 90px; padding: 10px 4px; }
-            .crown-floating i {
-                font-size: 36px !important;
-            }
-            .rank-circle {
-                width: 20px;
-                height: 20px;
-                font-size: 10px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            #realtime-clock {
-                font-size: 1.5rem !important;
-            }
+        /* Responsive Floating Tooltip for Status Cells */
+        #calFloatingTooltip {
+            position: fixed;
+            display: none;
+            padding: 7px 14px;
+            background: rgba(15, 23, 42, 0.95);
+            color: #ffffff;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 99999;
+            pointer-events: none;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            max-width: 250px;
+            text-align: center;
+            line-height: 1.35;
+            transition: opacity 0.12s ease-out;
+            opacity: 0;
+            border: 1px solid rgba(255,255,255,0.1);
         }
     </style>
 @endpush
-
 
 @section('heading')
     Dashboard
@@ -787,8 +499,7 @@
     </div>
 
     {{-- ======================================================================= --}}
-
-{{-- BANNER: AKTIFKAN NOTIFIKASI --}}
+    {{-- BANNER: AKTIFKAN NOTIFIKASI --}}
     {{-- ======================================================================= --}}
     <div class="row mb-3 animate-enter" style="animation-delay: 0.05s; display: none;" id="notif-permission-banner">
         <div class="col-12">
@@ -1200,8 +911,7 @@
     @endif
 
     {{-- ======================================================================= --}}
-
-{{-- RAPOR STATISTIK KARYAWAN (EVALUASI PERFORMA BULANAN) --}}
+    {{-- RAPOR STATISTIK KARYAWAN (EVALUASI PERFORMA BULANAN) --}}
     {{-- ======================================================================= --}}
     {{-- ======================================================================= --}}
     {{-- RAPOR STATISTIK KARYAWAN (EVALUASI PERFORMA BULANAN) --}}
@@ -1620,8 +1330,7 @@
     @endif
 
     {{-- ======================================================================= --}}
-
-{{-- POPUP PEMBERITAHUAN: MENU CUTI BARU --}}
+    {{-- POPUP PEMBERITAHUAN: MENU CUTI BARU --}}
     {{-- ======================================================================= --}}
     @if (!session('libur_notice_dismissed'))
         <div class="row mb-4 animate-enter" style="animation-delay: 0.18s" id="libur-notice-popup">
@@ -1670,25 +1379,20 @@
     @endif
 
     {{-- ======================================================================= --}}
-
-{{-- SECTION HEADER: COMPANY STATISTICS --}}
+    {{-- SECTION HEADER: COMPANY STATISTICS --}}
     {{-- ======================================================================= --}}
     @if (auth()->user()->role == 'admin')
         <div class="section-header animate-enter" style="animation-delay: 0.2s">
-            <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
-                <div>
-                    <h3>
-                        <span class="section-icon">
-                            <i class="mdi mdi-chart-box-outline"></i>
-                        </span>
-                        Statistik Perusahaan
-                    </h3>
-                    <p class="section-subtitle">Ringkasan data operasional dan performa organisasi</p>
-                </div>
-                <button class="btn btn-sm btn-outline-primary shadow-sm rounded-pill px-3" id="btnTestPush" onclick="testPushAll()">
-                    <i class="mdi mdi-bell-ring-outline me-1"></i> Test Push ke Semua User
-                </button>
-            </div>
+            <h3>
+                <span class="section-icon">
+                    <i class="mdi mdi-chart-box-outline"></i>
+                </span>
+                Statistik Perusahaan
+            </h3>
+            <p class="section-subtitle">Ringkasan data dan performa organisasi</p>
+            <button class="btn btn-sm btn-outline-warning shadow-sm mb-3" id="btnTestPush" onclick="testPushAll()">
+                <i class="mdi mdi-bell-ring-outline me-1"></i> Test Push ke Semua User
+            </button>
             <script>
                 function testPushAll() {
                     var btn = document.getElementById('btnTestPush');
@@ -1720,158 +1424,170 @@
     {{-- BAGIAN 1: DASHBOARD STATISTIK (ADMIN/AUDIT/SECURITY) --}}
     @if (auth()->user()->role == 'admin')
         {{-- WIDGET ADMIN --}}
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-4 col-xl animate-enter" style="animation-delay: 0.1s">
-                <div class="kpi-card">
-                    <div class="kpi-icon-box kpi-icon-blue">
-                        <i class="mdi mdi-account-multiple"></i>
-                    </div>
-                    <div>
-                        <div class="kpi-label">Total User</div>
-                        <h3 class="kpi-value count-up" data-target="{{ $totalUsers }}">0</h3>
-                        <p class="kpi-desc">Karyawan Aktif</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl animate-enter" style="animation-delay: 0.15s">
-                <div class="kpi-card">
-                    <div class="kpi-icon-box kpi-icon-emerald">
-                        <i class="mdi mdi-office-building"></i>
-                    </div>
-                    <div>
-                        <div class="kpi-label">Total Cabang</div>
-                        <h3 class="kpi-value count-up" data-target="{{ $totalBranches }}">0</h3>
-                        <p class="kpi-desc">Cabang Terdaftar</p>
+        <div class="row mb-4">
+            <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
+                <div class="card card-bank bg-primary">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-account-multiple"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Total User</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $totalUsers }}">0</h2>
+                            <p class="card-bank-desc">Karyawan Aktif</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-4 col-xl animate-enter" style="animation-delay: 0.2s">
-                <div class="kpi-card">
-                    <div class="kpi-icon-box kpi-icon-sky">
-                        <i class="mdi mdi-calendar-check"></i>
-                    </div>
-                    <div>
-                        <div class="kpi-label">Absensi Hari Ini</div>
-                        <h3 class="kpi-value count-up" data-target="{{ $attendancesToday }}">0</h3>
-                        <p class="kpi-desc">Total absensi hari ini</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl animate-enter" style="animation-delay: 0.25s">
-                <div class="kpi-card">
-                    <div class="kpi-icon-box kpi-icon-rose">
-                        <i class="mdi mdi-alert-circle-outline"></i>
-                    </div>
-                    <div>
-                        <div class="kpi-label">Perlu Verifikasi</div>
-                        <h3 class="kpi-value count-up" data-target="{{ $pendingVerifications }}">0</h3>
-                        <p class="kpi-desc">Menunggu persetujuan</p>
+            <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
+                <div class="card card-bank bg-success">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-office-building"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Total Cabang</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $totalBranches }}">0</h2>
+                            <p class="card-bank-desc">Cabang Terdaftar</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-4 col-xl animate-enter" style="animation-delay: 0.3s">
-                <div class="kpi-card">
-                    <div class="kpi-icon-box kpi-icon-slate">
-                        <i class="mdi mdi-car-off"></i>
+            <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
+                <div class="card card-bank bg-info">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Absensi Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
+                            <p class="card-bank-desc">Total absensi hari ini</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
-                    <div>
-                        <div class="kpi-label">Sedang Libur</div>
-                        <h3 class="kpi-value count-up" data-target="{{ $leavesToday ?? 0 }}">0</h3>
-                        <p class="kpi-desc">Pengajuan & Disetujui</p>
+                </div>
+            </div>
+            <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.4s">
+                <div class="card card-bank bg-danger">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Perlu Verifikasi</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
+                            <p class="card-bank-desc">Menunggu persetujuan</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg col-md-4 col-sm-6 col-12 grid-margin stretch-card animate-enter" style="animation-delay: 0.5s">
+                <div class="card card-bank bg-dark">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-car-off"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Sedang Libur</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $leavesToday ?? 0 }}">0</h2>
+                            <p class="card-bank-desc">Pengajuan & Disetujui</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
         </div>
     @elseif (auth()->user()->role == 'audit')
         {{-- WIDGET AUDIT --}}
-        <div class="row g-3 mb-4">
-            <div class="col-md-4 col-12 animate-enter" style="animation-delay: 0.1s">
-                <div class="kpi-card">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div class="kpi-icon-box kpi-icon-rose">
-                            <i class="mdi mdi-alert-circle-outline"></i>
+        <div class="row mb-4">
+            <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
+                <div class="card card-bank bg-danger">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-alert-circle-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Verif Absensi</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingVerifications }}">0</h2>
+                            <p class="card-bank-desc">Absensi pending (Foto/Lokasi)</p>
+                            <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
+                                <i class="mdi mdi-clipboard-check me-1"></i>Lihat Daftar
+                            </a>
                         </div>
-                        <a href="{{ route('audit.verify.list') }}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                            <i class="mdi mdi-clipboard-check me-1"></i>Lihat Daftar
-                        </a>
-                    </div>
-                    <div>
-                        <div class="kpi-label">Verif Absensi</div>
-                        <h3 class="kpi-value count-up" data-target="{{ $pendingVerifications }}">0</h3>
-                        <p class="kpi-desc">Absensi pending (Foto/Lokasi)</p>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 col-12 animate-enter" style="animation-delay: 0.2s">
-                <div class="kpi-card">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div class="kpi-icon-box kpi-icon-sky">
-                            <i class="mdi mdi-file-document-edit-outline"></i>
+            <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
+                <div class="card card-bank bg-info">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-file-document-edit-outline"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Approve Izin</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $pendingLeaves }}">0</h2>
+                            <p class="card-bank-desc">Izin, Sakit, Cuti, WFH, Telat</p>
+                            <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-light mt-2 shadow-sm">
+                                <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
+                            </a>
                         </div>
-                        <a href="{{ route('leave-requests.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                            <i class="mdi mdi-playlist-check me-1"></i>Lihat Pengajuan
-                        </a>
-                    </div>
-                    <div>
-                        <div class="kpi-label">Approve Izin</div>
-                        <h3 class="kpi-value count-up" data-target="{{ $pendingLeaves }}">0</h3>
-                        <p class="kpi-desc">Izin, Sakit, Cuti, WFH, Telat</p>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 col-12 animate-enter" style="animation-delay: 0.3s">
-                <div class="kpi-card">
-                    <div class="kpi-icon-box kpi-icon-emerald">
-                        <i class="mdi mdi-calendar-check"></i>
-                    </div>
-                    <div>
-                        <div class="kpi-label">Hadir Hari Ini</div>
-                        <h3 class="kpi-value count-up" data-target="{{ $attendancesToday }}">0</h3>
-                        <p class="kpi-desc">Total kehadiran cabang Anda</p>
+            <div class="col-md-4 grid-margin stretch-card animate-enter" style="animation-delay: 0.3s">
+                <div class="card card-bank bg-success">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-calendar-check"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Hadir Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $attendancesToday }}">0</h2>
+                            <p class="card-bank-desc">Total kehadiran di cabang Anda</p>
+                        </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
         </div>
     @elseif (auth()->user()->role == 'security')
         {{-- WIDGET SECURITY --}}
-        <div class="row g-3 mb-4">
-            <div class="col-md-6 col-12 animate-enter" style="animation-delay: 0.1s">
-                <div class="kpi-card p-4 text-center">
-                    <div class="mx-auto mb-3 kpi-icon-box kpi-icon-slate" style="width: 64px; height: 64px; font-size: 32px;">
-                        <i class="mdi mdi-qrcode-scan"></i>
-                    </div>
-                    <h4 class="fw-bold text-dark mb-2">Pindai QR User</h4>
-                    <p class="text-muted small mb-4">Arahkan kamera ke QR Code user untuk melakukan absensi.</p>
-                    <div>
-                        <a href="{{ route('security.scan') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <div class="row mb-4">
+            <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.1s">
+                <div class="card card-action hover-float">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4 pulse-icon-wrapper">
+                            <i class="mdi mdi-qrcode-scan display-1 text-dark"></i>
+                        </div>
+                        <h4 class="card-title mb-3">Pindai QR User</h4>
+                        <p class="text-muted mb-4">Arahkan kamera ke QR Code user untuk melakukan absensi.</p>
+                        <a href="{{ route('security.scan') }}" class="btn btn-dark btn-lg shadow-lg">
                             <i class="mdi mdi-camera-enhance me-2"></i>Mulai Memindai
                         </a>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-12 animate-enter" style="animation-delay: 0.2s">
-                <div class="kpi-card p-4">
-                    <div class="kpi-icon-box kpi-icon-sky">
-                        <i class="mdi mdi-chart-bar"></i>
-                    </div>
-                    <div class="mb-3">
-                        <div class="kpi-label">Pindaian Hari Ini</div>
-                        <h2 class="kpi-value count-up" data-target="{{ $myScansToday }}">0</h2>
-                        <p class="kpi-desc">Total pindaian QR hari ini</p>
-                    </div>
-                    <div class="pt-3 border-top">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="small text-muted fw-semibold">User Aktif:</span>
-                            <span class="fw-bold fs-5 text-dark count-up" data-target="{{ $totalUsers }}">0</span>
+            <div class="col-md-6 grid-margin stretch-card animate-enter" style="animation-delay: 0.2s">
+                <div class="card card-bank bg-dark">
+                    <div class="card-body">
+                        <div class="card-bank-chip"></div>
+                        <div class="card-bank-icon"><i class="mdi mdi-chart-bar"></i></div>
+                        <div class="card-bank-content">
+                            <p class="card-bank-label">Pindaian Hari Ini</p>
+                            <h2 class="card-bank-value count-up" data-target="{{ $myScansToday }}">0</h2>
+                            <p class="card-bank-desc">Total pindaian QR hari ini</p>
+                            <div class="mt-4 pt-3 border-top border-light">
+                                <p class="card-bank-label mb-2">User Aktif</p>
+                                <h3 class="card-bank-value mb-0 count-up" data-target="{{ $totalUsers }}">0</h3>
+                            </div>
                         </div>
+                        <div class="card-bank-pattern"></div>
                     </div>
                 </div>
             </div>
         </div>
     @endif
 
-
-{{-- [NEW] TEAM CALENDAR SECTION --}}
+    {{-- ======================================================================= --}}
+    {{-- [NEW] TEAM CALENDAR SECTION --}}
     {{-- ======================================================================= --}}
     @if(isset($teamCalendar))
         @php
@@ -1989,7 +1705,7 @@
         </div>
     @endif
 
-{{-- BAGIAN BARU: DINDING KENANGAN (PEMENANG BULAN LALU) --}}
+    {{-- BAGIAN BARU: DINDING KENANGAN (PEMENANG BULAN LALU) --}}
     @if (isset($lastMonthWinners) && $lastMonthWinners->count() > 0)
         <div class="row mb-5 animate-enter" style="animation-delay: 0.3s">
             <div class="col-12">
@@ -2052,8 +1768,7 @@
     @endif
 
     {{-- ======================================================================= --}}
-
-{{-- BAGIAN 2: LEADERBOARD PODIUM MEWAH (TOP 3) --}}
+    {{-- BAGIAN 2: LEADERBOARD PODIUM MEWAH (TOP 3) --}}
     {{-- ======================================================================= --}}
 
     <div class="row mb-5 animate-enter" style="animation-delay: 0.4s">
@@ -2305,8 +2020,7 @@
     </div>
 
     {{-- ======================================================================= --}}
-
-{{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA) --}}
+    {{-- [BARU] BAGIAN GALLERY: LEMBARAN CERITA BULAN INI (NOSTALGIA) --}}
     {{-- Hanya tampil 1 hari sebelum akhir bulan --}}
     {{-- ======================================================================= --}}
     @if(isset($showGallery) && $showGallery)
@@ -2360,8 +2074,7 @@
 
 
     {{-- ======================================================================= --}}
-
-{{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI) --}}
+    {{-- BAGIAN 3: DASHBOARD PERSONAL (ID CARD & ABSEN MANDIRI) --}}
     {{-- ======================================================================= --}}
 
     {{-- SECTION HEADER: PERSONAL DASHBOARD --}}
@@ -3105,49 +2818,242 @@
     </div>
 
     {{-- ======================================================================= --}}
-
-{{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) - MODERN REDESIGN --}}
+    {{-- BAGIAN BARU: MENU CEPAT (QUICK ACTIONS) - MODERN REDESIGN --}}
     {{-- ======================================================================= --}}
-    <div class="row mb-4 animate-enter" style="animation-delay: 0.6s">
+    <div class="row animate-enter mb-4" style="animation-delay: 0.7s">
         <div class="col-12">
-            <div class="section-header mb-3">
-                <h3>
-                    <span class="section-icon"><i class="mdi mdi-lightning-bolt text-warning"></i></span>
-                    Menu Cepat
-                </h3>
-                <p class="section-subtitle">Akses cepat untuk pengajuan izin dan riwayat</p>
-            </div>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <a href="{{ route('leave-requests.create') }}" class="quick-action-tile">
-                        <div class="quick-action-icon icon-emerald-gradient">
-                            <i class="mdi mdi-file-document-edit"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fw-bold text-dark mb-1">Ajukan Izin / Sakit</h5>
-                            <p class="small text-muted mb-0">Izin, Sakit, Cuti, WFH, atau Telat</p>
-                        </div>
-                        <i class="mdi mdi-chevron-right fs-4 text-muted"></i>
-                    </a>
+            {{-- Container dengan gradient background --}}
+            <div class="card border-0 shadow-lg overflow-hidden"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
+
+                {{-- Decorative elements --}}
+                <div
+                    style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; 
+                                                                                                                                                                                                                                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                                                                                                                                                                                                                                    border-radius: 50%; pointer-events: none;">
                 </div>
-                <div class="col-md-6">
-                    <a href="{{ route('attendance.history') }}" class="quick-action-tile">
-                        <div class="quick-action-icon icon-blue-gradient">
-                            <i class="mdi mdi-history"></i>
+
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-3">
+                        {{-- LEFT: Icon & Title --}}
+                        <div class="col-lg-4">
+                            <div class="d-flex align-items-center">
+                                {{-- Icon dengan glassmorphism effect --}}
+                                <div class="d-flex align-items-center justify-content-center me-3"
+                                    style="width: 64px; height: 64px; background: rgba(255, 255, 255, 0.2); 
+                                                                                                                                                                                                                                                    border-radius: 16px; backdrop-filter: blur(10px); 
+                                                                                                                                                                                                                                                    border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                                    <i class="mdi mdi-lightning-bolt text-white" style="font-size: 32px;"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-1 text-white">Menu Cepat</h4>
+                                    <p class="mb-0 small" style="color: rgba(255, 255, 255, 0.85);">
+                                        Akses cepat untuk pengajuan izin
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fw-bold text-dark mb-1">Riwayat Absensi</h5>
-                            <p class="small text-muted mb-0">Lihat riwayat dan log absensi Anda</p>
+
+                        {{-- RIGHT: Action Buttons --}}
+                        <div class="col-lg-8">
+                            <div class="row g-3">
+                                {{-- Button 1: Ajukan Izin --}}
+                                <div class="col-md-6">
+                                    <a href="{{ route('leave-requests.create') }}"
+                                        class="quick-action-card d-block text-decoration-none">
+                                        <div class="p-4 h-100 d-flex flex-column"
+                                            style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
+                                                                                                                                                                                                                                                            border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                                                                                                                                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                                                                                                                                            transition: all 0.3s ease; position: relative; overflow: hidden;">
+
+                                            {{-- Hover gradient effect --}}
+                                            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                                                                                                                                                                                                                                opacity: 0; transition: opacity 0.3s ease;"
+                                                class="hover-gradient"></div>
+
+                                            <div style="position: relative; z-index: 1;">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="icon-wrapper me-3"
+                                                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); 
+                                                                                                                                                                                                                                                                        border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                                                                                                                                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                                        <i class="mdi mdi-file-document-edit text-white fs-4"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="fw-bold mb-0 text-title">Ajukan Izin / Sakit</h5>
+                                                    </div>
+                                                </div>
+                                                <p class="small mb-0 text-desc" style="color: #6c757d;">
+                                                    Izin, Sakit, Cuti, WFH, atau Telat
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                {{-- Button 2: Riwayat --}}
+                                <div class="col-md-6">
+                                    <a href="{{ route('attendance.history') }}"
+                                        class="quick-action-card d-block text-decoration-none">
+                                        <div class="p-4 h-100 d-flex flex-column"
+                                            style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; 
+                                                                                                                                                                                                                                                            border: 1px solid rgba(255, 255, 255, 0.5); 
+                                                                                                                                                                                                                                                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); 
+                                                                                                                                                                                                                                                            transition: all 0.3s ease; position: relative; overflow: hidden;">
+
+                                            {{-- Hover gradient effect --}}
+                                            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                                                                                                                                                                                                                                                                opacity: 0; transition: opacity 0.3s ease;"
+                                                class="hover-gradient"></div>
+
+                                            <div style="position: relative; z-index: 1;">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="icon-wrapper me-3"
+                                                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #4facfe, #00f2fe); 
+                                                                                                                                                                                                                                                                        border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+                                                                                                                                                                                                                                                                        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
+                                                        <i class="mdi mdi-history text-white fs-4"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="fw-bold mb-0 text-title">Riwayat Absensi</h5>
+                                                    </div>
+                                                </div>
+                                                <p class="small mb-0 text-desc" style="color: #6c757d;">
+                                                    Lihat semua riwayat kehadiran Anda
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <i class="mdi mdi-chevron-right fs-4 text-muted"></i>
-                    </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <style>
+        /* Hover effects untuk quick action cards */
+        .quick-action-card:hover .hover-gradient {
+            opacity: 1;
+        }
 
-{{-- CHART SECTION --}}
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .quick-action-card:hover .text-title,
+        .quick-action-card:hover .text-desc {
+            color: white !important;
+        }
+
+        .quick-action-card:hover .icon-wrapper {
+            background: white !important;
+        }
+
+        .quick-action-card:hover .icon-wrapper i {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Motivational Quote Widget Styles */
+        .quote-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-decoration-1 {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            top: -100px;
+            right: -50px;
+            animation: floatQuote 6s ease-in-out infinite;
+        }
+
+        .quote-decoration-2 {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            bottom: -80px;
+            left: -50px;
+            animation: floatQuote 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes floatQuote {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(10px, -10px) scale(1.05);
+            }
+        }
+
+        .quote-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .quote-icon i {
+            font-size: 28px;
+            color: #fff;
+        }
+
+        .quote-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #fff !important;
+            line-height: 1.6;
+            font-style: italic;
+            margin: 0;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .quote-author {
+            color: rgba(255, 255, 255, 0.95) !important;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+        }
+
+        .quote-dash {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        @media (max-width: 768px) {
+            .quote-text {
+                font-size: 0.95rem;
+            }
+
+            .quote-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .quote-icon i {
+                font-size: 22px;
+            }
+        }
+    </style>
+
+    {{-- CHART SECTION --}}
     <div class="row mt-4 animate-enter" style="animation-delay: 0.8s">
         <div class="col-12">
             <div class="card shadow-sm">
@@ -3172,8 +3078,6 @@
             </div>
         </div>
     </div>
-
-<div id="calFloatingTooltip"></div>
 
     {{-- MODAL POPUP FOTO PROFIL --}}
     <div class="modal fade" id="profilePhotoModal" tabindex="-1" aria-hidden="true">
@@ -3341,6 +3245,1382 @@
     @endif
 
 @endsection
+
+@push('styles')
+    <style>
+        /* =================================================================
+                                                                                                                                                                                   DASHBOARD LAYOUT IMPROVEMENTS - SECTION STYLING
+                                                                                                                                                                                   ================================================================= */
+
+        /* Section Headers & Separators */
+        .section-header {
+            margin-bottom: 1.5rem;
+            margin-top: 2.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e9ecef;
+            position: relative;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-header .section-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .section-header p.section-subtitle {
+            color: #718096;
+            font-size: 0.875rem;
+            margin: 0.25rem 0 0 0;
+        }
+
+        /* Section Wrappers */
+        .dashboard-section {
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-section.hero-section {
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-section.personal-section {
+            background: linear-gradient(to right, #f8f9fa 0%, #ffffff 100%);
+            padding: 2rem 1rem;
+            border-radius: 16px;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-section.stats-section {
+            background: #ffffff;
+            padding: 2rem 1rem;
+            border-radius: 16px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 3rem;
+        }
+
+        /* Improved Spacing */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e9ecef, transparent);
+            margin: 3rem 0;
+        }
+
+        .card-row-spacing {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Responsive section padding */
+        @media (max-width: 768px) {
+
+            .dashboard-section.personal-section,
+            .dashboard-section.stats-section {
+                padding: 1.5rem 0.75rem;
+            }
+
+            .section-header {
+                margin-top: 1.5rem;
+            }
+        }
+
+        /* =================================================================
+                                                                                                                                                                                   CRITICAL FIX: TEXT VISIBILITY & PRESERVE GRADIENTS
+                                                                                                                                                                                   ================================================================= */
+
+        /* DON'T override backgrounds - only fix text colors */
+
+        /* Card Bank - WHITE text on gradient backgrounds */
+        .card-bank .card-bank-label,
+        .card-bank .card-bank-value,
+        .card-bank .card-bank-desc,
+        .card-bank * {
+            color: #ffffff !important;
+        }
+
+        /* Ensure gradients are applied */
+        .gradient-purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+
+        .gradient-blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        }
+
+        .gradient-green {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+        }
+
+        .gradient-orange {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important;
+        }
+
+        .gradient-red {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+        }
+
+        .gradient-dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%) !important;
+        }
+
+        /* Card ID - WHITE text on dark glossy background */
+        .card-id {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%) !important;
+            color: #ffffff !important;
+        }
+
+        .card-id .card-body *,
+        .card-id-label,
+        .card-id-name,
+        .card-id-division,
+        .card-id-card-number {
+            color: #ffffff !important;
+        }
+
+        /* Regular white cards - DARK text  */
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) {
+            background: #ffffff !important;
+        }
+
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) .card-title,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h1,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h2,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h3,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h4,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h5,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) h6,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) p,
+        .card:not(.card-bank):not(.card-id):not(.luxury-card):not(.hall-of-fame-card):not(.birthday-card) span {
+            color: #212529 !important;
+        }
+
+        /* Text utilities */
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        .text-primary {
+            color: #0d6efd !important;
+        }
+
+        .text-dark {
+            color: #212529 !important;
+        }
+
+        /* Ensure podium text is visible on light backgrounds */
+        .podium-content h5,
+        .podium-content h6,
+        .podium-content p,
+        .podium-content .small {
+            color: #212529 !important;
+        }
+
+        /* Stat pills - semi-transparent bg with dark text */
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.25) !important;
+            color: #212529 !important;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            font-weight: 600 !important;
+        }
+
+        .stat-pill.gold {
+            background: rgba(255, 215, 0, 0.3) !important;
+            color: #856404 !important;
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+
+        /* Luxury card titles on light gradient backgrounds */
+        .luxury-card .card-title,
+        .luxury-card h3,
+        .luxury-card h4 {
+            color: #333 !important;
+        }
+
+
+
+        /* === [BARU] NOSTALGIA GALLERY STYLES === */
+        .gallery-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 5px;
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .gallery-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Chrome/Safari */
+
+        .gallery-card {
+            width: 140px;
+            height: 210px;
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #000;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            filter: grayscale(80%) sepia(30%);
+            /* Efek Sedih/Nostalgia */
+            transition: all 0.6s ease;
+        }
+
+        .gallery-card:hover .gallery-img {
+            opacity: 1;
+            filter: grayscale(0%) sepia(0%);
+            transform: scale(1.1);
+        }
+
+        .gallery-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .gallery-date {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .border-dashed {
+            border: 2px dashed #dee2e6;
+        }
+
+        /* === BIRTHDAY CARD STYLES === */
+        .birthday-card {
+            background: linear-gradient(135deg, #FF3D77 0%, #FF9500 50%, #FFCC00 100%) !important;
+            /* Vibrant Tropical Sunset Gradient (Anti-White) */
+            position: relative;
+            color: white !important;
+            border-radius: 20px !important;
+            border: none !important;
+            box-shadow: 0 15px 35px rgba(255, 61, 119, 0.3) !important;
+        }
+
+        /* Darker version for different feel if needed */
+        .birthday-card-alt {
+            background: linear-gradient(135deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%) !important;
+        }
+
+        /* Glassmorphism for Countdown */
+        .glass-box {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 15px;
+            min-width: 70px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .text-shadow-glam {
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Balloons Animation */
+        .balloon {
+            position: absolute;
+            width: 60px;
+            height: 70px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            background-color: rgba(255, 255, 255, 0.1);
+            bottom: -80px;
+            z-index: 0;
+            animation: floatBalloon 10s infinite ease-in-out;
+        }
+
+        .balloon::before {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .b1 {
+            left: 10%;
+            background: rgba(255, 215, 0, 0.2);
+            animation-duration: 8s;
+            animation-delay: 0s;
+            width: 50px;
+            height: 60px;
+        }
+
+        .b2 {
+            right: 15%;
+            background: rgba(0, 255, 255, 0.15);
+            animation-duration: 12s;
+            animation-delay: 2s;
+            width: 70px;
+            height: 85px;
+        }
+
+        .b3 {
+            left: 50%;
+            background: rgba(255, 105, 180, 0.15);
+            animation-duration: 10s;
+            animation-delay: 5s;
+        }
+
+        @keyframes floatBalloon {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-300px) rotate(20deg);
+                opacity: 0;
+            }
+        }
+
+        /* === SLIDER LOGIC STYLES === */
+        #slide-thumb {
+            transition: transform 0.1s;
+        }
+
+        #slide-thumb:active {
+            cursor: grabbing !important;
+        }
+
+        .animate-enter {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        /* === EXISTING STYLES === */
+        /* === LUXURY LEADERBOARD STYLES (NEW) === */
+
+        /* 1. Card Container & Background */
+        .luxury-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .luxury-bg-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 223, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+            animation: rotateGlow 20s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .luxury-bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(#E1E1E1 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        @keyframes rotateGlow {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .icon-box-luxury {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFF8E1, #FFF3C4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.15);
+        }
+
+        .glass-badge {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #444;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        /* 2. Podium Layout */
+        .podium-luxury-container {
+            min-height: 280px;
+            margin-bottom: -30px;
+            /* Overlap with block below */
+        }
+
+        .podium-step-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 3. Avatars & Glows */
+        .podium-avatar-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .podium-avatar-wrapper:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .luxury-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .luxury-avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Winner Specifics */
+        .main-winner {
+            z-index: 10;
+        }
+
+        .main-winner .luxury-avatar,
+        .main-winner .luxury-avatar-placeholder {
+            width: 110px;
+            height: 110px;
+            border-width: 5px;
+        }
+
+        .crown-floating {
+            position: absolute;
+            top: -55px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-5deg);
+            animation: floatCrown 3s ease-in-out infinite;
+            z-index: 20;
+            filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
+        }
+
+        @keyframes floatCrown {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0) rotate(-5deg);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-10px) rotate(0deg);
+            }
+        }
+
+        /* Glow Effects */
+        .gold-glow::before {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+            z-index: -1;
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Gradients */
+        .gold-gradient {
+            background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
+        }
+
+        .silver-gradient {
+            background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+        }
+
+        .bronze-gradient {
+            background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
+        }
+
+        /* Rank Circles */
+        .rank-circle {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 5;
+        }
+
+        .rank-circle.gold {
+            background: #FDB931;
+        }
+
+        .rank-circle.silver {
+            background: #A9A9A9;
+        }
+
+        .rank-circle.bronze {
+            background: #A0522D;
+        }
+
+        /* 4. Podium Blocks (The Steps) */
+        .podium-block {
+            width: 100%;
+            border-radius: 16px 16px 0 0;
+            padding: 20px 10px;
+            position: relative;
+            margin: 0 5px;
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+            /* Tapered shape */
+            backdrop-filter: blur(5px);
+        }
+
+        .gold-block {
+            height: 180px;
+            /* Sedikit lebih tinggi untuk muat info tambahan */
+            background: linear-gradient(180deg, rgba(255, 236, 179, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #FFD700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
+        }
+
+        .silver-block {
+            height: 140px;
+            background: linear-gradient(180deg, rgba(245, 245, 245, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #C0C0C0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .bronze-block {
+            height: 120px;
+            background: linear-gradient(180deg, rgba(239, 219, 207, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-top: 4px solid #CD7F32;
+            box-shadow: 0 10px 20px rgba(160, 82, 45, 0.05);
+        }
+
+        .podium-content {
+            transform: translateY(5px);
+        }
+
+        .stat-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #fff;
+            color: #555;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-pill.gold {
+            background: linear-gradient(45deg, #FFD700, #FDB931);
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+        }
+
+        /* 5. Runner Up List */
+        .runner-up-container {
+            background: #fff;
+            border-radius: 16px;
+            padding: 10px;
+            /* border: 1px solid #f0f0f0; */
+        }
+
+        .runner-up-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #f1f3f5;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .runner-up-item:hover {
+            border-color: #FFD700;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transform: translateX(5px);
+        }
+
+        .rank-number {
+            font-family: 'Consolas', monospace;
+            font-weight: 900;
+            font-size: 18px;
+            color: #d1d1d1;
+            width: 30px;
+        }
+
+        .runner-avatar {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+        }
+
+        .runner-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            background: #eee;
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* 6. Sparkles */
+        .sparkle {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+            z-index: 20;
+            box-shadow: 0 0 5px #fff, 0 0 10px #FFD700;
+        }
+
+        .s1 {
+            width: 4px;
+            height: 4px;
+            top: 0;
+            left: 10%;
+            animation-delay: 0.5s;
+        }
+
+        .s2 {
+            width: 6px;
+            height: 6px;
+            top: 10%;
+            right: 0;
+            animation-delay: 1s;
+        }
+
+        .s3 {
+            width: 3px;
+            height: 3px;
+            bottom: 10px;
+            left: -5px;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Small utilities */
+        .small-font {
+            font-size: 11px;
+        }
+
+
+        /* === EXISTING STYLES === */
+
+        /* 1. Entrance Animation (Slide Up Fade) */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate3d(0, 40px, 0);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        .animate-enter {
+            opacity: 0;
+            /* Awal tersembunyi */
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* 2. Pulse Animation for Status Icon */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        .pulse-text {
+            animation: pulseText 2s infinite;
+        }
+
+        @keyframes pulseText {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* 3. Live Indicator Dot */
+        .live-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        /* 4. Hover Effects */
+        .hover-float {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-float:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+
+        .scale-on-hover:hover {
+            transform: scale(1.1);
+        }
+
+        .hover-shadow-lg {
+            transition: box-shadow 0.3s ease;
+        }
+
+        .hover-shadow-lg:hover {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* 5. Glassmorphism for Modal */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* 6. Card Bank Styles */
+        .card-bank {
+            position: relative;
+            min-height: 200px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-bank .card-body {
+            position: relative;
+            z-index: 2;
+            padding: 24px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-grow: 1;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .card-bank-chip {
+            width: 40px;
+            height: 30px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 6px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-bank-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 48px;
+            opacity: 0.2;
+        }
+
+        .card-bank-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .card-bank-value {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .card-bank-desc {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-bottom: 0;
+        }
+
+        .card-bank-pattern {
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        /* Gradients */
+        .gradient-purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .gradient-green {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .gradient-orange {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .gradient-red {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .gradient-dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+        }
+
+        .card-id {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            color: white;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .card-id .card-body {
+            position: relative;
+            z-index: 2;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-grow: 1;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .card-id-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-id-photo-wrapper {
+            position: relative;
+            z-index: 5;
+        }
+
+        .id-card-img {
+            width: 60px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .id-card-img:hover {
+            transform: scale(1.1);
+            border-color: #fff;
+        }
+
+        .id-card-img-placeholder {
+            width: 60px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-id-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .card-id-logo i {
+            font-size: 38px;
+            margin-bottom: 4px;
+            color: #ffed4e;
+        }
+
+        .card-id-details {
+            flex-grow: 1;
+        }
+
+        .card-id-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .card-id-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+            font-family: 'Consolas', 'Courier New', monospace;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-id-division {
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0.9;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .card-id-footer {
+            margin-top: auto;
+        }
+
+        .card-action {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .card-status {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            height: 100%;
+        }
+
+        .status-card {
+            padding: 24px;
+            border-radius: 12px;
+            border: 2px solid;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .status-success {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+
+        .status-warning {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .status-info {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .status-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .status-success .status-icon {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-warning .status-icon {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status-info .status-icon {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .badge {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 6px 12px;
+        }
+
+        .btn {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-dark {
+            background: #1a1a1a;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 12px 28px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-dark:hover {
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-outline-dark {
+            border: 2px solid #1a1a1a;
+            color: #1a1a1a;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 12px 28px;
+        }
+
+        .btn-outline-dark:hover {
+            background: #1a1a1a;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* ======================================================================= */
+        /* LUXURY HALL OF FAME STYLES (MODERN VERSION)                             */
+        /* ======================================================================= */
+
+        .hall-of-fame-card {
+            background: linear-gradient(145deg, #0f0f0f 0%, #1a1a1a 100%) !important;
+            border-radius: 24px !important;
+            border: 1px solid rgba(255, 215, 0, 0.15) !important;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Efek Cahaya Spotlight di Background */
+        .spotlight {
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 140%;
+            background: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .winner-memory-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            padding: 1.5rem !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .winner-memory-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(255, 215, 0, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Efek Grayscale-Nostalgia yang Halus */
+        .grayscale-memory {
+            filter: grayscale(40%) contrast(1.1);
+            /* Tidak terlalu gelap agar tetap modern */
+            transition: all 0.5s ease;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .winner-memory-card:hover .grayscale-memory {
+            filter: grayscale(0%) contrast(1);
+            border-color: #ffd700;
+            transform: rotate(3deg);
+        }
+
+        /* Rank Badge Modern */
+        .rank-badge-mini {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            /* Bentuk kotak membulat lebih modern dari lingkaran */
+            font-size: 13px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transform: rotate(12deg);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            color: #000;
+        }
+
+        .rank-badge-mini.gold {
+            background: linear-gradient(135deg, #ffd700, #b8860b);
+        }
+
+        .rank-badge-mini.silver {
+            background: linear-gradient(135deg, #e0e0e0, #757575);
+        }
+
+        .rank-badge-mini.bronze {
+            background: linear-gradient(135deg, #cd7f32, #8b4513);
+        }
+
+        /* Tipografi Teks */
+        .winner-memory-card h6 {
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .winner-memory-card .text-warning {
+            font-size: 11px !important;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        /* Badge Kehadiran (Pill) */
+        .attendance-pill-custom {
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        .winner-memory-card:hover .attendance-pill-custom {
+            background: #ffd700;
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .card-bank-value {
+                font-size: 28px;
+            }
+
+            .card-bank {
+                min-height: 180px;
+                margin-bottom: 20px;
+            }
+
+            .card-id {
+                min-height: 200px;
+            }
+
+            .card-id-name {
+                font-size: 20px;
+            }
+
+            .id-card-img,
+            .id-card-img-placeholder {
+                width: 50px;
+                height: 60px;
+            }
+
+            #greeting-text {
+                font-size: 0.8rem;
+            }
+
+            h3.fw-bold {
+                font-size: 1.5rem;
+            }
+
+            /* Responsive Podium */
+            .luxury-avatar,
+            .luxury-avatar-placeholder {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+
+            .main-winner .luxury-avatar,
+            .main-winner .luxury-avatar-placeholder {
+                width: 80px;
+                height: 80px;
+            }
+
+            .crown-floating {
+                top: -45px;
+            }
+
+            .crown-floating img {
+                width: 40px;
+            }
+
+            .podium-block {
+                height: auto;
+                min-height: 80px;
+            }
+        }
+    </style>
+@endpush
 
 @push('scripts')
     {{-- QRCode Lib --}}
