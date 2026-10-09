@@ -306,7 +306,7 @@
      - Modern full-width sliding search for mobile/tablet devices
      ========================================================================= --}}
 @if (in_array(auth()->user()->role, ['admin', 'audit', 'leader', 'admin_gaji']))
-    <div class="mobile-search-overlay" id="mobileSearchOverlay" aria-modal="true" role="dialog">
+    <div class="mobile-search-overlay d-md-none" id="mobileSearchOverlay" aria-modal="true" role="dialog">
         <div class="mobile-search-header d-flex align-items-center gap-2 px-3 py-2 border-bottom bg-white">
             <button type="button" class="modern-action-btn mobile-search-back-btn flex-shrink-0" id="mobileSearchClose" aria-label="Tutup pencarian" title="Kembali">
                 <i class="mdi mdi-arrow-left"></i>
@@ -352,7 +352,7 @@
             </div>
         </div>
     </div>
-    <div class="mobile-search-backdrop" id="mobileSearchBackdrop"></div>
+    <div class="mobile-search-backdrop d-md-none" id="mobileSearchBackdrop"></div>
 @endif
 
 {{-- =========================================================================
@@ -459,6 +459,14 @@
         let mobileSearchTimeout = null;
 
         function openMobileSearch() {
+            // Guard: Jika dibuka di desktop (>= 768px), fokuskan search bar desktop
+            if (window.innerWidth >= 768) {
+                if (searchInput) {
+                    searchInput.focus();
+                }
+                return;
+            }
+
             if (!mobileSearchOverlay) return;
             mobileSearchOverlay.classList.add('active');
             if (mobileSearchBackdrop) mobileSearchBackdrop.classList.add('active');
@@ -626,6 +634,9 @@
             } else if (e.key === 'Escape') {
                 if (mobileSearchOverlay && mobileSearchOverlay.classList.contains('active')) {
                     closeMobileSearch();
+                }
+                if (searchResults) {
+                    searchResults.classList.remove('show');
                 }
             }
         });
@@ -1399,9 +1410,15 @@
         white-space: nowrap;
     }
 
-    /* --- SEARCH BAR --- */
+    /* --- ACTIONS & SEARCH BAR --- */
+    .header-actions-box {
+        flex-shrink: 0;
+    }
+
     .modern-search-box {
         width: 240px;
+        min-width: 220px;
+        flex-shrink: 0;
         transition: width 0.2s ease;
     }
 
@@ -1492,6 +1509,17 @@
     }
 
     /* --- MOBILE SEARCH OVERLAY & RESULTS --- */
+    @media (min-width: 768px) {
+        .mobile-search-overlay,
+        .mobile-search-backdrop {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(-150%) !important;
+        }
+    }
+
     .mobile-search-overlay {
         position: fixed;
         top: 0;

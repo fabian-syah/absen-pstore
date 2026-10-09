@@ -10,27 +10,9 @@
 
 @section('heading')
     @if (isset($employee))
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center">
-                <a href="{{ route('team.branch.detail', $employee->branch_id) }}"
-                    class="btn btn-sm btn-light btn-icon me-3 rounded-circle shadow-sm" title="Kembali ke Cabang">
-                    <i class="mdi mdi-arrow-left text-primary"></i>
-                </a>
-                <div>
-                    <h4 class="mb-0 fw-bold text-slate-900">Riwayat Absensi: {{ $employee->name }}</h4>
-                    <div class="header-page-meta d-flex align-items-center gap-2 mt-1 flex-wrap">
-                        <span class="header-role-badge">
-                            <i class="mdi mdi-shield-check me-1"></i>{{ strtoupper(str_replace('_', ' ', $employee->role ?? 'karyawan')) }}
-                        </span>
-                        <span class="header-division-badge">
-                            <i class="mdi mdi-office-building me-1"></i>{{ $employee->division->name ?? '-' }} | {{ $employee->branch->name ?? '-' }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        Riwayat Absensi: {{ $employee->name }}
     @else
-        <h4 class="mb-0 fw-bold text-slate-900">Riwayat Absensi Saya</h4>
+        Riwayat Absensi Saya
     @endif
 @endsection
 
@@ -784,6 +766,34 @@
 
     <div class="row">
         <div class="col-12">
+
+            {{-- EMPLOYEE CONTEXT HEADER (Ketika Admin / Audit melihat riwayat karyawan lain) --}}
+            @if (isset($employee))
+                <div class="d-flex align-items-center justify-content-between mb-3 bg-white p-3 rounded-3 border shadow-sm flex-wrap gap-2">
+                    <div class="d-flex align-items-center">
+                        <a href="{{ route('team.branch.detail', $employee->branch_id) }}"
+                            class="btn btn-sm btn-light btn-icon me-3 rounded-circle shadow-sm" title="Kembali ke Cabang">
+                            <i class="mdi mdi-arrow-left text-primary"></i>
+                        </a>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h5 class="mb-0 fw-bold text-slate-900" style="font-size: 15px;">{{ $employee->name }}</h5>
+                                <span class="badge" style="font-size: 10px; font-weight: 700; background: #0f172a; color: #ffffff; padding: 3px 8px; border-radius: 6px;">
+                                    <i class="mdi mdi-shield-check me-1"></i>{{ strtoupper(str_replace('_', ' ', $employee->role ?? 'karyawan')) }}
+                                </span>
+                            </div>
+                            <small class="text-muted d-flex align-items-center gap-1 mt-0.5" style="font-size: 11.5px;">
+                                <i class="mdi mdi-office-building text-primary"></i> {{ $employee->division->name ?? '-' }} <span class="text-slate-300">|</span> <i class="mdi mdi-map-marker text-rose-500"></i> {{ $employee->branch->name ?? '-' }}
+                            </small>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="{{ route('team.branch.detail', $employee->branch_id) }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 px-3 py-1.5" style="border-radius: 8px; font-size: 12px; font-weight: 600;">
+                            <i class="mdi mdi-arrow-left"></i> Kembali ke Cabang
+                        </a>
+                    </div>
+                </div>
+            @endif
 
             {{-- 1. ALERT MODE AUDIT (Khusus Audit / Admin saat cek karyawan lain) --}}
             @if (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin'))
