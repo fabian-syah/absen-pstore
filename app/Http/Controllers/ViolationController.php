@@ -35,7 +35,12 @@ class ViolationController extends Controller
         if (in_array($user->role, ['admin', 'admin_gaji'])) {
             // No filter
         } elseif ($user->role === 'audit') {
-            $branchIds = $user->branches->pluck('id');
+            $branchIds = $user->branches->pluck('id')->toArray();
+            if ($user->branch_id) {
+                $branchIds[] = $user->branch_id;
+            }
+            $branchIds = array_unique($branchIds);
+
             $query->where(function ($q) use ($branchIds, $user) {
                 $q->whereHas('user', function ($subQ) use ($branchIds) {
                     $subQ->whereIn('branch_id', $branchIds);
@@ -57,10 +62,15 @@ class ViolationController extends Controller
         if (in_array($currentUser->role, ['admin', 'admin_gaji'])) {
             $users = User::where('role', '!=', 'admin')->orderBy('name')->get();
         } elseif ($currentUser->role === 'audit') {
-            $branchIds = $currentUser->branches->pluck('id');
+            $branchIds = $currentUser->branches->pluck('id')->toArray();
+            if ($currentUser->branch_id) {
+                $branchIds[] = $currentUser->branch_id;
+            }
+            $branchIds = array_unique($branchIds);
+
             $users = User::whereIn('branch_id', $branchIds)
-                ->where('role', '!=', 'audit')
                 ->where('role', '!=', 'admin')
+                ->where('id', '!=', $currentUser->id)
                 ->orderBy('name')
                 ->get();
         }
