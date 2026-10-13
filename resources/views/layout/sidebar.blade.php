@@ -778,9 +778,15 @@
         @if (auth()->user()->role == 'admin')
             <li class="nav-item nav-category">Menu Cabang</li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('branches.index') }}">
+                <a class="nav-link {{ request()->routeIs('branches.index', 'branches.show', 'branches.edit', 'branches.create') ? 'active' : '' }}" href="{{ route('branches.index') }}">
                     <i class="menu-icon mdi mdi-domain"></i>
                     <span class="menu-title">Data Cabang</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('branches.geofence.*') ? 'active' : '' }}" href="{{ route('branches.geofence.index') }}">
+                    <i class="menu-icon mdi mdi-crosshairs-gps"></i>
+                    <span class="menu-title">Setting Radius & Lokasi</span>
                 </a>
             </li>
             

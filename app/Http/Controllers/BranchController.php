@@ -320,4 +320,129 @@ class BranchController extends Controller
         $sanitizedBranchName = Str::slug($branch->name);
         return $pdf->download("Laporan_Absensi_{$sanitizedBranchName}_{$month}-{$year}.pdf");
     }
+
+    /**
+     * Halaman Khusus Admin: Pengaturan Lokasi, Koordinat GPS, dan Geofencing Cabang
+     */
+    public function geofenceIndex(Request $request)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak: Halaman Pengaturan Lokasi hanya dapat diakses oleh Admin.');
+        }
+
+        $branches = Branch::where('name', '!=', 'Cabang User Non Karyawan')
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $pusatBranches = $branches->filter(fn($b) => $b->is_pusat)->values();
+        $cabangBranches = $branches->filter(fn($b) => !$b->is_pusat)->values();
+
+        $totalBranches = $branches->count();
+        $activeGeofenceCount = $branches->filter(fn($b) => $b->hasGeofence())->count();
+        $missingGeofenceCount = $totalBranches - $activeGeofenceCount;
+        $pusatCount = $pusatBranches->count();
+        $cabangCount = $cabangBranches->count();
+        $pusatActiveCount = $pusatBranches->filter(fn($b) => $b->hasGeofence())->count();
+        $cabangActiveCount = $cabangBranches->filter(fn($b) => $b->hasGeofence())->count();
+
+        return view('branch.geofence_setting', compact(
+            'branches',
+            'pusatBranches',
+            'cabangBranches',
+            'totalBranches',
+            'activeGeofenceCount',
+            'missingGeofenceCount',
+            'pusatCount',
+            'cabangCount',
+            'pusatActiveCount',
+            'cabangActiveCount'
+        ));
+    }
+
+    /**
+     * Update Titik Koordinat & Radius untuk Cabang Tertentu (Single Update)
+     */
+    public function updateGeofence(Request $request, Branch $branch)
+    {
+        if (Auth::user()->role !== 'admin') {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+            }
+            abort(403);
+        }
+
+        $request->validate([
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'radius' => 'nullable|integer|min:10|max:5000',
+            'address' => 'nullable|string|max:500',
+        ]);
+
+        $branch->update([
+            'latitude' => $request->filled('latitude') ? (float)$request->latitude : null,
+            'longitude' => $request->filled('longitude') ? (float)$request->longitude : null,
+            'radius' => $request->filled('radius') ? (int)$request->radius : 100,
+            'address' => $request->filled('address') ? $request->address : $branch->address,
+        ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Lokasi dan radius ' . $branch->name . ' berhasil disimpan.',
+                'branch' => [
+                    'id' => $branch->id,
+                    'name' => $branch->name,
+                    'address' => $branch->address,
+                    'latitude' => $branch->latitude,
+                    'longitude' => $branch->longitude,
+                    'radius' => $branch->radius,
+                    'has_geofence' => $branch->hasGeofence(),
+                ]
+            ]);
+        }
+
+        return back()->with('success', 'Titik lokasi dan radius ' . $branch->name . ' berhasil diperbarui.');
+    }
+
+    /**
+     * Batch Update Radius Geofence (Semua, Hanya Pusat, atau Hanya Cabang)
+     */
+    public function batchUpdateRadius(Request $request)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $request->validate([
+            'target' => 'required|in:all,pusat,cabang',
+            'radius' => 'required|integer|min:10|max:5000',
+        ]);
+
+        $radius = (int) $request->radius;
+        $target = $request->target;
+
+        $query = Branch::where('name', '!=', 'Cabang User Non Karyawan');
+
+        if ($target === 'pusat') {
+            $pusatNames = Branch::pusatList();
+            $query->where(function($q) use ($pusatNames) {
+                $q->whereIn('name', $pusatNames)
+                  ->orWhere('name', 'LIKE', '%pusat%')
+                  ->orWhere('name', 'LIKE', '%head office%');
+            });
+            $targetLabel = "Unit Pusat";
+        } elseif ($target === 'cabang') {
+            $pusatNames = Branch::pusatList();
+            $query->whereNotIn('name', $pusatNames)
+                  ->where('name', 'NOT LIKE', '%pusat%')
+                  ->where('name', 'NOT LIKE', '%head office%');
+            $targetLabel = "Toko Cabang Daerah";
+        } else {
+            $targetLabel = "Semua Cabang & Unit";
+        }
+
+        $affected = $query->update(['radius' => $radius]);
+
+        return back()->with('success', "Berhasil menerapkan radius {$radius} meter untuk {$affected} {$targetLabel}.");
+    }
 }

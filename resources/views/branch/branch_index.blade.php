@@ -78,7 +78,14 @@
                                 </div>
                             </form>
 
-                            {{-- Tombol Tambah (Hanya Super Admin) --}}
+                            {{-- Tombol Setting Geofence & Tambah (Khusus Admin) --}}
+                            @if(auth()->user()->role == 'admin')
+                                <a href="{{ route('branches.geofence.index') }}" class="btn btn-outline-primary px-3 d-flex align-items-center gap-1 shadow-sm">
+                                    <i class="mdi mdi-crosshairs-gps fs-5"></i> 
+                                    <span class="d-none d-sm-inline">Setting Lokasi</span>
+                                </a>
+                            @endif
+
                             @if(auth()->user()->role == 'admin' && auth()->user()->branch_id == null)
                                 <a href="{{ route('branches.create') }}" class="btn btn-primary px-3 d-flex align-items-center gap-1 shadow-sm">
                                     <i class="mdi mdi-plus-circle-outline fs-5"></i> 

@@ -132,6 +132,9 @@ class Branch extends Model
                 return true;
             }
         }
+        if (str_contains($name, 'pusat') || str_contains($name, 'head office') || str_contains($name, 'holding') || str_contains($name, 'kantor pusat')) {
+            return true;
+        }
         return false;
     }
 
