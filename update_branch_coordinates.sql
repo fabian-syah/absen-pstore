@@ -109,8 +109,13 @@ UPDATE branches SET address = 'Jl. Wolter Monginsidi, Sangatta Utara, Kec. Sanga
 -- BALI, NTB, & SULAWESI
 UPDATE branches SET address = 'Jl. Teuku Umar No. 102, Dauh Puri Klod, Kec. Denpasar Bar., Kota Denpasar, Bali 80113', latitude = -8.6752100, longitude = 115.2052400, radius = 50 WHERE name LIKE '%Bali%';
 UPDATE branches SET address = 'Samping We Drink, Jl. Pejanggik No. 28, Cakranegara Bar., Mataram Barat, Kota Mataram, Nusa Tenggara Bar. 83239', latitude = -8.5885200, longitude = 116.1285100, radius = 50 WHERE name LIKE '%Lombok%';
-UPDATE branches SET address = 'Jl. Toddopuli 7 No. 7, Borong, Kec. Manggala, Kota Makassar, Sulawesi Selatan 90222', latitude = -5.1612100, longitude = 119.4525100, radius = 50 WHERE name = 'Pstore Makassar';
-UPDATE branches SET address = 'Jl. Perintis Kemerdekaan KM 12, Pai, Kec. Tamalanrea, Kota Makassar, Sulawesi Selatan 90245 (Samping Swalayan Bintang / Satu Sama)', latitude = -5.1325200, longitude = 119.5012400, radius = 50 WHERE name LIKE '%Makassar New%';
+
+-- Makassar Toddopuli
+UPDATE branches SET address = 'Jl. Toddopuli 7 No. 7, Borong, Kec. Manggala, Kota Makassar, Sulawesi Selatan 90222', latitude = -5.1612100, longitude = 119.4525100, radius = 100 WHERE (name = 'Pstore Makassar' OR name LIKE '%Toddopuli%') AND name NOT LIKE '%Perintis%' AND name NOT LIKE '%Makassar New%';
+
+-- Makassar Perintis (Sesuai titik fisik aktual dari HP karyawan)
+UPDATE branches SET address = 'Jl. Perintis Kemerdekaan KM 12, Pai, Kec. Tamalanrea, Kota Makassar, Sulawesi Selatan 90245 (Samping Swalayan Bintang / Satu Sama)', latitude = -5.1297200, longitude = 119.4990200, radius = 100 WHERE name LIKE '%Perintis%' OR name LIKE '%Makassar New%';
+
 UPDATE branches SET address = 'Jl. Piere Tendean No. 23, Sario Utara, Kec. Sario, Kota Manado, Sulawesi Utara 95111 (Kawasan Megamas)', latitude = 1.4812100, longitude = 124.8352100, radius = 50 WHERE name LIKE '%Manado%';
 UPDATE branches SET address = 'Jl. Emmy Saelan No. 4, Lolu Sel., Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111 (Seberang Pizza Hut / Zona Coffee)', latitude = -0.9085200, longitude = 119.8812400, radius = 50 WHERE name LIKE '%Palu%';
 UPDATE branches SET address = 'Jl. Prof. Dr. H.B. Jassin No. 3, Limba B, Kota Sel., Kota Gorontalo, Gorontalo 96136 (Perempatan Lampu Merah Gelael)', latitude = 0.5412100, longitude = 123.0612100, radius = 50 WHERE name LIKE '%Gorontalo%';

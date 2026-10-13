@@ -132,8 +132,14 @@ class SelfAttendanceController extends Controller
         }
 
         $branch = $user->branch;
-        // [PENTING] Kirim $branchTimezone & $branch ke View agar jam dan radius di UI sesuai lokasi
-        return view('user_biasa.absen', compact('mode', 'attendance', 'branchTimezone', 'ktpWarningMsg', 'branch'));
+        $allBranchesGeofence = \App\Models\Branch::whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->whereNotNull('radius')
+            ->where('radius', '>', 0)
+            ->get(['id', 'name', 'latitude', 'longitude', 'radius']);
+
+        // [PENTING] Kirim $branchTimezone, $branch, dan $allBranchesGeofence ke View agar jam dan radius di UI sesuai lokasi
+        return view('user_biasa.absen', compact('mode', 'attendance', 'branchTimezone', 'ktpWarningMsg', 'branch', 'allBranchesGeofence'));
     }
 
     /**
@@ -165,20 +171,48 @@ class SelfAttendanceController extends Controller
 
         $user = Auth::user();
 
-        // --- LAYER 3: VALIDASI GEOFENCING / RADIUS CABANG ---
-        // Hanya divalidasi jika cabang memiliki koordinat dan radius aktif (> 0).
-        // Jika koordinat cabang belum disetel (NULL / 0), absensi tetap berjalan normal tanpa memblokir karyawan.
-        $branch = $user->branch;
-        if ($branch && method_exists($branch, 'hasGeofence') && $branch->hasGeofence()) {
+        // --- LAYER 3: VALIDASI GEOFENCING / RADIUS CABANG (MENDUKUNG ROTASI CABANG / BKO) ---
+        // 1. Cek apakah berada di cabang penempatan utama
+        // 2. Jika tidak, cek apakah berada di cabang PStore lain (misal rotasi Perintis <-> Toddopuli)
+        // 3. Jika di luar semua cabang -> Tolak absensi
+        $primaryBranch = $user->branch;
+        $activeBranchForAttendance = $primaryBranch;
+        $isCrossBranch = false;
+
+        if ($primaryBranch && method_exists($primaryBranch, 'hasGeofence') && $primaryBranch->hasGeofence()) {
             $userLat = (float) $request->latitude;
             $userLng = (float) $request->longitude;
 
             if ($userLat != 0.0 && $userLng != 0.0) {
-                $distance = $branch->calculateDistanceTo($userLat, $userLng);
+                $distanceToPrimary = $primaryBranch->calculateDistanceTo($userLat, $userLng);
 
-                if ($distance > $branch->radius) {
-                    $distFormatted = round($distance);
-                    return redirect()->route('dashboard')->with('error', "AKSES DITOLAK: Anda berada di luar radius cabang {$branch->name}. Jarak Anda terdeteksi {$distFormatted} meter dari toko (Maksimal radius: {$branch->radius} meter). Silakan lakukan absensi di dalam area toko.");
+                if ($distanceToPrimary <= $primaryBranch->radius) {
+                    $activeBranchForAttendance = $primaryBranch;
+                } else {
+                    // Cek cabang PStore lainnya jika karyawan sedang jadwal di cabang lain (seperti Toddopuli)
+                    $otherBranches = \App\Models\Branch::where('id', '!=', $primaryBranch->id)
+                        ->whereNotNull('latitude')
+                        ->whereNotNull('longitude')
+                        ->whereNotNull('radius')
+                        ->where('radius', '>', 0)
+                        ->get();
+
+                    $foundOtherBranch = null;
+                    foreach ($otherBranches as $otherBranch) {
+                        $distOther = $otherBranch->calculateDistanceTo($userLat, $userLng);
+                        if ($distOther <= $otherBranch->radius) {
+                            $foundOtherBranch = $otherBranch;
+                            break;
+                        }
+                    }
+
+                    if ($foundOtherBranch) {
+                        $activeBranchForAttendance = $foundOtherBranch;
+                        $isCrossBranch = true;
+                    } else {
+                        $distFormatted = round($distanceToPrimary);
+                        return redirect()->route('dashboard')->with('error', "AKSES DITOLAK: Anda berada di luar radius cabang {$primaryBranch->name}. Jarak Anda terdeteksi {$distFormatted} meter dari toko (Maksimal radius: {$primaryBranch->radius} meter). Silakan lakukan absensi di dalam area cabang.");
+                    }
                 }
             }
         }
@@ -286,7 +320,8 @@ class SelfAttendanceController extends Controller
                 $extraNote = "";
             }
 
-            $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $extraNote . "Pulang (Selfie)" . $userNote;
+            $crossNote = $isCrossBranch ? "[Jadwal di {$activeBranchForAttendance->name}] " : "";
+            $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $crossNote . $extraNote . "Pulang (Selfie)" . $userNote;
 
             $attendanceToUpdate->update([
                 'check_out_time' => $currentTime,
@@ -347,6 +382,11 @@ class SelfAttendanceController extends Controller
                 ->first();
 
             $finalNotes = $request->notes;
+
+            if ($isCrossBranch) {
+                $crossNote = "[Jadwal di {$activeBranchForAttendance->name}]";
+                $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $crossNote;
+            }
 
             if ($latePermission) {
                 $reasonNote = "[Izin Telat Approved: " . $latePermission->reason . "]";

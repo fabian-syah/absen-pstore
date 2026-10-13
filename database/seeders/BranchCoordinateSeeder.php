@@ -346,13 +346,25 @@ class BranchCoordinateSeeder extends Seeder
                 'address' => 'Jl. Toddopuli 7 No. 7, Borong, Kec. Manggala, Kota Makassar, Sulawesi Selatan 90222',
                 'lat' => -5.1612100,
                 'lng' => 119.4525100,
-                'radius' => 50,
+                'radius' => 100,
+            ],
+            'Pstore Makassar Toddopuli' => [
+                'address' => 'Jl. Toddopuli 7 No. 7, Borong, Kec. Manggala, Kota Makassar, Sulawesi Selatan 90222',
+                'lat' => -5.1612100,
+                'lng' => 119.4525100,
+                'radius' => 100,
             ],
             'Pstore Makassar New' => [
                 'address' => 'Jl. Perintis Kemerdekaan KM 12, Pai, Kec. Tamalanrea, Kota Makassar, Sulawesi Selatan 90245 (Samping Swalayan Bintang / Satu Sama)',
-                'lat' => -5.1325200,
-                'lng' => 119.5012400,
-                'radius' => 50,
+                'lat' => -5.1297200,
+                'lng' => 119.4990200,
+                'radius' => 100,
+            ],
+            'Pstore Makassar Perintis' => [
+                'address' => 'Jl. Perintis Kemerdekaan KM 12, Pai, Kec. Tamalanrea, Kota Makassar, Sulawesi Selatan 90245 (Samping Swalayan Bintang / Satu Sama)',
+                'lat' => -5.1297200,
+                'lng' => 119.4990200,
+                'radius' => 100,
             ],
             'Pstore Manado' => [
                 'address' => 'Jl. Piere Tendean No. 23, Sario Utara, Kec. Sario, Kota Manado, Sulawesi Utara 95111 (Kawasan Megamas)',
@@ -377,7 +389,6 @@ class BranchCoordinateSeeder extends Seeder
         foreach ($branchCoordinates as $branchName => $data) {
             DB::table('branches')
                 ->where('name', $branchName)
-                ->orWhere('name', 'LIKE', "%{$branchName}%")
                 ->update([
                     'address' => $data['address'],
                     'latitude' => $data['lat'],
@@ -386,5 +397,34 @@ class BranchCoordinateSeeder extends Seeder
                     'updated_at' => now(),
                 ]);
         }
+
+        // Penanganan Khusus Cabang Makassar (Toddopuli & Perintis)
+        DB::table('branches')
+            ->where(function ($q) {
+                $q->where('name', 'LIKE', '%Toddopuli%')
+                    ->orWhere('name', 'Pstore Makassar');
+            })
+            ->where('name', 'NOT LIKE', '%Perintis%')
+            ->where('name', 'NOT LIKE', '%Makassar New%')
+            ->update([
+                'address' => 'Jl. Toddopuli 7 No. 7, Borong, Kec. Manggala, Kota Makassar, Sulawesi Selatan 90222',
+                'latitude' => -5.1612100,
+                'longitude' => 119.4525100,
+                'radius' => 100,
+                'updated_at' => now(),
+            ]);
+
+        DB::table('branches')
+            ->where(function ($q) {
+                $q->where('name', 'LIKE', '%Perintis%')
+                    ->orWhere('name', 'LIKE', '%Makassar New%');
+            })
+            ->update([
+                'address' => 'Jl. Perintis Kemerdekaan KM 12, Pai, Kec. Tamalanrea, Kota Makassar, Sulawesi Selatan 90245 (Samping Swalayan Bintang / Satu Sama)',
+                'latitude' => -5.1297200,
+                'longitude' => 119.4990200,
+                'radius' => 100,
+                'updated_at' => now(),
+            ]);
     }
 }
