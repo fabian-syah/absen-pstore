@@ -172,8 +172,8 @@ class BranchCoordinateSeeder extends Seeder
             ],
             'Pstore Sukabumi' => [
                 'address' => 'Jl. R.A. Kosasih No. 115, Ciaul, Subangjaya, Kec. Cikole, Kota Sukabumi (Samping Klinik Permata Ciaul)',
-                'lat' => -6.9212100,
-                'lng' => 106.9425200,
+                'lat' => -6.9225000,
+                'lng' => 106.9405000,
                 'radius' => 100,
             ],
 
@@ -433,6 +433,16 @@ class BranchCoordinateSeeder extends Seeder
                 'address' => 'Jl. Raya Bratang Binangun No. 29, Baratajaya, Kec. Gubeng, Surabaya, Jawa Timur 60284',
                 'latitude' => -7.2971100,
                 'longitude' => 112.7597100,
+                'radius' => 100,
+                'updated_at' => now(),
+            ]);
+
+        DB::table('branches')
+            ->where('name', 'LIKE', '%Sukabumi%')
+            ->update([
+                'address' => 'Jl. R.A. Kosasih No. 115, Ciaul, Subangjaya, Kec. Cikole, Kota Sukabumi (Samping Klinik Permata Ciaul)',
+                'latitude' => -6.9225000,
+                'longitude' => 106.9405000,
                 'radius' => 100,
                 'updated_at' => now(),
             ]);

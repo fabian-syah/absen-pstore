@@ -168,9 +168,23 @@
                                         <td>
                                             <div class="d-flex">
                                                 <i class="mdi mdi-map-marker text-danger mt-1 me-2"></i>
-                                                <span class="text-muted small lh-sm">
-                                                    {{ Str::limit($branch->address ?? 'Alamat belum diisi', 70) }}
-                                                </span>
+                                                <div>
+                                                    <span class="text-muted small lh-sm d-block mb-1">
+                                                        {{ Str::limit($branch->address ?? 'Alamat belum diisi', 70) }}
+                                                    </span>
+                                                    @if($branch->latitude && $branch->longitude)
+                                                        <span class="badge bg-soft-success text-success border border-success border-opacity-25" style="font-size: 0.7rem;">
+                                                            <i class="mdi mdi-crosshairs-gps me-1"></i>Radius: {{ $branch->radius ?? 100 }}m
+                                                        </span>
+                                                        <a href="https://www.google.com/maps?q={{ $branch->latitude }},{{ $branch->longitude }}" target="_blank" class="text-decoration-none small ms-1 text-primary" style="font-size: 0.7rem;">
+                                                            <i class="mdi mdi-open-in-new"></i> Maps
+                                                        </a>
+                                                    @else
+                                                        <span class="badge bg-soft-warning text-warning border" style="font-size: 0.7rem;">
+                                                            Belum Pasang GPS
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </td>
 

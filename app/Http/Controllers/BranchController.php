@@ -142,6 +142,9 @@ class BranchController extends Controller
             'name' => 'required|string|max:255|unique:branches',
             'address' => 'nullable|string',
             'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'radius' => 'nullable|integer|min:10|max:5000',
             'kemenag_city_id' => 'nullable|string',
         ]);
 
@@ -179,6 +182,9 @@ class BranchController extends Controller
             'name' => 'required|string|max:255|unique:branches,name,' . $branch->id,
             'address' => 'nullable|string',
             'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'radius' => 'nullable|integer|min:10|max:5000',
             'kemenag_city_id' => 'nullable|string',
             'is_active' => 'required|boolean',
         ]);

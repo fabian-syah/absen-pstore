@@ -49,11 +49,43 @@
                             <small class="form-text text-muted">ID Kota dapat dicari di API MyQuran. Kosongkan jika tidak perlu jadwal shalat spesifik cabang.</small>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="address">Alamat Cabang</label>
                             <textarea class="form-control" id="address" name="address"
                                 rows="3">{{ old('address') }}</textarea>
                         </div>
+
+                        {{-- GEOFENCING / LOKASI ABSENSI MANDIRI --}}
+                        <div class="card bg-light border p-3 mb-4 rounded">
+                            <h6 class="fw-bold text-primary mb-2">
+                                <i class="mdi mdi-map-marker-radius me-1"></i> Pengaturan Geofencing & Radius Absensi
+                            </h6>
+                            <p class="text-muted small mb-3">
+                                Tentukan titik koordinat GPS cabang dan batas radius toleransi absensi mandiri karyawan.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="latitude" class="form-label fw-bold small">Latitude</label>
+                                    <input type="text" class="form-control" id="latitude" name="latitude"
+                                        value="{{ old('latitude') }}" placeholder="Contoh: -6.1952300">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="longitude" class="form-label fw-bold small">Longitude</label>
+                                    <input type="text" class="form-control" id="longitude" name="longitude"
+                                        value="{{ old('longitude') }}" placeholder="Contoh: 106.7865200">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="radius" class="form-label fw-bold small">Radius Absensi (Meter)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="radius" name="radius" min="10" max="5000"
+                                            value="{{ old('radius', 100) }}" placeholder="100">
+                                        <span class="input-group-text">Meter</span>
+                                    </div>
+                                    <small class="text-muted">Standar: 100 meter</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-primary me-2">Simpan</button>
                         <a href="{{ route('branches.index') }}" class="btn btn-light">Batal</a>
                     </form>

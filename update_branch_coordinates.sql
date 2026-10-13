@@ -72,7 +72,7 @@ UPDATE branches SET address = 'Jl. A.H. Nasution No. 73, Pasanggrahan, Kec. Ujun
 UPDATE branches SET address = 'Ruko Mediterania Blok A No. 19, Jl. Galuh Mas Raya, Sukaharja, Telukjambe Timur, Kab. Karawang (Samping Bank BRI)', latitude = -6.3218100, longitude = 107.2942400, radius = 100 WHERE name LIKE '%Karawang%';
 UPDATE branches SET address = 'Jl. Dr. Cipto Mangunkusumo No. 26, Pekiringan, Kec. Kesambi, Kota Cirebon (Samping Transmart Cirebon)', latitude = -6.7262100, longitude = 108.5532400, radius = 100 WHERE name LIKE '%Cirebon%';
 UPDATE branches SET address = 'Jl. KH. Abdullah bin Nuh No. 1, Pamoyanan, Kec. Cianjur, Kabupaten Cianjur', latitude = -6.8155200, longitude = 107.1325100, radius = 100 WHERE name LIKE '%Cianjur%';
-UPDATE branches SET address = 'Jl. R.A. Kosasih No. 115, Ciaul, Subangjaya, Kec. Cikole, Kota Sukabumi (Samping Klinik Permata Ciaul)', latitude = -6.9212100, longitude = 106.9425200, radius = 100 WHERE name LIKE '%Sukabumi%';
+UPDATE branches SET address = 'Jl. R.A. Kosasih No. 115, Ciaul, Subangjaya, Kec. Cikole, Kota Sukabumi (Samping Klinik Permata Ciaul)', latitude = -6.9225000, longitude = 106.9405000, radius = 100 WHERE name LIKE '%Sukabumi%';
 
 -- JAWA TENGAH & DIY
 UPDATE branches SET address = 'Ruko DTA Square, Kledokan, Caturtunggal, Kec. Depok, Kabupaten Sleman, Daerah Istimewa Yogyakarta 55282', latitude = -7.7718200, longitude = 110.4082400, radius = 100 WHERE name LIKE '%Jogja%';
