@@ -12,10 +12,57 @@ class Branch extends Model
     protected $fillable = [
         'name', 
         'address', 
+        'latitude',
+        'longitude',
+        'radius',
         'is_active', 
         'timezone',
         'kemenag_city_id'
     ];
+
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'radius' => 'integer',
+        'is_active' => 'boolean',
+    ];
+
+    /**
+     * Cek apakah cabang ini memiliki pembatasan radius aktif (koordinat dan radius terisi)
+     */
+    public function hasGeofence(): bool
+    {
+        return !is_null($this->latitude) 
+            && !is_null($this->longitude) 
+            && !is_null($this->radius) 
+            && $this->radius > 0;
+    }
+
+    /**
+     * Hitung jarak dari titik cabang ke koordinat user (dalam meter)
+     * Menggunakan Haversine Formula
+     */
+    public function calculateDistanceTo(float $userLat, float $userLng): float
+    {
+        if (is_null($this->latitude) || is_null($this->longitude)) {
+            return 0.0;
+        }
+
+        $earthRadius = 6371000; // Radius rata-rata bumi dalam meter
+
+        $latFrom = deg2rad((float) $this->latitude);
+        $lonFrom = deg2rad((float) $this->longitude);
+        $latTo = deg2rad($userLat);
+        $lonTo = deg2rad($userLng);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+
+        return $angle * $earthRadius;
+    }
 
     // Relasi: Satu cabang punya banyak user
     public function users()

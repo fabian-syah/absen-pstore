@@ -131,8 +131,9 @@ class SelfAttendanceController extends Controller
             $attendance = null;
         }
 
-        // [PENTING] Kirim $branchTimezone ke View agar jam di UI sesuai lokasi
-        return view('user_biasa.absen', compact('mode', 'attendance', 'branchTimezone', 'ktpWarningMsg'));
+        $branch = $user->branch;
+        // [PENTING] Kirim $branchTimezone & $branch ke View agar jam dan radius di UI sesuai lokasi
+        return view('user_biasa.absen', compact('mode', 'attendance', 'branchTimezone', 'ktpWarningMsg', 'branch'));
     }
 
     /**
@@ -163,6 +164,25 @@ class SelfAttendanceController extends Controller
         ]);
 
         $user = Auth::user();
+
+        // --- LAYER 3: VALIDASI GEOFENCING / RADIUS CABANG ---
+        // Hanya divalidasi jika cabang memiliki koordinat dan radius aktif (> 0).
+        // Jika koordinat cabang belum disetel (NULL / 0), absensi tetap berjalan normal tanpa memblokir karyawan.
+        $branch = $user->branch;
+        if ($branch && method_exists($branch, 'hasGeofence') && $branch->hasGeofence()) {
+            $userLat = (float) $request->latitude;
+            $userLng = (float) $request->longitude;
+
+            if ($userLat != 0.0 && $userLng != 0.0) {
+                $distance = $branch->calculateDistanceTo($userLat, $userLng);
+
+                if ($distance > $branch->radius) {
+                    $distFormatted = round($distance);
+                    return redirect()->route('dashboard')->with('error', "AKSES DITOLAK: Anda berada di luar radius cabang {$branch->name}. Jarak Anda terdeteksi {$distFormatted} meter dari toko (Maksimal radius: {$branch->radius} meter). Silakan lakukan absensi di dalam area toko.");
+                }
+            }
+        }
+
         $currentTime = now(); // Waktu Server
 
         // Setup Timezone

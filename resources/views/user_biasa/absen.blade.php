@@ -292,6 +292,23 @@
                             </span>
                         </div>
 
+                        {{-- GEOFENCE STATUS BOX --}}
+                        @php
+                            $userBranch = Auth::user()->branch;
+                            $hasGeofence = ($userBranch && !is_null($userBranch->latitude) && !is_null($userBranch->longitude) && !is_null($userBranch->radius) && $userBranch->radius > 0);
+                        @endphp
+                        @if($hasGeofence)
+                            <div class="p-2 rounded-2 bg-light border mt-2 d-none" id="geofence-status-box">
+                                <div class="d-flex align-items-center justify-content-between" style="font-size: 11.5px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="mdi mdi-circle-medium text-warning fs-5 me-1" id="geofence-status-dot"></i>
+                                        <span class="fw-bold text-slate-800" id="geofence-status-text">Memvalidasi jarak ke {{ $userBranch->name }}...</span>
+                                    </div>
+                                    <span class="badge bg-secondary" id="geofence-distance-badge">Maks {{ $userBranch->radius }}m</span>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="d-none text-danger mt-1.5 small" id="gps-permission-help" style="font-size: 11px;">
                             <i class="mdi mdi-alert-circle-outline me-1"></i> Izin lokasi ditolak. Silahkan aktifkan izin lokasi di ikon gembok browser (samping URL) lalu klik <strong>Perbarui</strong>.
                         </div>
@@ -1284,6 +1301,71 @@
         if (retakeBtn) retakeBtn.addEventListener('click', triggerRetake);
         if (bottomRetakeBtn) bottomRetakeBtn.addEventListener('click', triggerRetake);
 
+        // === GEOFENCING CONFIGURATION ===
+        const branchLat = {{ !is_null(Auth::user()->branch?->latitude) ? (float)Auth::user()->branch->latitude : 'null' }};
+        const branchLng = {{ !is_null(Auth::user()->branch?->longitude) ? (float)Auth::user()->branch->longitude : 'null' }};
+        const branchRadius = {{ !is_null(Auth::user()->branch?->radius) ? (int)Auth::user()->branch->radius : 'null' }};
+        const branchName = "{{ addslashes(Auth::user()->branch?->name ?? 'Cabang') }}";
+        const hasBranchGeofence = (branchLat !== null && branchLng !== null && branchRadius !== null && branchRadius > 0);
+
+        let isWithinRadius = !hasBranchGeofence; // Default true jika cabang belum konfigurasi geofence
+        let currentDistanceToBranch = null;
+
+        function calculateDistanceInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Radius bumi dalam meter
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function updateGeofenceDisplay(distance) {
+            const geofenceBox = document.getElementById('geofence-status-box');
+            const geofenceDot = document.getElementById('geofence-status-dot');
+            const geofenceText = document.getElementById('geofence-status-text');
+            const geofenceBadge = document.getElementById('geofence-distance-badge');
+
+            if (!geofenceBox || !hasBranchGeofence) return;
+
+            geofenceBox.classList.remove('d-none');
+            const distRound = Math.round(distance);
+
+            if (distance <= branchRadius) {
+                isWithinRadius = true;
+                geofenceBox.style.backgroundColor = '#ecfdf5';
+                geofenceBox.style.borderColor = '#a7f3d0';
+                if (geofenceDot) {
+                    geofenceDot.className = 'mdi mdi-check-circle text-success fs-5 me-1';
+                }
+                if (geofenceText) {
+                    geofenceText.className = 'fw-bold text-success';
+                    geofenceText.textContent = `Dalam Radius ${branchName}`;
+                }
+                if (geofenceBadge) {
+                    geofenceBadge.className = 'badge bg-success';
+                    geofenceBadge.textContent = `${distRound}m / Maks ${branchRadius}m`;
+                }
+            } else {
+                isWithinRadius = false;
+                geofenceBox.style.backgroundColor = '#fff1f2';
+                geofenceBox.style.borderColor = '#fecdd3';
+                if (geofenceDot) {
+                    geofenceDot.className = 'mdi mdi-alert-circle text-danger fs-5 me-1';
+                }
+                if (geofenceText) {
+                    geofenceText.className = 'fw-bold text-danger';
+                    geofenceText.textContent = `Di Luar Radius ${branchName}`;
+                }
+                if (geofenceBadge) {
+                    geofenceBadge.className = 'badge bg-danger';
+                    geofenceBadge.textContent = `${distRound}m / Maks ${branchRadius}m`;
+                }
+            }
+        }
+
         // === GPS GEOLOCATION ===
         function getLocation(highAccuracy = true) {
             if (!navigator.geolocation) {
@@ -1308,11 +1390,31 @@
                     accBadge.className = 'info-badge success';
                     if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
 
+                    // Validasi Geofence jika cabang sudah terpasang koordinat
+                    if (hasBranchGeofence) {
+                        const dist = calculateDistanceInMeters(latitude, longitude, branchLat, branchLng);
+                        currentDistanceToBranch = dist;
+                        updateGeofenceDisplay(dist);
+                    } else {
+                        isWithinRadius = true;
+                    }
+
                     // Update Step 2 Status
-                    if (stepGpsCircle) stepGpsCircle.classList.add('done');
+                    if (stepGpsCircle) {
+                        if (isWithinRadius) {
+                            stepGpsCircle.classList.add('done');
+                        } else {
+                            stepGpsCircle.classList.remove('done');
+                        }
+                    }
                     if (stepGpsStatus) {
-                        stepGpsStatus.textContent = 'Terkunci';
-                        stepGpsStatus.className = 'badge-step-status done';
+                        if (!hasBranchGeofence || isWithinRadius) {
+                            stepGpsStatus.textContent = 'Terkunci';
+                            stepGpsStatus.className = 'badge-step-status done';
+                        } else {
+                            stepGpsStatus.textContent = 'Di Luar Radius';
+                            stepGpsStatus.className = 'badge-step-status text-danger';
+                        }
                     }
 
                     checkGlobalValidity();
@@ -1350,7 +1452,7 @@
             const hasPhoto = photoInputHidden.files && photoInputHidden.files.length > 0;
             const hasLoc = latInput.value !== '';
 
-            if (hasPhoto && hasLoc) {
+            if (hasPhoto && hasLoc && isWithinRadius) {
                 slideTrack.classList.remove('disabled');
                 slideTrack.classList.add('active');
                 slideText.textContent = 'GESER UNTUK ABSEN';
@@ -1359,7 +1461,15 @@
                 slideTrack.classList.add('disabled');
                 slideTrack.classList.remove('active');
                 if (fallbackSubmitBtn) fallbackSubmitBtn.classList.add('d-none');
-                slideText.textContent = hasPhoto ? 'MENUNGGU LOKASI GPS...' : 'AMBIL FOTO TERLEBIH DAHULU';
+
+                if (!hasPhoto) {
+                    slideText.textContent = 'AMBIL FOTO TERLEBIH DAHULU';
+                } else if (!hasLoc) {
+                    slideText.textContent = 'MENUNGGU LOKASI GPS...';
+                } else if (hasBranchGeofence && !isWithinRadius) {
+                    const distMsg = currentDistanceToBranch !== null ? Math.round(currentDistanceToBranch) + 'm' : '';
+                    slideText.textContent = `DI LUAR AREA TOKO (${distMsg} / MAKS ${branchRadius}m)`;
+                }
             }
         }
 
@@ -1367,6 +1477,11 @@
         window.submitAttendanceNow = function() {
             if (latInput.value === '') {
                 alert('Lokasi GPS belum terkunci. Klik tombol "Perbarui" pada kotak lokasi atau izinkan GPS browser.');
+                return;
+            }
+            if (hasBranchGeofence && !isWithinRadius) {
+                const distMsg = currentDistanceToBranch !== null ? Math.round(currentDistanceToBranch) + 'm' : '';
+                alert(`AKSES DITOLAK: Anda berada di luar radius area cabang ${branchName} (${distMsg} dari toko, batas maksimal: ${branchRadius}m).\n\nSilakan menuju ke area toko untuk melakukan absensi.`);
                 return;
             }
             if (!photoInputHidden.files || photoInputHidden.files.length === 0) {
