@@ -221,30 +221,12 @@ class SelfAttendanceController extends Controller
                     }
                 }
             } else {
-                // Cabang utama belum set geofence, periksa apakah karyawan berada di cabang lain
-                $otherBranches = \App\Models\Branch::whereNotNull('latitude')
-                    ->whereNotNull('longitude')
-                    ->whereNotNull('radius')
-                    ->where('radius', '>', 0)
-                    ->when($primaryBranch, function ($q) use ($primaryBranch) {
-                        $q->where('id', '!=', $primaryBranch->id);
-                    })
-                    ->get();
-
-                $foundOtherBranch = null;
-                foreach ($otherBranches as $otherBranch) {
-                    $distOther = $otherBranch->calculateDistanceTo($userLat, $userLng);
-                    if ($distOther <= $otherBranch->radius) {
-                        $foundOtherBranch = $otherBranch;
-                        break;
-                    }
-                }
-
-                if ($foundOtherBranch) {
-                    $activeBranchForAttendance = $foundOtherBranch;
-                    $isCrossBranch = true;
-                    $isUnknownLocation = false;
-                }
+                // Cabang belum di-setting radius / geofence:
+                // Berjalan normal persis seperti awal default tanpa perubahan apa pun
+                $activeBranchForAttendance = $primaryBranch;
+                $isCrossBranch = false;
+                $isUnknownLocation = false;
+                $distanceFromBranch = null;
             }
         }
 

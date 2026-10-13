@@ -374,14 +374,19 @@ class BranchController extends Controller
         $request->validate([
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
-            'radius' => 'nullable|integer|min:10|max:5000',
+            'radius' => 'nullable|integer|min:0|max:5000',
             'address' => 'nullable|string|max:500',
         ]);
+
+        $radiusVal = $request->filled('radius') ? (int)$request->radius : null;
+        if ($radiusVal === 0) {
+            $radiusVal = null; // Nilai 0 atau kosong berarti geofence dinonaktifkan
+        }
 
         $branch->update([
             'latitude' => $request->filled('latitude') ? (float)$request->latitude : null,
             'longitude' => $request->filled('longitude') ? (float)$request->longitude : null,
-            'radius' => $request->filled('radius') ? (int)$request->radius : 100,
+            'radius' => $radiusVal,
             'address' => $request->filled('address') ? $request->address : $branch->address,
         ]);
 

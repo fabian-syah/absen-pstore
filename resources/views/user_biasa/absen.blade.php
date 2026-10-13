@@ -1390,55 +1390,57 @@
                     accBadge.className = 'info-badge success';
                     if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
 
-                    // Validasi Geofence (Cabang Utama & Cabang Rotasi / BKO)
-                    let matchedBranch = null;
-                    let isCross = false;
-
-                    // 1. Cek cabang utama
                     if (hasBranchGeofence) {
+                        // 1. Cek cabang utama
                         const distPrimary = calculateDistanceInMeters(latitude, longitude, branchLat, branchLng);
                         currentDistanceToBranch = distPrimary;
+
+                        let matchedBranch = null;
+                        let isCross = false;
 
                         if (distPrimary <= branchRadius) {
                             matchedBranch = { name: branchName, dist: distPrimary, radius: branchRadius };
                             isCross = false;
-                        }
-                    }
+                        } else {
+                            // 2. Cek cabang PStore lain jika rotasi jadwal
+                            if (Array.isArray(allBranchesGeofence) && allBranchesGeofence.length > 0) {
+                                for (let b of allBranchesGeofence) {
+                                    if (b.latitude && b.longitude && b.radius) {
+                                        if (b.name === branchName) continue;
 
-                    // 2. Jika tidak di cabang utama (atau cabang utama belum set geofence), cek cabang PStore lain
-                    if (!matchedBranch && Array.isArray(allBranchesGeofence) && allBranchesGeofence.length > 0) {
-                        for (let b of allBranchesGeofence) {
-                            if (b.latitude && b.longitude && b.radius) {
-                                if (hasBranchGeofence && b.name === branchName) continue;
-
-                                const d = calculateDistanceInMeters(latitude, longitude, parseFloat(b.latitude), parseFloat(b.longitude));
-                                if (d <= parseInt(b.radius)) {
-                                    matchedBranch = { id: b.id, name: b.name, dist: d, radius: parseInt(b.radius) };
-                                    isCross = true;
-                                    break;
+                                        const d = calculateDistanceInMeters(latitude, longitude, parseFloat(b.latitude), parseFloat(b.longitude));
+                                        if (d <= parseInt(b.radius)) {
+                                            matchedBranch = { id: b.id, name: b.name, dist: d, radius: parseInt(b.radius) };
+                                            isCross = true;
+                                            break;
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // 3. Terapkan hasil pencocokan
-                    if (matchedBranch) {
-                        isWithinRadius = true;
-                        activeMatchedBranchName = matchedBranch.name;
-                        isCrossBranchAttendance = isCross;
-                        currentDistanceToBranch = matchedBranch.dist;
-                        updateGeofenceDisplay(matchedBranch.dist, matchedBranch.name, isCross, matchedBranch.radius);
-                    } else if (hasBranchGeofence) {
-                        // Di luar radius semua cabang -> Unknown
-                        isWithinRadius = false;
-                        activeMatchedBranchName = branchName;
-                        isCrossBranchAttendance = false;
-                        updateGeofenceDisplay(currentDistanceToBranch, branchName, false, branchRadius);
+                        // 3. Terapkan hasil pencocokan
+                        if (matchedBranch) {
+                            isWithinRadius = true;
+                            activeMatchedBranchName = matchedBranch.name;
+                            isCrossBranchAttendance = isCross;
+                            currentDistanceToBranch = matchedBranch.dist;
+                            updateGeofenceDisplay(matchedBranch.dist, matchedBranch.name, isCross, matchedBranch.radius);
+                        } else {
+                            // Di luar radius semua cabang -> Unknown
+                            isWithinRadius = false;
+                            activeMatchedBranchName = branchName;
+                            isCrossBranchAttendance = false;
+                            updateGeofenceDisplay(currentDistanceToBranch, branchName, false, branchRadius);
+                        }
                     } else {
-                        // Tidak ada geofence di cabang utama dan tidak match cabang lain
+                        // CABANG BELUM SETTING RADIUS / GEOFENCE:
+                        // Berjalan normal persis seperti awal default tanpa perubahan apa pun
                         isWithinRadius = true;
                         activeMatchedBranchName = branchName;
                         isCrossBranchAttendance = false;
+                        const geofenceBox = document.getElementById('geofence-status-box');
+                        if (geofenceBox) geofenceBox.classList.add('d-none');
                     }
 
                     // Update Step 2 Status di Checklist
@@ -1446,10 +1448,14 @@
                         stepGpsCircle.classList.add('done');
                     }
                     if (stepGpsStatus) {
-                        if (isCrossBranchAttendance) {
+                        if (!hasBranchGeofence) {
+                            // Sesuai awal: Hanya tampilkan 'Terkunci' biasa tanpa info radius/lokasi
+                            stepGpsStatus.textContent = 'Terkunci';
+                            stepGpsStatus.className = 'badge-step-status done';
+                        } else if (isCrossBranchAttendance) {
                             stepGpsStatus.textContent = `Terkunci (${activeMatchedBranchName})`;
                             stepGpsStatus.className = 'badge-step-status done';
-                        } else if (!hasBranchGeofence || isWithinRadius) {
+                        } else if (isWithinRadius) {
                             stepGpsStatus.textContent = 'Terkunci (Area Toko)';
                             stepGpsStatus.className = 'badge-step-status done';
                         } else {
