@@ -230,7 +230,7 @@ class AuditController extends Controller
     public function showVerificationList()
     {
         $user = Auth::user();
-        $query = Attendance::with(['user.division', 'user.branch'])
+        $query = Attendance::with(['user.division', 'user.branch', 'branch'])
             ->where('status', 'pending_verification')
             ->whereNotNull('photo_path');
 
@@ -252,8 +252,10 @@ class AuditController extends Controller
             $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
-                $query->whereHas('user', function ($q) use ($myBranchIds) {
-                    $q->whereIn('branch_id', $myBranchIds);
+                $query->where(function ($masterQ) use ($myBranchIds) {
+                    $masterQ->whereHas('user', function ($q) use ($myBranchIds) {
+                        $q->whereIn('branch_id', $myBranchIds);
+                    })->orWhereIn('branch_id', $myBranchIds);
                 });
             } else {
                 $query->where('id', 0);
@@ -335,7 +337,7 @@ class AuditController extends Controller
     public function showRejectedVerificationList()
     {
         $user = Auth::user();
-        $query = Attendance::with(['user.division', 'user.branch', 'verifier'])
+        $query = Attendance::with(['user.division', 'user.branch', 'branch', 'verifier'])
             ->where('status', 'rejected');
 
         $isUniversalAccess = in_array($user->role, ['admin']);
@@ -350,8 +352,10 @@ class AuditController extends Controller
             $myBranchIds = array_unique($myBranchIds);
 
             if (!empty($myBranchIds)) {
-                $query->whereHas('user', function ($q) use ($myBranchIds) {
-                    $q->whereIn('branch_id', $myBranchIds);
+                $query->where(function ($masterQ) use ($myBranchIds) {
+                    $masterQ->whereHas('user', function ($q) use ($myBranchIds) {
+                        $q->whereIn('branch_id', $myBranchIds);
+                    })->orWhereIn('branch_id', $myBranchIds);
                 });
             } else {
                 $query->where('id', 0);

@@ -1182,6 +1182,16 @@
                                                     <i class="mdi mdi-map-marker-radius"></i> Maps
                                                 </a>
                                             @endif
+                                        @elseif(str_contains($att->notes ?? '', 'Lintas Cabang') || ($att->branch_id && $att->user && $att->branch_id != $att->user->branch_id))
+                                            <span class="badge bg-soft-info text-info border border-info" title="Absen di cabang: {{ $att->branch?->name }}">
+                                                <i class="mdi mdi-store me-1"></i>{{ $att->branch?->name ?? 'Cabang Lain' }}
+                                            </span>
+                                            @if($att->latitude && $att->longitude)
+                                                <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}"
+                                                    target="_blank" class="location-pill location-pill-maps ms-1" title="Buka Koordinat di Google Maps">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Maps
+                                                </a>
+                                            @endif
                                         @elseif($att->latitude && $att->longitude)
                                             <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}"
                                                 target="_blank" class="location-pill location-pill-maps" title="Buka Koordinat di Google Maps">
@@ -1237,6 +1247,16 @@
                                         @elseif($att->check_out_time && (str_contains($att->notes ?? '', 'Pulang') && (str_contains($att->notes ?? '', 'Lokasi: Unknown') || str_contains($att->notes ?? '', 'Lokasi Unknown'))))
                                             <span class="badge bg-soft-warning text-warning border border-warning" title="Absen pulang di luar radius cabang">
                                                 <i class="mdi mdi-map-marker-question"></i> Unknown
+                                            </span>
+                                            @if($att->latitude_out && $att->longitude_out)
+                                                <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}"
+                                                    target="_blank" class="location-pill location-pill-maps ms-1" title="Buka Koordinat Pulang di Google Maps">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Maps
+                                                </a>
+                                            @endif
+                                        @elseif($att->check_out_time && str_contains($att->notes ?? '', 'Lintas Cabang'))
+                                            <span class="badge bg-soft-info text-info border border-info" title="Absen pulang di cabang lain">
+                                                <i class="mdi mdi-store me-1"></i>{{ $att->branch?->name ?? 'Cabang Lain' }}
                                             </span>
                                             @if($att->latitude_out && $att->longitude_out)
                                                 <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}"

@@ -72,7 +72,7 @@ class AttendanceHistoryController extends Controller
         $todayInBranch = Carbon::now($branchTimezone)->startOfDay();
 
         // 4. Query Database (Pindah ke atas agar data tersedia untuk penentuan limit)
-        $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user'])
+        $attendances = Attendance::with(['verifier', 'scanner', 'scannerOut', 'user', 'branch'])
             ->where('user_id', $user->id)
             ->whereBetween('check_in_time', [
                 $startDate->copy()->subDay()->startOfDay(),

@@ -283,7 +283,14 @@
             <div class="sv-info-row">
                 <div class="sv-info-box">
                     <label><i class="mdi mdi-store me-1"></i>Cabang</label>
-                    <div class="sv-val">{{ $attendance->user?->branch?->name ?? '-' }}</div>
+                    <div class="sv-val">
+                        {{ $attendance->user?->branch?->name ?? '-' }}
+                        @if(str_contains($attendance->notes ?? '', 'Lintas Cabang') || ($attendance->branch_id && $attendance->user && $attendance->branch_id != $attendance->user->branch_id))
+                            <span class="badge bg-info text-white ms-1" style="font-size: 10px;">
+                                Absen di: {{ $attendance->branch?->name ?? 'Cabang Lain' }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
                 <div class="sv-info-box">
                     <label><i class="mdi mdi-clock-outline me-1"></i>Masuk ({{ $tzLabel }})</label>
@@ -304,7 +311,14 @@
             {{-- Map --}}
             @if($hasLocation)
             <div class="mb-3">
-                <div class="sv-map-label"><i class="mdi mdi-map-marker me-1"></i>Lokasi Absen</div>
+                <div class="sv-map-label d-flex align-items-center justify-content-between">
+                    <span><i class="mdi mdi-map-marker me-1"></i>Lokasi Absen</span>
+                    @if(str_contains($attendance->notes ?? '', 'Lokasi: Unknown') || str_contains($attendance->notes ?? '', 'Lokasi Unknown'))
+                        <span class="badge bg-warning text-dark"><i class="mdi mdi-map-marker-question me-1"></i>Unknown</span>
+                    @elseif(str_contains($attendance->notes ?? '', 'Lintas Cabang') || ($attendance->branch_id && $attendance->user && $attendance->branch_id != $attendance->user->branch_id))
+                        <span class="badge bg-info text-white"><i class="mdi mdi-store me-1"></i>{{ $attendance->branch?->name ?? 'Lintas Cabang' }}</span>
+                    @endif
+                </div>
                 <div id="sv-map"></div>
                 <a href="https://maps.google.com/?q={{ $lat }},{{ $lng }}" target="_blank" class="sv-map-link">
                     <i class="mdi mdi-open-in-new me-1"></i>Buka di Google Maps

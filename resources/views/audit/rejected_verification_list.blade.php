@@ -65,14 +65,20 @@
                                             @if(str_contains($att->notes ?? '', 'Lokasi: Unknown') || str_contains($att->notes ?? '', 'Lokasi Unknown'))
                                                 <div class="mb-1">
                                                     <span class="badge bg-soft-warning text-warning border border-warning" style="font-size: 11px;">
-                                                        Unknown
+                                                        <i class="mdi mdi-map-marker-question"></i> Unknown
+                                                    </span>
+                                                </div>
+                                            @elseif(str_contains($att->notes ?? '', 'Lintas Cabang') || ($att->branch_id && $att->user && $att->branch_id != $att->user->branch_id))
+                                                <div class="mb-1">
+                                                    <span class="badge bg-soft-info text-info border border-info" style="font-size: 11px;">
+                                                        <i class="mdi mdi-store"></i> {{ $att->branch?->name ?? 'Lintas Cabang' }}
                                                     </span>
                                                 </div>
                                             @endif
                                             @if($att->latitude && $att->longitude)
                                                 <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}"
-                                                    target="_blank" class="btn btn-sm btn-info text-white rounded-pill px-3">
-                                                    Maps
+                                                    target="_blank" class="btn btn-sm btn-info text-white rounded-pill px-3 fw-bold">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Maps
                                                 </a>
                                             @else
                                                 -

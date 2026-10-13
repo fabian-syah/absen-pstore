@@ -293,21 +293,15 @@
                         </div>
 
                         {{-- GEOFENCE STATUS BOX --}}
-                        @php
-                            $userBranch = Auth::user()->branch;
-                            $hasGeofence = ($userBranch && !is_null($userBranch->latitude) && !is_null($userBranch->longitude) && !is_null($userBranch->radius) && $userBranch->radius > 0);
-                        @endphp
-                        @if($hasGeofence)
-                            <div class="p-2 rounded-2 bg-light border mt-2 d-none" id="geofence-status-box">
-                                <div class="d-flex align-items-center justify-content-between" style="font-size: 11.5px;">
-                                    <div class="d-flex align-items-center">
-                                        <i class="mdi mdi-circle-medium text-warning fs-5 me-1" id="geofence-status-dot"></i>
-                                        <span class="fw-bold text-slate-800" id="geofence-status-text">Memvalidasi jarak ke {{ $userBranch->name }}...</span>
-                                    </div>
-                                    <span class="badge bg-secondary" id="geofence-distance-badge">Maks {{ $userBranch->radius }}m</span>
+                        <div class="p-2 rounded-2 bg-light border mt-2 d-none" id="geofence-status-box">
+                            <div class="d-flex align-items-center justify-content-between" style="font-size: 11.5px;">
+                                <div class="d-flex align-items-center">
+                                    <i class="mdi mdi-circle-medium text-warning fs-5 me-1" id="geofence-status-dot"></i>
+                                    <span class="fw-bold text-slate-800" id="geofence-status-text">Memvalidasi jarak lokasi...</span>
                                 </div>
+                                <span class="badge bg-secondary" id="geofence-distance-badge"></span>
                             </div>
-                        @endif
+                        </div>
 
                         <div class="d-none text-danger mt-1.5 small" id="gps-permission-help" style="font-size: 11px;">
                             <i class="mdi mdi-alert-circle-outline me-1"></i> Izin lokasi ditolak. Silahkan aktifkan izin lokasi di ikon gembok browser (samping URL) lalu klik <strong>Perbarui</strong>.
@@ -1333,7 +1327,7 @@
             const geofenceText = document.getElementById('geofence-status-text');
             const geofenceBadge = document.getElementById('geofence-distance-badge');
 
-            if (!geofenceBox || !hasBranchGeofence) return;
+            if (!geofenceBox) return;
 
             geofenceBox.classList.remove('d-none');
             const distRound = Math.round(distance);
@@ -1363,7 +1357,7 @@
                 }
                 if (geofenceText) {
                     geofenceText.className = 'fw-bold text-warning';
-                    geofenceText.textContent = `Lokasi: Unknown (Di Luar Radius)`;
+                    geofenceText.textContent = `Lokasi: Unknown (Di Luar Radius Toko)`;
                 }
                 if (geofenceBadge) {
                     geofenceBadge.className = 'badge bg-warning text-dark';
@@ -1397,54 +1391,65 @@
                     if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
 
                     // Validasi Geofence (Cabang Utama & Cabang Rotasi / BKO)
+                    let matchedBranch = null;
+                    let isCross = false;
+
+                    // 1. Cek cabang utama
                     if (hasBranchGeofence) {
                         const distPrimary = calculateDistanceInMeters(latitude, longitude, branchLat, branchLng);
                         currentDistanceToBranch = distPrimary;
 
                         if (distPrimary <= branchRadius) {
-                            // Berada di cabang penempatan utama
-                            isWithinRadius = true;
-                            activeMatchedBranchName = branchName;
-                            isCrossBranchAttendance = false;
-                            updateGeofenceDisplay(distPrimary, branchName, false, branchRadius);
-                        } else {
-                            // Cek apakah sedang bertugas di cabang PStore lain (Rotasi Jadwal)
-                            let matchedOther = null;
-                            if (Array.isArray(allBranchesGeofence)) {
-                                for (let b of allBranchesGeofence) {
-                                    if (b.latitude && b.longitude && b.radius) {
-                                        const d = calculateDistanceInMeters(latitude, longitude, parseFloat(b.latitude), parseFloat(b.longitude));
-                                        if (d <= parseInt(b.radius)) {
-                                            matchedOther = { name: b.name, dist: d, radius: parseInt(b.radius) };
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (matchedOther) {
-                                isWithinRadius = true;
-                                activeMatchedBranchName = matchedOther.name;
-                                isCrossBranchAttendance = true;
-                                currentDistanceToBranch = matchedOther.dist;
-                                updateGeofenceDisplay(matchedOther.dist, matchedOther.name, true, matchedOther.radius);
-                            } else {
-                                isWithinRadius = false;
-                                activeMatchedBranchName = branchName;
-                                isCrossBranchAttendance = false;
-                                updateGeofenceDisplay(distPrimary, branchName, false, branchRadius);
-                            }
+                            matchedBranch = { name: branchName, dist: distPrimary, radius: branchRadius };
+                            isCross = false;
                         }
-                    } else {
-                        isWithinRadius = true;
                     }
 
-                    // Update Step 2 Status
+                    // 2. Jika tidak di cabang utama (atau cabang utama belum set geofence), cek cabang PStore lain
+                    if (!matchedBranch && Array.isArray(allBranchesGeofence) && allBranchesGeofence.length > 0) {
+                        for (let b of allBranchesGeofence) {
+                            if (b.latitude && b.longitude && b.radius) {
+                                if (hasBranchGeofence && b.name === branchName) continue;
+
+                                const d = calculateDistanceInMeters(latitude, longitude, parseFloat(b.latitude), parseFloat(b.longitude));
+                                if (d <= parseInt(b.radius)) {
+                                    matchedBranch = { id: b.id, name: b.name, dist: d, radius: parseInt(b.radius) };
+                                    isCross = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. Terapkan hasil pencocokan
+                    if (matchedBranch) {
+                        isWithinRadius = true;
+                        activeMatchedBranchName = matchedBranch.name;
+                        isCrossBranchAttendance = isCross;
+                        currentDistanceToBranch = matchedBranch.dist;
+                        updateGeofenceDisplay(matchedBranch.dist, matchedBranch.name, isCross, matchedBranch.radius);
+                    } else if (hasBranchGeofence) {
+                        // Di luar radius semua cabang -> Unknown
+                        isWithinRadius = false;
+                        activeMatchedBranchName = branchName;
+                        isCrossBranchAttendance = false;
+                        updateGeofenceDisplay(currentDistanceToBranch, branchName, false, branchRadius);
+                    } else {
+                        // Tidak ada geofence di cabang utama dan tidak match cabang lain
+                        isWithinRadius = true;
+                        activeMatchedBranchName = branchName;
+                        isCrossBranchAttendance = false;
+                    }
+
+                    // Update Step 2 Status di Checklist
                     if (stepGpsCircle) {
                         stepGpsCircle.classList.add('done');
                     }
                     if (stepGpsStatus) {
-                        if (!hasBranchGeofence || isWithinRadius) {
+                        if (isCrossBranchAttendance) {
+                            stepGpsStatus.textContent = `Terkunci (${activeMatchedBranchName})`;
+                            stepGpsStatus.className = 'badge-step-status done';
+                        } else if (!hasBranchGeofence || isWithinRadius) {
                             stepGpsStatus.textContent = 'Terkunci (Area Toko)';
                             stepGpsStatus.className = 'badge-step-status done';
                         } else {
@@ -1489,16 +1494,31 @@
             const hasLoc = latInput.value !== '';
 
             // Pengguna tetap bisa absen selama foto sudah diambil dan GPS terkunci
-            // Jika di luar radius, tetap bisa absen tetapi ditandai Lokasi Unknown
+            // Jika di cabang lain -> Tombol menampilkan nama cabang
+            // Jika di luar radius -> Tombol menampilkan LOKASI UNKNOWN
             if (hasPhoto && hasLoc) {
                 slideTrack.classList.remove('disabled');
                 slideTrack.classList.add('active');
                 if (hasBranchGeofence && !isWithinRadius) {
                     slideText.textContent = 'GESER UNTUK ABSEN (LOKASI UNKNOWN)';
+                } else if (isCrossBranchAttendance) {
+                    slideText.textContent = 'GESER UNTUK ABSEN DI ' + activeMatchedBranchName.toUpperCase();
                 } else {
                     slideText.textContent = 'GESER UNTUK ABSEN';
                 }
-                if (fallbackSubmitBtn) fallbackSubmitBtn.classList.remove('d-none');
+                if (fallbackSubmitBtn) {
+                    fallbackSubmitBtn.classList.remove('d-none');
+                    if (hasBranchGeofence && !isWithinRadius) {
+                        fallbackSubmitBtn.innerHTML = '<i class="mdi mdi-alert-circle-outline me-1.5"></i> Kirim Absen (Lokasi Unknown)';
+                        fallbackSubmitBtn.className = 'btn btn-warning text-dark w-100 py-2.5 mt-2 fw-bold d-flex align-items-center justify-content-center shadow-sm';
+                    } else if (isCrossBranchAttendance) {
+                        fallbackSubmitBtn.innerHTML = '<i class="mdi mdi-store me-1.5"></i> Kirim Absen di ' + activeMatchedBranchName;
+                        fallbackSubmitBtn.className = 'btn btn-primary w-100 py-2.5 mt-2 fw-bold d-flex align-items-center justify-content-center shadow-sm';
+                    } else {
+                        fallbackSubmitBtn.innerHTML = '<i class="mdi mdi-check-circle me-1.5"></i> Kirim Absen Sekarang';
+                        fallbackSubmitBtn.className = 'btn btn-primary w-100 py-2.5 mt-2 fw-bold d-flex align-items-center justify-content-center shadow-sm';
+                    }
+                }
             } else {
                 slideTrack.classList.add('disabled');
                 slideTrack.classList.remove('active');

@@ -181,11 +181,11 @@ class SelfAttendanceController extends Controller
         $isUnknownLocation = false;
         $distanceFromBranch = null;
 
-        if ($primaryBranch && method_exists($primaryBranch, 'hasGeofence') && $primaryBranch->hasGeofence()) {
-            $userLat = (float) $request->latitude;
-            $userLng = (float) $request->longitude;
+        $userLat = (float) $request->latitude;
+        $userLng = (float) $request->longitude;
 
-            if ($userLat != 0.0 && $userLng != 0.0) {
+        if ($userLat != 0.0 && $userLng != 0.0) {
+            if ($primaryBranch && method_exists($primaryBranch, 'hasGeofence') && $primaryBranch->hasGeofence()) {
                 $distanceToPrimary = $primaryBranch->calculateDistanceTo($userLat, $userLng);
                 $distanceFromBranch = round($distanceToPrimary);
 
@@ -219,6 +219,31 @@ class SelfAttendanceController extends Controller
                         // tetapi status lokasi ditandai "Unknown"
                         $isUnknownLocation = true;
                     }
+                }
+            } else {
+                // Cabang utama belum set geofence, periksa apakah karyawan berada di cabang lain
+                $otherBranches = \App\Models\Branch::whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->whereNotNull('radius')
+                    ->where('radius', '>', 0)
+                    ->when($primaryBranch, function ($q) use ($primaryBranch) {
+                        $q->where('id', '!=', $primaryBranch->id);
+                    })
+                    ->get();
+
+                $foundOtherBranch = null;
+                foreach ($otherBranches as $otherBranch) {
+                    $distOther = $otherBranch->calculateDistanceTo($userLat, $userLng);
+                    if ($distOther <= $otherBranch->radius) {
+                        $foundOtherBranch = $otherBranch;
+                        break;
+                    }
+                }
+
+                if ($foundOtherBranch) {
+                    $activeBranchForAttendance = $foundOtherBranch;
+                    $isCrossBranch = true;
+                    $isUnknownLocation = false;
                 }
             }
         }
@@ -326,11 +351,11 @@ class SelfAttendanceController extends Controller
                 $extraNote = "";
             }
 
-            $crossNote = $isCrossBranch ? "[Jadwal di {$activeBranchForAttendance->name}] " : "";
-            $unknownNote = $isUnknownLocation ? "[Lokasi: Unknown ({$distanceFromBranch}m dari {$primaryBranch->name})] " : "";
+            $crossNote = $isCrossBranch ? "[Lokasi: {$activeBranchForAttendance->name} (Lintas Cabang)] " : "";
+            $unknownNote = $isUnknownLocation ? "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari {$primaryBranch->name})" : "") . "] " : "";
             $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $unknownNote . $crossNote . $extraNote . "Pulang (Selfie)" . $userNote;
 
-            $attendanceToUpdate->update([
+            $updateCheckoutData = [
                 'check_out_time' => $currentTime,
                 'photo_out_path' => $path,
                 'is_early_checkout' => $isEarly,
@@ -338,11 +363,19 @@ class SelfAttendanceController extends Controller
                 'notes' => $finalNotes,
                 'latitude_out' => $request->latitude,
                 'longitude_out' => $request->longitude,
-            ]);
+            ];
+
+            if ($isCrossBranch && $activeBranchForAttendance) {
+                $updateCheckoutData['branch_id'] = $activeBranchForAttendance->id;
+            }
+
+            $attendanceToUpdate->update($updateCheckoutData);
 
             $message = "Berhasil absen pulang.";
             if ($isUnknownLocation) {
                 $message = "Berhasil absen pulang (Lokasi: Unknown di luar radius toko).";
+            } elseif ($isCrossBranch) {
+                $message = "Berhasil absen pulang di {$activeBranchForAttendance->name} (Lintas Cabang).";
             } elseif ($isCrossDay) {
                 $message = "Konfirmasi Lembur Berhasil. Absen pulang tercatat.";
             }
@@ -350,8 +383,13 @@ class SelfAttendanceController extends Controller
             if ($newStatus == 'pending_verification') {
                 $shouldSendNotif = true;
                 $notifTitle = "Verifikasi Pulang";
-                $notifLocTag = $isUnknownLocation ? " [LOKASI UNKNOWN]" : "";
-                $notifBody = "{$user->name} absen pulang di {$branchName}" . $notifLocTag;
+                $notifLocTag = "";
+                if ($isUnknownLocation) {
+                    $notifLocTag = " [LOKASI UNKNOWN]";
+                } elseif ($isCrossBranch) {
+                    $notifLocTag = " [DI {$activeBranchForAttendance->name}]";
+                }
+                $notifBody = "{$user->name} absen pulang di " . ($isCrossBranch ? $activeBranchForAttendance->name : $branchName) . $notifLocTag;
             }
 
         }
@@ -394,10 +432,10 @@ class SelfAttendanceController extends Controller
             $finalNotes = $request->notes;
 
             if ($isUnknownLocation) {
-                $unknownNote = "[Lokasi: Unknown ({$distanceFromBranch}m dari {$primaryBranch->name})]";
+                $unknownNote = "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari {$primaryBranch->name})" : "") . "]";
                 $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $unknownNote;
             } elseif ($isCrossBranch) {
-                $crossNote = "[Jadwal di {$activeBranchForAttendance->name}]";
+                $crossNote = "[Lokasi: {$activeBranchForAttendance->name} (Lintas Cabang)]";
                 $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $crossNote;
             }
 
@@ -416,6 +454,8 @@ class SelfAttendanceController extends Controller
             if (!$snapOut && $workSchedule)
                 $snapOut = $workSchedule->check_out_start;
 
+            $branchIdForAttendance = ($isCrossBranch && $activeBranchForAttendance) ? $activeBranchForAttendance->id : $user->branch_id;
+
             // FIX: Cek apakah hari ini sudah ada record attendance (apapun jenisnya)
             // Jika ada, UPDATE record tersebut, jangan create baru (biar tidak double)
             $existingAttendanceToday = Attendance::where('user_id', $user->id)
@@ -430,8 +470,15 @@ class SelfAttendanceController extends Controller
             }
 
             if ($existingAttendanceToday) {
-                $unknownNote = $isUnknownLocation ? "[Lokasi: Unknown ({$distanceFromBranch}m dari {$primaryBranch->name})] " : "";
+                $locNote = "";
+                if ($isUnknownLocation) {
+                    $locNote = "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari {$primaryBranch->name})" : "") . "] ";
+                } elseif ($isCrossBranch) {
+                    $locNote = "[Lokasi: {$activeBranchForAttendance->name} (Lintas Cabang)] ";
+                }
+
                 $existingAttendanceToday->update([
+                    'branch_id' => $branchIdForAttendance,
                     'check_in_time' => $currentTime, // Ambil jam asli selfie
                     'photo_path' => $path,           // Simpan foto selfie
                     'latitude' => $request->latitude,
@@ -440,12 +487,12 @@ class SelfAttendanceController extends Controller
                     'status' => 'pending_verification',
                     // Preserve presence_status ONLY if it was Izin Telat. Otherwise, auto-override to Masuk.
                     'presence_status' => ($existingAttendanceToday->presence_status == 'Izin Telat' || str_contains(strtolower($existingAttendanceToday->presence_status), 'telat')) ? $existingAttendanceToday->presence_status : 'Masuk',
-                    'notes' => ($existingAttendanceToday->notes ? $existingAttendanceToday->notes . " | " : "") . $unknownNote . "[Selfie: " . ($request->notes ?? 'Tanpa catatan') . "]",
+                    'notes' => ($existingAttendanceToday->notes ? $existingAttendanceToday->notes . " | " : "") . $locNote . "[Selfie: " . ($request->notes ?? 'Tanpa catatan') . "]",
                 ]);
             } else {
                 Attendance::create([
                     'user_id' => $user->id,
-                    'branch_id' => $user->branch_id,
+                    'branch_id' => $branchIdForAttendance,
                     'check_in_time' => $currentTime,
                     'status' => 'pending_verification',
                     'presence_status' => $presenceStatus,
@@ -464,21 +511,32 @@ class SelfAttendanceController extends Controller
 
             if ($isUnknownLocation) {
                 $message = "Berhasil absen masuk (Lokasi: Unknown di luar radius toko). Menunggu verifikasi audit.";
+            } elseif ($isCrossBranch) {
+                $message = "Berhasil absen masuk di {$activeBranchForAttendance->name} (Lintas Cabang). Menunggu verifikasi audit.";
             } else {
                 $message = 'Berhasil absen masuk. Menunggu verifikasi.';
             }
+
             $shouldSendNotif = true;
             $notifTitle = "Verifikasi Masuk";
-            $notifLocTag = $isUnknownLocation ? " [LOKASI UNKNOWN]" : "";
-            $notifBody = "{$user->name} absen masuk (Selfie) di {$branchName}" . $notifLocTag;
+            $notifLocTag = "";
+            if ($isUnknownLocation) {
+                $notifLocTag = " [LOKASI UNKNOWN]";
+            } elseif ($isCrossBranch) {
+                $notifLocTag = " [DI {$activeBranchForAttendance->name}]";
+            }
+            $notifBody = "{$user->name} absen masuk (Selfie) di " . ($isCrossBranch ? $activeBranchForAttendance->name : $branchName) . $notifLocTag;
         }
 
-        // <-- TAMBAHKAN INI DI AWAL
+        // Kirim Web Push Notification ke Admin / Audit cabang terkait
         if ($shouldSendNotif) {
             try {
                 // Gunakan class khusus untuk kirim langsung (bukan Job)
                 $notifier = new class { use \App\Traits\SendWebPushNotification; };
-                $notifier->sendWebPushToBranchRoles(['audit', 'admin'], $user->branch_id, $notifTitle, $notifBody, url('/verifikasi/absensi'));
+                $branchIdsToNotify = array_unique(array_filter([$user->branch_id, $activeBranchForAttendance?->id]));
+                foreach ($branchIdsToNotify as $targetBId) {
+                    $notifier->sendWebPushToBranchRoles(['audit', 'admin'], $targetBId, $notifTitle, $notifBody, url('/verifikasi/absensi'));
+                }
             } catch (\Exception $e) {
                 Log::error("Web Push Error: " . $e->getMessage());
             }

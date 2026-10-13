@@ -117,6 +117,18 @@
                                                         <i class="mdi mdi-map-marker-question"></i> Unknown
                                                     </span>
                                                 </div>
+                                            @elseif(str_contains($att->notes ?? '', 'Lintas Cabang') || ($att->branch_id && $att->user && $att->branch_id != $att->user->branch_id))
+                                                <div class="mb-1">
+                                                    <span class="badge bg-soft-info text-info border border-info" style="font-size: 11px;">
+                                                        <i class="mdi mdi-store"></i> {{ $att->branch?->name ?? 'Lintas Cabang' }}
+                                                    </span>
+                                                </div>
+                                            @elseif($att->branch)
+                                                <div class="mb-1">
+                                                    <span class="badge bg-soft-success text-success border border-success" style="font-size: 11px;">
+                                                        <i class="mdi mdi-check-circle"></i> {{ $att->branch->name }}
+                                                    </span>
+                                                </div>
                                             @endif
                                             @if($att->latitude && $att->longitude)
                                                 <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-sm btn-info text-white rounded-pill px-3 fw-bold shadow-sm">
@@ -218,9 +230,22 @@
                                         <img src="{{ Storage::url($att->photo_path) }}" loading="lazy" alt="Foto">
                                     </div>
                                 </div>
-                                <div class="col-8">
+                                <div class="col-8 d-flex flex-column gap-1">
+                                    @if(str_contains($att->notes ?? '', 'Lokasi: Unknown') || str_contains($att->notes ?? '', 'Lokasi Unknown'))
+                                        <span class="badge bg-soft-warning text-warning border border-warning text-truncate" style="font-size: 11px;">
+                                            <i class="mdi mdi-map-marker-question"></i> Unknown
+                                        </span>
+                                    @elseif(str_contains($att->notes ?? '', 'Lintas Cabang') || ($att->branch_id && $att->user && $att->branch_id != $att->user->branch_id))
+                                        <span class="badge bg-soft-info text-info border border-info text-truncate" style="font-size: 11px;">
+                                            <i class="mdi mdi-store"></i> {{ $att->branch?->name ?? 'Lintas Cabang' }}
+                                        </span>
+                                    @elseif($att->branch)
+                                        <span class="badge bg-soft-success text-success border border-success text-truncate" style="font-size: 11px;">
+                                            <i class="mdi mdi-check-circle"></i> {{ $att->branch->name }}
+                                        </span>
+                                    @endif
                                     @if($att->latitude && $att->longitude)
-                                        <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-outline-info w-100 h-100 d-flex align-items-center justify-content-center btn-sm rounded-3">
+                                        <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}" target="_blank" class="btn btn-outline-info w-100 flex-grow-1 d-flex align-items-center justify-content-center btn-sm rounded-3">
                                             <i class="mdi mdi-map-marker-radius me-1"></i> Peta Lokasi
                                         </a>
                                     @else
