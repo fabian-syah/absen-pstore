@@ -171,13 +171,15 @@ class SelfAttendanceController extends Controller
 
         $user = Auth::user();
 
-        // --- LAYER 3: VALIDASI GEOFENCING / RADIUS CABANG (MENDUKUNG ROTASI CABANG / BKO) ---
+        // --- LAYER 3: VALIDASI GEOFENCING / RADIUS CABANG (ROTASI & STATUS UNKNOWN) ---
         // 1. Cek apakah berada di cabang penempatan utama
         // 2. Jika tidak, cek apakah berada di cabang PStore lain (misal rotasi Perintis <-> Toddopuli)
-        // 3. Jika di luar semua cabang -> Tolak absensi
+        // 3. Jika di luar semua cabang -> Tetap izinkan absen, tetapi tandai sebagai LOKASI UNKNOWN
         $primaryBranch = $user->branch;
         $activeBranchForAttendance = $primaryBranch;
         $isCrossBranch = false;
+        $isUnknownLocation = false;
+        $distanceFromBranch = null;
 
         if ($primaryBranch && method_exists($primaryBranch, 'hasGeofence') && $primaryBranch->hasGeofence()) {
             $userLat = (float) $request->latitude;
@@ -185,9 +187,11 @@ class SelfAttendanceController extends Controller
 
             if ($userLat != 0.0 && $userLng != 0.0) {
                 $distanceToPrimary = $primaryBranch->calculateDistanceTo($userLat, $userLng);
+                $distanceFromBranch = round($distanceToPrimary);
 
                 if ($distanceToPrimary <= $primaryBranch->radius) {
                     $activeBranchForAttendance = $primaryBranch;
+                    $isUnknownLocation = false;
                 } else {
                     // Cek cabang PStore lainnya jika karyawan sedang jadwal di cabang lain (seperti Toddopuli)
                     $otherBranches = \App\Models\Branch::where('id', '!=', $primaryBranch->id)
@@ -209,9 +213,11 @@ class SelfAttendanceController extends Controller
                     if ($foundOtherBranch) {
                         $activeBranchForAttendance = $foundOtherBranch;
                         $isCrossBranch = true;
+                        $isUnknownLocation = false;
                     } else {
-                        $distFormatted = round($distanceToPrimary);
-                        return redirect()->route('dashboard')->with('error', "AKSES DITOLAK: Anda berada di luar radius cabang {$primaryBranch->name}. Jarak Anda terdeteksi {$distFormatted} meter dari toko (Maksimal radius: {$primaryBranch->radius} meter). Silakan lakukan absensi di dalam area cabang.");
+                        // Sesuai kebijakan: Karyawan tetap bisa absen walau di luar radius,
+                        // tetapi status lokasi ditandai "Unknown"
+                        $isUnknownLocation = true;
                     }
                 }
             }
@@ -321,7 +327,8 @@ class SelfAttendanceController extends Controller
             }
 
             $crossNote = $isCrossBranch ? "[Jadwal di {$activeBranchForAttendance->name}] " : "";
-            $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $crossNote . $extraNote . "Pulang (Selfie)" . $userNote;
+            $unknownNote = $isUnknownLocation ? "[Lokasi: Unknown ({$distanceFromBranch}m dari {$primaryBranch->name})] " : "";
+            $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $unknownNote . $crossNote . $extraNote . "Pulang (Selfie)" . $userNote;
 
             $attendanceToUpdate->update([
                 'check_out_time' => $currentTime,
@@ -334,14 +341,17 @@ class SelfAttendanceController extends Controller
             ]);
 
             $message = "Berhasil absen pulang.";
-            if ($isCrossDay) {
+            if ($isUnknownLocation) {
+                $message = "Berhasil absen pulang (Lokasi: Unknown di luar radius toko).";
+            } elseif ($isCrossDay) {
                 $message = "Konfirmasi Lembur Berhasil. Absen pulang tercatat.";
             }
 
             if ($newStatus == 'pending_verification') {
                 $shouldSendNotif = true;
                 $notifTitle = "Verifikasi Pulang";
-                $notifBody = "{$user->name} absen pulang di {$branchName}";
+                $notifLocTag = $isUnknownLocation ? " [LOKASI UNKNOWN]" : "";
+                $notifBody = "{$user->name} absen pulang di {$branchName}" . $notifLocTag;
             }
 
         }
@@ -383,7 +393,10 @@ class SelfAttendanceController extends Controller
 
             $finalNotes = $request->notes;
 
-            if ($isCrossBranch) {
+            if ($isUnknownLocation) {
+                $unknownNote = "[Lokasi: Unknown ({$distanceFromBranch}m dari {$primaryBranch->name})]";
+                $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $unknownNote;
+            } elseif ($isCrossBranch) {
                 $crossNote = "[Jadwal di {$activeBranchForAttendance->name}]";
                 $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $crossNote;
             }
@@ -417,16 +430,17 @@ class SelfAttendanceController extends Controller
             }
 
             if ($existingAttendanceToday) {
-
+                $unknownNote = $isUnknownLocation ? "[Lokasi: Unknown ({$distanceFromBranch}m dari {$primaryBranch->name})] " : "";
                 $existingAttendanceToday->update([
                     'check_in_time' => $currentTime, // Ambil jam asli selfie
                     'photo_path' => $path,           // Simpan foto selfie
                     'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
                     'attendance_type' => 'self',      // Ubah tipe jadi self
                     'status' => 'pending_verification',
                     // Preserve presence_status ONLY if it was Izin Telat. Otherwise, auto-override to Masuk.
                     'presence_status' => ($existingAttendanceToday->presence_status == 'Izin Telat' || str_contains(strtolower($existingAttendanceToday->presence_status), 'telat')) ? $existingAttendanceToday->presence_status : 'Masuk',
-                    'notes' => ($existingAttendanceToday->notes ? $existingAttendanceToday->notes . " | " : "") . "[Selfie: " . ($request->notes ?? 'Tanpa catatan') . "]",
+                    'notes' => ($existingAttendanceToday->notes ? $existingAttendanceToday->notes . " | " : "") . $unknownNote . "[Selfie: " . ($request->notes ?? 'Tanpa catatan') . "]",
                 ]);
             } else {
                 Attendance::create([
@@ -448,10 +462,15 @@ class SelfAttendanceController extends Controller
                 ]);
             }
 
-            $message = 'Berhasil absen masuk. Menunggu verifikasi.';
+            if ($isUnknownLocation) {
+                $message = "Berhasil absen masuk (Lokasi: Unknown di luar radius toko). Menunggu verifikasi audit.";
+            } else {
+                $message = 'Berhasil absen masuk. Menunggu verifikasi.';
+            }
             $shouldSendNotif = true;
             $notifTitle = "Verifikasi Masuk";
-            $notifBody = "{$user->name} absen masuk (Selfie) di {$branchName}";
+            $notifLocTag = $isUnknownLocation ? " [LOKASI UNKNOWN]" : "";
+            $notifBody = "{$user->name} absen masuk (Selfie) di {$branchName}" . $notifLocTag;
         }
 
         // <-- TAMBAHKAN INI DI AWAL

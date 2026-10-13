@@ -1354,19 +1354,20 @@
                     geofenceBadge.textContent = `${distRound}m / Maks ${maxRadius}m`;
                 }
             } else {
+                // Di luar radius: Tetap izinkan absen, tampilkan status Unknown
                 isWithinRadius = false;
-                geofenceBox.style.backgroundColor = '#fff1f2';
-                geofenceBox.style.borderColor = '#fecdd3';
+                geofenceBox.style.backgroundColor = '#fffbeb';
+                geofenceBox.style.borderColor = '#fde68a';
                 if (geofenceDot) {
-                    geofenceDot.className = 'mdi mdi-alert-circle text-danger fs-5 me-1';
+                    geofenceDot.className = 'mdi mdi-map-marker-question text-warning fs-5 me-1';
                 }
                 if (geofenceText) {
-                    geofenceText.className = 'fw-bold text-danger';
-                    geofenceText.textContent = `Di Luar Radius ${targetBranchName}`;
+                    geofenceText.className = 'fw-bold text-warning';
+                    geofenceText.textContent = `Lokasi: Unknown (Di Luar Radius)`;
                 }
                 if (geofenceBadge) {
-                    geofenceBadge.className = 'badge bg-danger';
-                    geofenceBadge.textContent = `${distRound}m / Maks ${maxRadius}m`;
+                    geofenceBadge.className = 'badge bg-warning text-dark';
+                    geofenceBadge.textContent = `${distRound}m dari ${targetBranchName}`;
                 }
             }
         }
@@ -1440,19 +1441,15 @@
 
                     // Update Step 2 Status
                     if (stepGpsCircle) {
-                        if (isWithinRadius) {
-                            stepGpsCircle.classList.add('done');
-                        } else {
-                            stepGpsCircle.classList.remove('done');
-                        }
+                        stepGpsCircle.classList.add('done');
                     }
                     if (stepGpsStatus) {
                         if (!hasBranchGeofence || isWithinRadius) {
-                            stepGpsStatus.textContent = 'Terkunci';
+                            stepGpsStatus.textContent = 'Terkunci (Area Toko)';
                             stepGpsStatus.className = 'badge-step-status done';
                         } else {
-                            stepGpsStatus.textContent = 'Di Luar Radius';
-                            stepGpsStatus.className = 'badge-step-status text-danger';
+                            stepGpsStatus.textContent = 'Lokasi Unknown';
+                            stepGpsStatus.className = 'badge-step-status text-warning';
                         }
                     }
 
@@ -1491,10 +1488,16 @@
             const hasPhoto = photoInputHidden.files && photoInputHidden.files.length > 0;
             const hasLoc = latInput.value !== '';
 
-            if (hasPhoto && hasLoc && isWithinRadius) {
+            // Pengguna tetap bisa absen selama foto sudah diambil dan GPS terkunci
+            // Jika di luar radius, tetap bisa absen tetapi ditandai Lokasi Unknown
+            if (hasPhoto && hasLoc) {
                 slideTrack.classList.remove('disabled');
                 slideTrack.classList.add('active');
-                slideText.textContent = 'GESER UNTUK ABSEN';
+                if (hasBranchGeofence && !isWithinRadius) {
+                    slideText.textContent = 'GESER UNTUK ABSEN (LOKASI UNKNOWN)';
+                } else {
+                    slideText.textContent = 'GESER UNTUK ABSEN';
+                }
                 if (fallbackSubmitBtn) fallbackSubmitBtn.classList.remove('d-none');
             } else {
                 slideTrack.classList.add('disabled');
@@ -1505,9 +1508,6 @@
                     slideText.textContent = 'AMBIL FOTO TERLEBIH DAHULU';
                 } else if (!hasLoc) {
                     slideText.textContent = 'MENUNGGU LOKASI GPS...';
-                } else if (hasBranchGeofence && !isWithinRadius) {
-                    const distMsg = currentDistanceToBranch !== null ? Math.round(currentDistanceToBranch) + 'm' : '';
-                    slideText.textContent = `DI LUAR AREA TOKO (${distMsg} / MAKS ${branchRadius}m)`;
                 }
             }
         }
@@ -1516,11 +1516,6 @@
         window.submitAttendanceNow = function() {
             if (latInput.value === '') {
                 alert('Lokasi GPS belum terkunci. Klik tombol "Perbarui" pada kotak lokasi atau izinkan GPS browser.');
-                return;
-            }
-            if (hasBranchGeofence && !isWithinRadius) {
-                const distMsg = currentDistanceToBranch !== null ? Math.round(currentDistanceToBranch) + 'm' : '';
-                alert(`AKSES DITOLAK: Anda berada di luar radius area cabang ${branchName} (${distMsg} dari toko, batas maksimal: ${branchRadius}m).\n\nSilakan menuju ke area toko untuk melakukan absensi.`);
                 return;
             }
             if (!photoInputHidden.files || photoInputHidden.files.length === 0) {

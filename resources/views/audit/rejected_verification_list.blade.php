@@ -62,6 +62,13 @@
                                             <small class="text-muted">{{ $checkInLocal->format('d M Y') }}</small>
                                         </td>
                                         <td>
+                                            @if(str_contains($att->notes ?? '', 'Lokasi: Unknown') || str_contains($att->notes ?? '', 'Lokasi Unknown'))
+                                                <div class="mb-1">
+                                                    <span class="badge bg-soft-warning text-warning border border-warning" style="font-size: 11px;">
+                                                        Unknown
+                                                    </span>
+                                                </div>
+                                            @endif
                                             @if($att->latitude && $att->longitude)
                                                 <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}"
                                                     target="_blank" class="btn btn-sm btn-info text-white rounded-pill px-3">

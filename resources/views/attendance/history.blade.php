@@ -1172,6 +1172,16 @@
                                             <span class="location-pill" title="Absen terverifikasi scanner di kantor">
                                                 <i class="mdi mdi-office-building text-primary"></i> Di Kantor
                                             </span>
+                                        @elseif(str_contains($att->notes ?? '', 'Lokasi: Unknown') || str_contains($att->notes ?? '', 'Lokasi Unknown'))
+                                            <span class="badge bg-soft-warning text-warning border border-warning" title="Absen di luar radius cabang">
+                                                <i class="mdi mdi-map-marker-question"></i> Unknown
+                                            </span>
+                                            @if($att->latitude && $att->longitude)
+                                                <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}"
+                                                    target="_blank" class="location-pill location-pill-maps ms-1" title="Buka Koordinat di Google Maps">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Maps
+                                                </a>
+                                            @endif
                                         @elseif($att->latitude && $att->longitude)
                                             <a href="https://maps.google.com/?q={{ $att->latitude }},{{ $att->longitude }}"
                                                 target="_blank" class="location-pill location-pill-maps" title="Buka Koordinat di Google Maps">
@@ -1224,6 +1234,16 @@
                                             <span class="location-pill" title="Absen terverifikasi scanner di kantor">
                                                 <i class="mdi mdi-office-building text-primary"></i> Di Kantor
                                             </span>
+                                        @elseif($att->check_out_time && (str_contains($att->notes ?? '', 'Pulang') && (str_contains($att->notes ?? '', 'Lokasi: Unknown') || str_contains($att->notes ?? '', 'Lokasi Unknown'))))
+                                            <span class="badge bg-soft-warning text-warning border border-warning" title="Absen pulang di luar radius cabang">
+                                                <i class="mdi mdi-map-marker-question"></i> Unknown
+                                            </span>
+                                            @if($att->latitude_out && $att->longitude_out)
+                                                <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}"
+                                                    target="_blank" class="location-pill location-pill-maps ms-1" title="Buka Koordinat Pulang di Google Maps">
+                                                    <i class="mdi mdi-map-marker-radius"></i> Maps
+                                                </a>
+                                            @endif
                                         @elseif($att->check_out_time && $att->latitude_out && $att->longitude_out)
                                             <a href="https://maps.google.com/?q={{ $att->latitude_out }},{{ $att->longitude_out }}"
                                                 target="_blank" class="location-pill location-pill-maps" title="Buka Koordinat Pulang di Google Maps">
