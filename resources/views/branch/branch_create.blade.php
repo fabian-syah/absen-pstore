@@ -72,7 +72,7 @@
                                     </p>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                                    <button type="button" class="btn btn-sm btn-outline-primary fw-semibold rounded-3 px-2.5 py-1" onclick="useCurrentAdminLocationForCreate()" style="min-height: 34px;">
+                                    <button type="button" class="btn btn-sm btn-outline-primary fw-semibold rounded-3 px-2.5 py-1" onclick="useCurrentAdminLocationForCreate(this)" style="min-height: 34px;">
                                         <i class="mdi mdi-crosshairs-gps me-1"></i> Kunci Posisi GPS Saya
                                     </button>
                                 </div>
@@ -255,30 +255,61 @@
         });
     }
 
-    function useCurrentAdminLocationForCreate() {
+    function useCurrentAdminLocationForCreate(triggerBtn = null) {
         if (!navigator.geolocation) {
             alert('Browser Anda tidak mendukung geolokasi GPS.');
             return;
         }
 
-        const btn = event.currentTarget;
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengunci...';
+        const btn = triggerBtn || event?.currentTarget;
+        const originalHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengunci...';
+        }
 
+        const resetBtn = () => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        };
+
+        const handleSuccess = pos => {
+            const { latitude, longitude } = pos.coords;
+            updateCreateCoords(latitude, longitude);
+            resetBtn();
+        };
+
+        // Percobaan 1: High Accuracy
         navigator.geolocation.getCurrentPosition(
-            pos => {
-                const { latitude, longitude } = pos.coords;
-                updateCreateCoords(latitude, longitude);
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
+            handleSuccess,
+            errHigh => {
+                if (errHigh.code === 1) {
+                    resetBtn();
+                    alert('Izin lokasi diblokir oleh browser atau sistem operasi. Pastikan izin lokasi aktif di browser & Pengaturan Windows.');
+                    return;
+                }
+
+                // Percobaan 2: Fallback Akurasi Standar (Sangat cocok untuk Laptop & PC Windows)
+                navigator.geolocation.getCurrentPosition(
+                    handleSuccess,
+                    errLow => {
+                        resetBtn();
+                        let errMsg = 'Gagal mendeteksi lokasi GPS.';
+                        if (errLow.code === 1) {
+                            errMsg = 'Izin lokasi tidak diizinkan di browser atau sistem operasi.';
+                        } else if (errLow.code === 2) {
+                            errMsg = 'Sinyal lokasi tidak tersedia di perangkat ini. Silakan klik langsung pada peta atau ketik koordinat.';
+                        } else if (errLow.code === 3) {
+                            errMsg = 'Waktu permintaan lokasi habis (timeout). Silakan klik langsung pada peta.';
+                        }
+                        alert(errMsg);
+                    },
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+                );
             },
-            err => {
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-                alert('Gagal mendeteksi lokasi GPS. Pastikan izin lokasi browser aktif.');
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
         );
     }
 </script>

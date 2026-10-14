@@ -577,7 +577,7 @@
                                 <i class="mdi mdi-map-marker-radius text-danger me-1"></i>Peta Lokasi & Geofence
                             </label>
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary rounded-3 px-2.5 py-1 fw-semibold" onclick="useCurrentAdminLocation()" style="min-height: 34px;">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-3 px-2.5 py-1 fw-semibold" id="btn-get-admin-loc" onclick="useCurrentAdminLocation(this)" style="min-height: 34px;">
                                     <i class="mdi mdi-crosshairs-gps me-1"></i>Gunakan Posisi Saya
                                 </button>
                                 <a href="#" id="modal-open-gmaps" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary rounded-3 px-2 py-1" title="Buka di Google Maps" style="min-height: 34px;">
@@ -586,9 +586,23 @@
                             </div>
                         </div>
 
+                        {{-- PENCARIAN TEMPAT / PASTE KOORDINAT & LINK GOOGLE MAPS --}}
+                        <div class="mb-2">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-slate-300 text-muted">
+                                    <i class="mdi mdi-magnify text-primary"></i>
+                                </span>
+                                <input type="text" id="modal-search-place-input" class="form-control border-slate-300" placeholder="Ketik nama tempat/jalan, atau tempel link/koordinat Google Maps..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchLocationOnMap();}">
+                                <button type="button" class="btn btn-primary px-3 fw-semibold" id="btn-search-map" onclick="searchLocationOnMap()" style="min-height: 38px;">
+                                    <i class="mdi mdi-map-search-outline me-1"></i>Cari di Peta
+                                </button>
+                            </div>
+                            <div id="modal-geo-hint" class="d-none mt-2 p-2 rounded-3 small fw-semibold"></div>
+                        </div>
+
                         <div id="modal-map"></div>
                         <div class="form-text small text-muted mt-1">
-                            <i class="mdi mdi-information-outline me-1"></i>Klik pada peta atau geser pin merah untuk menggeser koordinat secara presisi.
+                            <i class="mdi mdi-information-outline me-1"></i>Klik pada peta atau geser pin biru untuk menyesuaikan titik koordinat secara presisi.
                         </div>
                     </div>
 
@@ -733,6 +747,15 @@
         document.getElementById('modal-input-lng').value = (branch.longitude !== null && branch.longitude !== undefined) ? branch.longitude : '';
         document.getElementById('modal-input-radius').value = branch.radius || 100;
 
+        // Reset Search Input & Hints
+        const searchInput = document.getElementById('modal-search-place-input');
+        if (searchInput) searchInput.value = '';
+        const hintEl = document.getElementById('modal-geo-hint');
+        if (hintEl) {
+            hintEl.className = 'd-none';
+            hintEl.innerHTML = '';
+        }
+
         // Reset Error Alert
         const errAlert = document.getElementById('modal-error-alert');
         errAlert.classList.add('d-none');
@@ -746,30 +769,31 @@
 
         // Show Bootstrap Modal
         const modalEl = document.getElementById('editGeofenceModal');
-        const bsModal = new bootstrap.Modal(modalEl);
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
         bsModal.show();
 
-        // Initialize / Refresh Leaflet Map after modal is fully shown
-        modalEl.addEventListener('shown.bs.modal', function onShown() {
-            initModalMap(
-                (branch.latitude !== null && branch.latitude !== undefined && branch.latitude !== '') ? parseFloat(branch.latitude) : DEFAULT_LAT,
-                (branch.longitude !== null && branch.longitude !== undefined && branch.longitude !== '') ? parseFloat(branch.longitude) : DEFAULT_LNG,
-                branch.radius || 100
-            );
-            modalEl.removeEventListener('shown.bs.modal', onShown);
-        });
+        const targetLat = (branch.latitude !== null && branch.latitude !== undefined && branch.latitude !== '') ? parseFloat(branch.latitude) : DEFAULT_LAT;
+        const targetLng = (branch.longitude !== null && branch.longitude !== undefined && branch.longitude !== '') ? parseFloat(branch.longitude) : DEFAULT_LNG;
+        const targetRadius = branch.radius || 100;
+
+        initOrUpdateModalMap(targetLat, targetLng, targetRadius);
     }
 
     /**
      * Inisialisasi atau Update Peta Leaflet di dalam Modal
      */
-    function initModalMap(lat, lng, radius) {
+    function initOrUpdateModalMap(lat, lng, radius) {
         if (!modalMap) {
-            modalMap = L.map('modal-map').setView([lat, lng], 16);
+            modalMap = L.map('modal-map', {
+                center: [lat, lng],
+                zoom: 16,
+                zoomControl: true
+            });
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
+                subdomains: ['a', 'b', 'c'],
+                attribution: '&copy; OpenStreetMap contributors'
             }).addTo(modalMap);
 
             // Draggable Marker
@@ -795,12 +819,16 @@
                 setCoordsInput(e.latlng.lat, e.latlng.lng);
             });
         } else {
-            modalMap.invalidateSize();
             modalMap.setView([lat, lng], 16);
             modalMarker.setLatLng([lat, lng]);
             modalCircle.setLatLng([lat, lng]);
             modalCircle.setRadius(radius);
         }
+
+        // Pastikan ukuran peta disinkronkan setelah modal Bootstrap selesai render animasi
+        setTimeout(() => { if (modalMap) modalMap.invalidateSize(true); }, 150);
+        setTimeout(() => { if (modalMap) modalMap.invalidateSize(true); }, 350);
+        setTimeout(() => { if (modalMap) modalMap.invalidateSize(true); }, 600);
     }
 
     /**
@@ -867,34 +895,205 @@
     }
 
     /**
-     * Ambil Posisi GPS Browser Admin Saat Ini
+     * Cari Lokasi di Peta via Nama Tempat, Alamat, atau Link/Koordinat Google Maps
      */
-    function useCurrentAdminLocation() {
-        if (!navigator.geolocation) {
-            alert('Browser Anda tidak mendukung geolokasi GPS.');
+    function searchLocationOnMap() {
+        const input = document.getElementById('modal-search-place-input');
+        const query = (input ? input.value : '').trim();
+        if (!query) {
+            showModalGeoHint('Ketik nama tempat, alamat, atau tempel link / koordinat Google Maps.', 'warning');
             return;
         }
 
-        const btn = event.currentTarget;
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengunci GPS...';
+        const btn = document.getElementById('btn-search-map');
+        const originalHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mencari...';
+        }
 
+        const resetBtn = () => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        };
+
+        // 1. Cek apakah format URL Google Maps (e.g. @lat,lng atau ?q=lat,lng)
+        const matchUrlAt = query.match(/@([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/);
+        const matchUrlQ = query.match(/[?&]q=([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/);
+        const matchUrl = matchUrlAt || matchUrlQ;
+
+        if (matchUrl) {
+            const lat = parseFloat(matchUrl[1]);
+            const lng = parseFloat(matchUrl[2]);
+            setCoordsInput(lat, lng);
+            resetBtn();
+            showModalGeoHint(`Koordinat berhasil diambil dari link Google Maps: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
+            return;
+        }
+
+        // 2. Cek apakah format teks koordinat (e.g. "-6.2088, 106.8456")
+        const matchCoord = query.match(/^[-+]?[0-9]{1,2}(?:\.[0-9]+)?[,\s]+[-+]?[0-9]{1,3}(?:\.[0-9]+)?$/);
+        if (matchCoord) {
+            const parts = query.split(/[\s,]+/);
+            if (parts.length >= 2) {
+                const lat = parseFloat(parts[0]);
+                const lng = parseFloat(parts[1]);
+                if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    setCoordsInput(lat, lng);
+                    resetBtn();
+                    showModalGeoHint(`Koordinat berhasil disetel: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
+                    return;
+                }
+            }
+        }
+
+        // 3. Pencarian Alamat / Nama Tempat via OpenStreetMap Nominatim
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=id`;
+
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(res => res.json())
+            .then(data => {
+                resetBtn();
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    const lat = parseFloat(result.lat);
+                    const lng = parseFloat(result.lon);
+                    setCoordsInput(lat, lng);
+
+                    const addrInput = document.getElementById('modal-input-address');
+                    if (addrInput && (!addrInput.value || addrInput.value.trim() === '')) {
+                        addrInput.value = result.display_name;
+                    }
+
+                    showModalGeoHint(`Lokasi ditemukan: ${result.display_name.substring(0, 75)}...`, 'success');
+                } else {
+                    showModalGeoHint('Lokasi tidak ditemukan. Coba ketik nama jalan / wilayah lebih lengkap, atau tempel koordinat dari Google Maps.', 'warning');
+                }
+            })
+            .catch(err => {
+                resetBtn();
+                showModalGeoHint('Gagal memuat pencarian lokasi online. Silakan klik langsung pada peta atau tempel koordinat.', 'warning');
+            });
+    }
+
+    /**
+     * Ambil Posisi GPS Browser Admin Saat Ini dengan Smart Fallback (High -> Low Accuracy)
+     */
+    function useCurrentAdminLocation(triggerBtn = null) {
+        if (!navigator.geolocation) {
+            showModalGeoHint('Browser Anda tidak mendukung geolokasi GPS.', 'danger');
+            return;
+        }
+
+        const btn = triggerBtn || document.getElementById('btn-get-admin-loc');
+        const originalHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengunci GPS...';
+        }
+
+        const resetBtn = () => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        };
+
+        const handleSuccess = pos => {
+            const { latitude, longitude } = pos.coords;
+            setCoordsInput(latitude, longitude);
+            resetBtn();
+            showModalGeoHint(`Lokasi GPS terkunci (${latitude.toFixed(5)}, ${longitude.toFixed(5)})`, 'success');
+        };
+
+        // Percobaan 1: High Accuracy (GPS Satelit/Seluler)
         navigator.geolocation.getCurrentPosition(
-            pos => {
-                const { latitude, longitude } = pos.coords;
-                setCoordsInput(latitude, longitude);
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
+            handleSuccess,
+            errHigh => {
+                console.warn('GPS High Accuracy gagal (code ' + errHigh.code + '), mencoba fallback akurasi standar (Wi-Fi/IP)...');
+
+                if (errHigh.code === 1) {
+                    resetBtn();
+                    showModalGeoHint('Izin lokasi diblokir oleh browser atau sistem operasi. Pastikan izin lokasi aktif di Chrome & Pengaturan Windows.', 'danger');
+                    return;
+                }
+
+                // Percobaan 2: Fallback Akurasi Standar (Sangat cocok untuk Laptop & PC Windows via Wi-Fi/IP)
+                navigator.geolocation.getCurrentPosition(
+                    handleSuccess,
+                    errLow => {
+                        resetBtn();
+                        let errMsg = 'Gagal mendeteksi lokasi GPS.';
+                        if (errLow.code === 1) {
+                            errMsg = 'Izin lokasi tidak diizinkan di browser atau sistem operasi.';
+                        } else if (errLow.code === 2) {
+                            errMsg = 'Sinyal lokasi tidak tersedia di PC/laptop ini. Silakan cari nama tempat pada peta atau ketik koordinat.';
+                        } else if (errLow.code === 3) {
+                            errMsg = 'Waktu permintaan lokasi habis (timeout). Silakan gunakan pencarian nama tempat pada peta.';
+                        }
+                        showModalGeoHint(errMsg, 'warning');
+                    },
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+                );
             },
-            err => {
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-                alert('Gagal mendeteksi lokasi GPS. Pastikan izin lokasi browser aktif.');
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
         );
     }
+
+    /**
+     * Tampilkan Hint Notifikasi Ringan di Dalam Modal (Tanpa alert popup yang memblokir)
+     */
+    function showModalGeoHint(message, type = 'info') {
+        const hintEl = document.getElementById('modal-geo-hint');
+        if (!hintEl) return;
+
+        let bgClass = 'bg-info-subtle text-info border border-info-subtle';
+        let icon = '<i class="mdi mdi-information-outline me-1.5 fs-5"></i>';
+
+        if (type === 'success') {
+            bgClass = 'bg-success-subtle text-success border border-success-subtle';
+            icon = '<i class="mdi mdi-check-circle-outline me-1.5 fs-5"></i>';
+        } else if (type === 'warning') {
+            bgClass = 'bg-warning-subtle text-warning border border-warning-subtle';
+            icon = '<i class="mdi mdi-alert-outline me-1.5 fs-5"></i>';
+        } else if (type === 'danger') {
+            bgClass = 'bg-danger-subtle text-danger border border-danger-subtle';
+            icon = '<i class="mdi mdi-alert-circle-outline me-1.5 fs-5"></i>';
+        }
+
+        hintEl.className = `p-2.5 rounded-3 small fw-semibold d-flex align-items-center ${bgClass}`;
+        hintEl.innerHTML = `${icon}<span>${message}</span>`;
+    }
+
+    // Global listener untuk refresh Leaflet saat modal tampil & auto-split paste koordinat
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('editGeofenceModal');
+        if (modalEl) {
+            modalEl.addEventListener('shown.bs.modal', function () {
+                if (modalMap) {
+                    modalMap.invalidateSize(true);
+                    setTimeout(() => { if (modalMap) modalMap.invalidateSize(true); }, 200);
+                }
+            });
+        }
+
+        const latInput = document.getElementById('modal-input-lat');
+        if (latInput) {
+            latInput.addEventListener('paste', function (e) {
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                const match = text.match(/([-+]?[0-9]{1,2}(?:\.[0-9]+)?)[,\s]+([-+]?[0-9]{1,3}(?:\.[0-9]+)?)/);
+                if (match) {
+                    e.preventDefault();
+                    const lat = parseFloat(match[1]);
+                    const lng = parseFloat(match[2]);
+                    setCoordsInput(lat, lng);
+                    showModalGeoHint(`Koordinat disetel: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
+                }
+            });
+        }
+    });
 
     /**
      * Submit Form via AJAX untuk kecepatan tanpa reload
