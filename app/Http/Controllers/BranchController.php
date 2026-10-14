@@ -212,7 +212,7 @@ class BranchController extends Controller
     public function exportBranchExcel(Request $request, Branch $branch)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
+        if (!in_array($user->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
             abort(403);
         }
 
@@ -228,7 +228,7 @@ class BranchController extends Controller
     public function exportBranchPdf(Request $request, Branch $branch)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['admin', 'audit', 'leader'])) {
+        if (!in_array($user->role, ['admin', 'audit', 'leader', 'admin_gaji'])) {
             abort(403);
         }
 

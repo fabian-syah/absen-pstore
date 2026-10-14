@@ -454,9 +454,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::post('/audit/attendance/delete-day', [App\Http\Controllers\AuditController::class, 'deleteAttendanceDay'])->name('audit.delete_day');
     });
 
-    Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
-
+    // Export Laporan Cabang (Excel & PDF) untuk Admin, Audit, Admin Gaji, dan Leader
+    Route::middleware(['role:admin,audit,admin_gaji,leader'])->group(function () {
         Route::get('/branches/{branch}/export-excel', [BranchController::class, 'exportBranchExcel'])->name('branches.export.excel');
+        Route::get('/branches/{branch}/export-pdf', [BranchController::class, 'exportBranchPdf'])->name('branches.export.pdf');
+    });
+
+    Route::middleware(['role:admin,audit,admin_gaji'])->group(function () {
         // Setting Geofencing & Titik Lokasi Cabang (Khusus Role Admin)
         Route::get('/branches/setting-lokasi', [BranchController::class, 'geofenceIndex'])->name('branches.geofence.index');
         Route::get('/branches/geocode', [BranchController::class, 'geocodeAddress'])->name('branches.geocode');
