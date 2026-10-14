@@ -754,6 +754,7 @@
             hintEl.className = 'd-none';
             hintEl.innerHTML = '';
         }
+        resetSyncButton();
 
         // Reset Error Alert
         const errAlert = document.getElementById('modal-error-alert');
@@ -917,6 +918,16 @@
         }, 850);
     }
 
+    const BTN_SYNC_DEFAULT_HTML = '<i class="mdi mdi-crosshairs-gps fs-5 mb-0.5"></i><span style="font-size: 11px;">Cari di Peta</span>';
+
+    function resetSyncButton() {
+        const btn = document.getElementById('btn-sync-address');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = BTN_SYNC_DEFAULT_HTML;
+        }
+    }
+
     /**
      * Otomatis sinkronkan Alamat ke Latitude, Longitude, dan gerakkan peta ke lokasi tersebut
      */
@@ -926,7 +937,6 @@
         const query = addrInput.value.trim();
         const syncStatus = document.getElementById('address-sync-status');
         const btn = document.getElementById('btn-sync-address');
-        const originalBtnHtml = btn ? btn.innerHTML : '';
 
         if (!query || query.length < 3) {
             if (syncStatus) {
@@ -935,6 +945,7 @@
             if (isManual) {
                 showModalGeoHint('Ketik alamat cabang terlebih dahulu pada kotak di atas.', 'warning');
             }
+            resetSyncButton();
             return;
         }
 
@@ -942,17 +953,11 @@
             syncStatus.innerHTML = '<span class="text-primary"><i class="mdi mdi-loading mdi-spin me-0.5"></i>Mencari di peta...</span>';
         }
 
-        if (btn) {
+        // Hanya tampilkan status loading di tombol jika diklik manual oleh admin
+        if (isManual && btn) {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm mb-0.5"></span><span style="font-size: 11px;">Mencari...</span>';
         }
-
-        const resetBtn = () => {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalBtnHtml;
-            }
-        };
 
         fetch(`/branches/geocode?q=${encodeURIComponent(query)}`, {
             headers: {
@@ -962,7 +967,7 @@
         })
         .then(res => res.json())
         .then(data => {
-            resetBtn();
+            resetSyncButton();
             if (data.success && data.lat && data.lng) {
                 setCoordsInput(data.lat, data.lng);
 
@@ -975,15 +980,15 @@
                 }
                 showModalGeoHint(`Peta digeser otomatis ke: ${data.display_name.substring(0, 75)}...`, 'success');
             } else {
-                fallbackClientNominatim(query, isManual, syncStatus, resetBtn);
+                fallbackClientNominatim(query, isManual, syncStatus);
             }
         })
         .catch(() => {
-            fallbackClientNominatim(query, isManual, syncStatus, resetBtn);
+            fallbackClientNominatim(query, isManual, syncStatus);
         });
     }
 
-    function fallbackClientNominatim(query, isManual, syncStatus, resetBtnCallback) {
+    function fallbackClientNominatim(query, isManual, syncStatus) {
         // Bersihkan komponen RT/RW / No sebelum dikirim ke client OSM
         let cleanQuery = query.replace(/RT\.?\s*\d+\s*\/?\s*RW\.?\s*\d+/gi, '')
                               .replace(/No\.?\s*[\w\/-]+/gi, '')
@@ -995,7 +1000,7 @@
         fetch(url, { headers: { 'Accept': 'application/json' } })
             .then(res => res.json())
             .then(data => {
-                if (resetBtnCallback) resetBtnCallback();
+                resetSyncButton();
                 if (data && data.length > 0) {
                     const result = data[0];
                     const lat = parseFloat(result.lat);
@@ -1020,7 +1025,7 @@
                 }
             })
             .catch(() => {
-                if (resetBtnCallback) resetBtnCallback();
+                resetSyncButton();
                 if (syncStatus) {
                     syncStatus.innerHTML = '<span class="text-muted"><i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif</span>';
                 }

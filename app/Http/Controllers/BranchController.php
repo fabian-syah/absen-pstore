@@ -533,46 +533,80 @@ class BranchController extends Controller
 
         // 3. Progressive Search Strategy untuk Alamat Indonesia (dari Google Maps / input user)
         $searchCandidates = [];
-        $searchCandidates[] = $query; // Kandidat 1: Alamat utuh asli
 
-        // Bersihkan komponen yang sering menggagalkan OpenStreetMap (No rumah, RT/RW, Kode Pos, DKI)
-        $clean = $query;
-        $clean = preg_replace('/RT\.?\s*\d+\s*\/?\s*RW\.?\s*\d+/i', '', $clean);
+        // Parsing bagian koma alamat Indonesia
+        $rawParts = array_map('trim', explode(',', $query));
+        $meaningfulParts = [];
+        $streetPart = '';
+        $cityPart = '';
+        $subdistrictPart = '';
+
+        foreach ($rawParts as $idx => $part) {
+            // Lewati RT/RW
+            if (preg_match('/RT\.?\s*\d+|RW\.?\s*\d+/i', $part)) {
+                continue;
+            }
+            // Lewati jika hanya kode pos atau Indonesia
+            if (preg_match('/^\d{5}$/', $part) || strcasecmp($part, 'Indonesia') === 0) {
+                continue;
+            }
+
+            // Bersihkan label formal provinsi/kota/wilayah
+            $cleanedPart = preg_replace('/\b(Daerah Khusus Ibukota|DKI)\b/i', '', $part);
+            $cleanedPart = preg_replace('/\b\d{5}\b/', '', $cleanedPart);
+            $cleanedPart = trim($cleanedPart);
+
+            if ($idx === 0) {
+                // Bersihkan nomor rumah dari nama jalan agar jalan dikenali OpenStreetMap
+                $streetPart = trim(preg_replace('/No\.?\s*[\w\/-]+/i', '', $part));
+                if (!empty($streetPart)) {
+                    $meaningfulParts[] = $streetPart;
+                }
+            } else {
+                if (stripos($part, 'Jakarta') !== false || stripos($part, 'Kota') !== false || stripos($part, 'Kabupaten') !== false || stripos($part, 'Makassar') !== false || stripos($part, 'Surabaya') !== false) {
+                    $cityPart = trim(preg_replace('/\b(Kota|Kabupaten|Daerah Khusus Ibukota|DKI)\s*/i', '', $cleanedPart));
+                }
+                $cleanSub = trim(preg_replace('/\b(Kec\.|Kel\.|Kecamatan|Kelurahan)\s*/i', '', $cleanedPart));
+                if (!empty($cleanSub)) {
+                    if (empty($subdistrictPart) && $idx <= 2) {
+                        $subdistrictPart = $cleanSub;
+                    }
+                    $meaningfulParts[] = $cleanSub;
+                }
+            }
+        }
+
+        // Prioritas 1: Alamat bersih berstruktur koma (Contoh: "Jl. Raya Condet, Batu Ampar, Kramat Jati, Jakarta Timur")
+        if (count($meaningfulParts) >= 2) {
+            $searchCandidates[] = implode(', ', $meaningfulParts);
+        }
+
+        // Prioritas 2: Jalan + Kelurahan / Kecamatan + Kota (Contoh: "Jl. Raya Condet, Batu Ampar, Jakarta Timur")
+        if (!empty($streetPart) && !empty($subdistrictPart) && !empty($cityPart)) {
+            $searchCandidates[] = "{$streetPart}, {$subdistrictPart}, {$cityPart}";
+        }
+
+        // Prioritas 3: Jalan + Kota (Contoh: "Jl. Raya Condet, Jakarta Timur")
+        if (!empty($streetPart) && !empty($cityPart)) {
+            $searchCandidates[] = "{$streetPart}, {$cityPart}";
+        }
+
+        // Prioritas 4: Jalan + Kelurahan / Kecamatan (Contoh: "Jl. Raya Condet, Batu Ampar")
+        if (!empty($streetPart) && !empty($subdistrictPart)) {
+            $searchCandidates[] = "{$streetPart}, {$subdistrictPart}";
+        }
+
+        // Prioritas 5: Query mentah asli
+        $searchCandidates[] = $query;
+
+        // Prioritas 6: Versi single-line tanpa simbol
+        $clean = preg_replace('/RT\.?\s*\d+\s*\/?\s*RW\.?\s*\d+/i', '', $query);
         $clean = preg_replace('/No\.?\s*[\w\/-]+/i', '', $clean);
         $clean = preg_replace('/\b\d{5}\b/', '', $clean);
         $clean = preg_replace('/\b(Daerah Khusus Ibukota|DKI)\b/i', '', $clean);
-        $clean = preg_replace('/\b(Kec\.|Kecamatan|Kel\.|Kelurahan)\s*/i', '', $clean);
         $clean = preg_replace('/[,\s]+/', ' ', trim($clean));
-
-        if (!empty($clean) && $clean !== $query) {
-            $searchCandidates[] = $clean; // Kandidat 2: Alamat tanpa RT/RW dan No
-        }
-
-        // Kandidat 3 & 4: Ekstrak Nama Jalan + Kota/Kabupaten
-        $parts = array_map('trim', explode(',', $query));
-        if (count($parts) >= 2) {
-            $streetPart = preg_replace('/No\.?\s*[\w\/-]+/i', '', $parts[0]);
-            $streetPart = trim($streetPart);
-
-            $cityPart = '';
-            foreach ($parts as $p) {
-                if (stripos($p, 'Jakarta') !== false || stripos($p, 'Kota') !== false || stripos($p, 'Kabupaten') !== false || stripos($p, 'Makassar') !== false || stripos($p, 'Surabaya') !== false) {
-                    $cityPart = preg_replace('/\b(Kota|Kabupaten|Daerah Khusus Ibukota|DKI|\d{5})\b/i', '', $p);
-                    $cityPart = trim($cityPart);
-                    break;
-                }
-            }
-
-            if (!empty($streetPart) && !empty($cityPart)) {
-                $searchCandidates[] = "{$streetPart}, {$cityPart}";
-            }
-
-            if (isset($parts[2]) && !empty($cityPart)) {
-                $subdistrict = trim(preg_replace('/\b(Kec\.|Kel\.|Kecamatan|Kelurahan)\b/i', '', $parts[2]));
-                if (!empty($subdistrict)) {
-                    $searchCandidates[] = "{$subdistrict}, {$cityPart}";
-                }
-            }
+        if (!empty($clean)) {
+            $searchCandidates[] = $clean;
         }
 
         $searchCandidates = array_unique(array_filter($searchCandidates));
