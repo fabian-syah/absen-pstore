@@ -309,6 +309,52 @@
             padding: 0.75rem 1rem !important;
         }
     }
+
+    /* Modal Dialog Scrollable & Pinned Sticky Header / Footer */
+    #editGeofenceModal .modal-dialog,
+    #batchRadiusModal .modal-dialog {
+        max-height: calc(100vh - 2rem);
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    #editGeofenceModal .modal-content,
+    #batchRadiusModal .modal-content {
+        max-height: calc(100vh - 2rem);
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    #editGeofenceModal .modal-header,
+    #editGeofenceModal .modal-footer,
+    #batchRadiusModal .modal-header,
+    #batchRadiusModal .modal-footer {
+        flex-shrink: 0 !important;
+    }
+
+    #editGeofenceModal .modal-body,
+    #batchRadiusModal .modal-body {
+        overflow-y: auto !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Scrollbar Halus & Bersih */
+    #editGeofenceModal .modal-body::-webkit-scrollbar,
+    #batchRadiusModal .modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    #editGeofenceModal .modal-body::-webkit-scrollbar-thumb,
+    #batchRadiusModal .modal-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    #editGeofenceModal .modal-body::-webkit-scrollbar-thumb:hover,
+    #batchRadiusModal .modal-body::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
 </style>
 @endpush
 
@@ -632,8 +678,11 @@
 {{-- ========================================================================= --}}
 <div class="modal fade" id="editGeofenceModal" tabindex="-1" aria-labelledby="editGeofenceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header bg-primary text-white p-3 p-md-4">
+        <form class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" id="editGeofenceForm" method="POST" onsubmit="submitGeofenceForm(event)">
+            @csrf
+            @method('PUT')
+
+            <div class="modal-header bg-primary text-white p-3 p-md-4 flex-shrink-0">
                 <div class="d-flex align-items-center gap-2">
                     <div class="p-2 bg-white bg-opacity-20 rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                         <i class="mdi mdi-crosshairs-gps fs-4"></i>
@@ -646,121 +695,116 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form id="editGeofenceForm" method="POST" onsubmit="submitGeofenceForm(event)">
-                @csrf
-                @method('PUT')
+            <div class="modal-body p-3 p-md-4 flex-grow-1">
+                <div class="alert alert-danger d-none mb-3" id="modal-error-alert" role="alert"></div>
 
-                <div class="modal-body p-3 p-md-4">
-                    <div class="alert alert-danger d-none mb-3" id="modal-error-alert" role="alert"></div>
+                {{-- Alamat --}}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="modal-input-address" class="form-label fw-bold small text-dark mb-0">
+                            <i class="mdi mdi-map-marker-outline text-primary me-1"></i>Alamat Resmi Cabang
+                        </label>
+                        <span id="address-sync-status" class="small text-muted" style="font-size: 11px;">
+                            <i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif
+                        </span>
+                    </div>
+                    <div class="input-group address-input-group">
+                        <textarea class="form-control" id="modal-input-address" name="address" rows="2" placeholder="Ketik alamat cabang atau tempel link / alamat Google Maps..." oninput="handleAddressInputDebounced()" onpaste="setTimeout(() => geocodeAddressToMap(false), 150)"></textarea>
+                        <button type="button" class="btn btn-primary px-3 d-flex flex-column align-items-center justify-content-center fw-semibold" id="btn-sync-address" onclick="geocodeAddressToMap(true)" style="min-width: 95px;">
+                            <i class="mdi mdi-crosshairs-gps fs-5 mb-0.5"></i>
+                            <span style="font-size: 11px;">Cari di Peta</span>
+                        </button>
+                    </div>
+                    <div id="modal-geo-hint" class="d-none mt-2 p-2 rounded-3 small fw-semibold"></div>
+                    <div class="form-text small text-muted mt-1">
+                        <span>Ketik alamat cabang atau tempel link dari Google Maps, peta dan koordinat GPS akan otomatis menyesuaikan posisi.</span>
+                    </div>
+                </div>
 
-                    {{-- Alamat --}}
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label for="modal-input-address" class="form-label fw-bold small text-dark mb-0">
-                                <i class="mdi mdi-map-marker-outline text-primary me-1"></i>Alamat Resmi Cabang
-                            </label>
-                            <span id="address-sync-status" class="small text-muted" style="font-size: 11px;">
-                                <i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif
-                            </span>
+                {{-- MAP PICKER CONTAINER DENGAN SATELLITE HYBRID GOOGLE MAPS --}}
+                <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                        <label class="form-label fw-bold small text-dark mb-0">
+                            <i class="mdi mdi-map-marker-radius text-danger me-1"></i>Peta Lokasi & Geofence
+                        </label>
+                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-3 px-2.5 py-1 fw-semibold" id="btn-get-admin-loc" onclick="useCurrentAdminLocation(this)" style="min-height: 34px;">
+                                <i class="mdi mdi-crosshairs-gps me-1"></i>Posisi Saya
+                            </button>
+                            <a href="#" id="modal-open-gmaps" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary rounded-3 px-2.5 py-1" title="Buka di Google Maps" style="min-height: 34px;">
+                                <i class="mdi mdi-open-in-new me-1"></i>Google Maps
+                            </a>
                         </div>
-                        <div class="input-group address-input-group">
-                            <textarea class="form-control" id="modal-input-address" name="address" rows="2" placeholder="Ketik alamat cabang atau tempel link / alamat Google Maps..." oninput="handleAddressInputDebounced()" onpaste="setTimeout(() => geocodeAddressToMap(false), 150)"></textarea>
-                            <button type="button" class="btn btn-primary px-3 d-flex flex-column align-items-center justify-content-center fw-semibold" id="btn-sync-address" onclick="geocodeAddressToMap(true)" style="min-width: 95px;">
-                                <i class="mdi mdi-crosshairs-gps fs-5 mb-0.5"></i>
-                                <span style="font-size: 11px;">Cari di Peta</span>
+                    </div>
+
+                    <div class="position-relative">
+                        <div id="modal-map"></div>
+                        {{-- Floating Layer Switcher (Google Satellite vs Street Map) --}}
+                        <div class="map-layer-switcher">
+                            <button type="button" class="layer-btn active" id="btn-layer-hybrid" onclick="setModalMapLayer('hybrid')">
+                                <i class="mdi mdi-satellite-variant me-1"></i>Satelit
+                            </button>
+                            <button type="button" class="layer-btn" id="btn-layer-streets" onclick="setModalMapLayer('streets')">
+                                <i class="mdi mdi-map-outline me-1"></i>Peta Jalan
                             </button>
                         </div>
-                        <div id="modal-geo-hint" class="d-none mt-2 p-2 rounded-3 small fw-semibold"></div>
-                        <div class="form-text small text-muted mt-1">
-                            <span>Ketik alamat cabang atau tempel link dari Google Maps, peta dan koordinat GPS akan otomatis menyesuaikan posisi.</span>
-                        </div>
                     </div>
 
-                    {{-- MAP PICKER CONTAINER DENGAN SATELLITE HYBRID GOOGLE MAPS --}}
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                            <label class="form-label fw-bold small text-dark mb-0">
-                                <i class="mdi mdi-map-marker-radius text-danger me-1"></i>Peta Lokasi & Geofence
-                            </label>
-                            <div class="d-flex align-items-center gap-1.5 flex-wrap">
-                                <button type="button" class="btn btn-sm btn-outline-primary rounded-3 px-2.5 py-1 fw-semibold" id="btn-get-admin-loc" onclick="useCurrentAdminLocation(this)" style="min-height: 34px;">
-                                    <i class="mdi mdi-crosshairs-gps me-1"></i>Posisi Saya
-                                </button>
-                                <a href="#" id="modal-open-gmaps" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary rounded-3 px-2.5 py-1" title="Buka di Google Maps" style="min-height: 34px;">
-                                    <i class="mdi mdi-open-in-new me-1"></i>Google Maps
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="position-relative">
-                            <div id="modal-map"></div>
-                            {{-- Floating Layer Switcher (Google Satellite vs Street Map) --}}
-                            <div class="map-layer-switcher">
-                                <button type="button" class="layer-btn active" id="btn-layer-hybrid" onclick="setModalMapLayer('hybrid')">
-                                    <i class="mdi mdi-satellite-variant me-1"></i>Satelit
-                                </button>
-                                <button type="button" class="layer-btn" id="btn-layer-streets" onclick="setModalMapLayer('streets')">
-                                    <i class="mdi mdi-map-outline me-1"></i>Peta Jalan
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="form-text small text-muted mt-1">
-                            <i class="mdi mdi-information-outline me-1"></i>Tampilan foto udara satelit aktif. Klik pada peta atau geser pin biru untuk menentukan titik kantor cabang.
-                        </div>
+                    <div class="form-text small text-muted mt-1">
+                        <i class="mdi mdi-information-outline me-1"></i>Tampilan foto udara satelit aktif. Klik pada peta atau geser pin biru untuk menentukan titik kantor cabang.
                     </div>
+                </div>
 
-                    {{-- INPUT COORDINATES & RADIUS (RESPONSIVE GRID 2-COL ON MOBILE) --}}
-                    <div class="row g-2 g-md-3">
-                        <div class="col-6 col-md-4">
-                            <label for="modal-input-lat" class="form-label fw-bold small text-dark mb-1">
-                                <i class="mdi mdi-latitude text-primary me-0.5"></i>Latitude
-                            </label>
-                            <input type="number" step="any" class="form-control" id="modal-input-lat" name="latitude" placeholder="-6.2000000" onchange="syncMapFromInputs()" style="min-height: 42px;">
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <label for="modal-input-lng" class="form-label fw-bold small text-dark mb-1">
-                                <i class="mdi mdi-longitude text-primary me-0.5"></i>Longitude
-                            </label>
-                            <input type="number" step="any" class="form-control" id="modal-input-lng" name="longitude" placeholder="106.8166660" onchange="syncMapFromInputs()" style="min-height: 42px;">
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <label for="modal-input-radius" class="form-label fw-bold small text-dark mb-1">
-                                <i class="mdi mdi-map-marker-radius-outline text-danger me-0.5"></i>Radius Absensi
-                            </label>
-                            <div class="input-group">
-                                <input type="number" min="10" max="5000" class="form-control" id="modal-input-radius" name="radius" placeholder="100" oninput="syncRadiusFromInput()" style="min-height: 42px;">
-                                <span class="input-group-text px-2.5 small">Meter</span>
-                            </div>
-                        </div>
+                {{-- INPUT COORDINATES & RADIUS (RESPONSIVE GRID 2-COL ON MOBILE) --}}
+                <div class="row g-2 g-md-3">
+                    <div class="col-6 col-md-4">
+                        <label for="modal-input-lat" class="form-label fw-bold small text-dark mb-1">
+                            <i class="mdi mdi-latitude text-primary me-0.5"></i>Latitude
+                        </label>
+                        <input type="number" step="any" class="form-control" id="modal-input-lat" name="latitude" placeholder="-6.2000000" onchange="syncMapFromInputs()" style="min-height: 42px;">
                     </div>
-
-                    {{-- PRESET RADIUS BUTTONS (EXPANDS EVENLY ON MOBILE) --}}
-                    <div class="mt-3 pt-2 border-top">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <span class="small fw-semibold text-secondary">
-                                <i class="mdi mdi-tune-variant text-muted me-1"></i>Pilihan Cepat Radius:
-                            </span>
-                            <div class="d-flex gap-1.5 flex-wrap flex-grow-1 flex-sm-grow-0">
-                                <button type="button" class="radius-preset-btn flex-fill" onclick="setRadiusPreset(50)">50m</button>
-                                <button type="button" class="radius-preset-btn flex-fill" onclick="setRadiusPreset(100)">100m</button>
-                                <button type="button" class="radius-preset-btn flex-fill" onclick="setRadiusPreset(150)">150m</button>
-                                <button type="button" class="radius-preset-btn flex-fill" onclick="setRadiusPreset(200)">200m</button>
-                            </div>
+                    <div class="col-6 col-md-4">
+                        <label for="modal-input-lng" class="form-label fw-bold small text-dark mb-1">
+                            <i class="mdi mdi-longitude text-primary me-0.5"></i>Longitude
+                        </label>
+                        <input type="number" step="any" class="form-control" id="modal-input-lng" name="longitude" placeholder="106.8166660" onchange="syncMapFromInputs()" style="min-height: 42px;">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="modal-input-radius" class="form-label fw-bold small text-dark mb-1">
+                            <i class="mdi mdi-map-marker-radius-outline text-danger me-0.5"></i>Radius Absensi
+                        </label>
+                        <div class="input-group">
+                            <input type="number" min="10" max="5000" class="form-control" id="modal-input-radius" name="radius" placeholder="100" oninput="syncRadiusFromInput()" style="min-height: 42px;">
+                            <span class="input-group-text px-2.5 small">Meter</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="modal-footer bg-light p-2.5 p-sm-3 border-top d-flex justify-content-between gap-2">
-                    <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3 fw-semibold flex-fill flex-sm-grow-0" data-bs-dismiss="modal" style="min-height: 44px;">
-                        Batal
-                    </button>
-                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm flex-fill flex-sm-grow-0" id="modal-submit-btn" style="min-height: 44px;">
-                        <i class="mdi mdi-content-save me-1"></i> Simpan Lokasi
-                    </button>
+                {{-- PRESET RADIUS BUTTONS (EXPANDS EVENLY ON MOBILE) --}}
+                <div class="mt-3 pt-2 border-top">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <span class="small fw-semibold text-secondary">
+                            <i class="mdi mdi-tune-variant text-muted me-1"></i>Pilihan Cepat Radius:
+                        </span>
+                        <div class="d-flex gap-1.5 flex-wrap flex-grow-1 flex-sm-grow-0">
+                            <button type="button" class="radius-preset-btn flex-fill" onclick="setRadiusPreset(50)">50m</button>
+                            <button type="button" class="radius-preset-btn flex-fill" onclick="setRadiusPreset(100)">100m</button>
+                            <button type="button" class="radius-preset-btn flex-fill" onclick="setRadiusPreset(150)">150m</button>
+                            <button type="button" class="radius-preset-btn flex-fill" onclick="setRadiusPreset(200)">200m</button>
+                        </div>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="modal-footer bg-light p-2.5 p-sm-3 border-top d-flex justify-content-between gap-2 flex-shrink-0">
+                <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3 fw-semibold flex-fill flex-sm-grow-0" data-bs-dismiss="modal" style="min-height: 44px;">
+                    Batal
+                </button>
+                <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm flex-fill flex-sm-grow-0" id="modal-submit-btn" style="min-height: 44px;">
+                    <i class="mdi mdi-content-save me-1"></i> Simpan Lokasi
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -768,9 +812,10 @@
 {{-- MODAL 2: BATCH UPDATE RADIUS UNTUK BANYAK CABANG                           --}}
 {{-- ========================================================================= --}}
 <div class="modal fade" id="batchRadiusModal" tabindex="-1" aria-labelledby="batchRadiusModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header bg-dark text-white p-3 p-md-4">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" action="{{ route('branches.geofence.batch') }}" method="POST">
+            @csrf
+            <div class="modal-header bg-dark text-white p-3 p-md-4 flex-shrink-0">
                 <div class="d-flex align-items-center gap-2">
                     <div class="p-2 bg-white bg-opacity-10 rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                         <i class="mdi mdi-tune-vertical fs-5"></i>
@@ -783,44 +828,41 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form action="{{ route('branches.geofence.batch') }}" method="POST">
-                @csrf
-                <div class="modal-body p-3 p-md-4">
-                    <div class="mb-3">
-                        <label for="batch-target-select" class="form-label fw-bold small text-dark mb-1">
-                            Pilih Target Cabang
-                        </label>
-                        <select name="target" id="batch-target-select" class="form-select border-slate-300 rounded-3" style="min-height: 44px;" required>
-                            <option value="all">Semua Cabang & Unit ({{ $totalBranches }} Lokasi)</option>
-                            <option value="cabang" selected>Hanya Toko Cabang Daerah ({{ $cabangCount }} Toko)</option>
-                            <option value="pusat">Hanya Kantor & Unit Pusat ({{ $pusatCount }} Unit)</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="batch-radius-input" class="form-label fw-bold small text-dark mb-1">
-                            Radius Baru (Meter)
-                        </label>
-                        <div class="input-group">
-                            <input type="number" min="10" max="5000" class="form-control" id="batch-radius-input" name="radius" value="100" style="min-height: 44px;" required>
-                            <span class="input-group-text">Meter</span>
-                        </div>
-                        <div class="form-text small text-muted">
-                            Rekomendasi standar: 100 meter agar absensi karyawan tidak terganggu deviasi sinyal GPS handphone.
-                        </div>
-                    </div>
+            <div class="modal-body p-3 p-md-4 flex-grow-1">
+                <div class="mb-3">
+                    <label for="batch-target-select" class="form-label fw-bold small text-dark mb-1">
+                        Pilih Target Cabang
+                    </label>
+                    <select name="target" id="batch-target-select" class="form-select border-slate-300 rounded-3" style="min-height: 44px;" required>
+                        <option value="all">Semua Cabang & Unit ({{ $totalBranches }} Lokasi)</option>
+                        <option value="cabang" selected>Hanya Toko Cabang Daerah ({{ $cabangCount }} Toko)</option>
+                        <option value="pusat">Hanya Kantor & Unit Pusat ({{ $pusatCount }} Unit)</option>
+                    </select>
                 </div>
 
-                <div class="modal-footer bg-light p-3 border-top d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3 fw-semibold" data-bs-dismiss="modal" style="min-height: 44px;">
-                        Batal
-                    </button>
-                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" style="min-height: 44px;">
-                        Terapkan Massal
-                    </button>
+                <div class="mb-3">
+                    <label for="batch-radius-input" class="form-label fw-bold small text-dark mb-1">
+                        Radius Baru (Meter)
+                    </label>
+                    <div class="input-group">
+                        <input type="number" min="10" max="5000" class="form-control" id="batch-radius-input" name="radius" value="100" style="min-height: 44px;" required>
+                        <span class="input-group-text">Meter</span>
+                    </div>
+                    <div class="form-text small text-muted">
+                        Rekomendasi standar: 100 meter agar absensi karyawan tidak terganggu deviasi sinyal GPS handphone.
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="modal-footer bg-light p-3 border-top d-flex justify-content-between flex-shrink-0">
+                <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3 fw-semibold" data-bs-dismiss="modal" style="min-height: 44px;">
+                    Batal
+                </button>
+                <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" style="min-height: 44px;">
+                    Terapkan Massal
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
