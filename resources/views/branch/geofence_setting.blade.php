@@ -1151,17 +1151,33 @@
             return;
         }
 
-        // 1. Cek apakah input adalah Koordinat Desimal Langsung ("-7.2987, 112.7597")
-        const decimalCoordMatch = query.match(/^[-+]?[0-9]{1,2}(?:\.[0-9]+)?[,\s]+[-+]?[0-9]{1,3}(?:\.[0-9]+)?$/);
-        if (decimalCoordMatch) {
-            const parts = query.split(/[\s,]+/);
-            const lat = parseFloat(parts[0]);
-            const lng = parseFloat(parts[1]);
+        // 0. Cek apakah input adalah link Google Maps (@lat,lng atau !3d...!4d...)
+        const gmapsMatch = query.match(/@([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/) ||
+                           query.match(/!3d([-+]?[0-9]{1,2}\.[0-9]+)!4d([-+]?[0-9]{1,3}\.[0-9]+)/) ||
+                           query.match(/[?&](?:q|ll|destination)=([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/);
+        if (gmapsMatch) {
+            const lat = parseFloat(gmapsMatch[1]);
+            const lng = parseFloat(gmapsMatch[2]);
             if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
                 setCoordsInput(lat, lng);
-                if (modalMap) modalMap.flyTo([lat, lng], 17, { animate: true });
-                if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
-                showModalGeoHint(`Koordinat langsung diterapkan: ${lat}, ${lng}`, 'success');
+                if (modalMap) modalMap.flyTo([lat, lng], 18, { animate: true });
+                if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Titik Google Maps akurat terpasang!</span>';
+                showModalGeoHint(`Koordinat presisi Google Maps diterapkan: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+                resetSyncButton();
+                return;
+            }
+        }
+
+        // 1. Cek apakah input adalah Koordinat Desimal Langsung ("-7.2987, 112.7597")
+        const decimalCoordMatch = query.match(/([-+]?[0-9]{1,2}(?:\.[0-9]+)?)[,\s]+([-+]?[0-9]{1,3}(?:\.[0-9]+)?)/);
+        if (decimalCoordMatch && (query.trim().startsWith('-') || query.trim().startsWith('+') || /^\d/.test(query.trim()))) {
+            const lat = parseFloat(decimalCoordMatch[1]);
+            const lng = parseFloat(decimalCoordMatch[2]);
+            if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                setCoordsInput(lat, lng);
+                if (modalMap) modalMap.flyTo([lat, lng], 18, { animate: true });
+                if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Koordinat angka langsung terpasang!</span>';
+                showModalGeoHint(`Koordinat langsung diterapkan: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
                 resetSyncButton();
                 return;
             }
@@ -1176,7 +1192,7 @@
             if (dmsMatch[8].toUpperCase() === 'W') lng = -lng;
 
             setCoordsInput(lat, lng);
-            if (modalMap) modalMap.flyTo([lat, lng], 17, { animate: true });
+            if (modalMap) modalMap.flyTo([lat, lng], 18, { animate: true });
             if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
             showModalGeoHint(`Koordinat GPS diterapkan: ${lat.toFixed(7)}, ${lng.toFixed(7)}`, 'success');
             resetSyncButton();
@@ -1210,9 +1226,9 @@
                 }
 
                 if (syncStatus) {
-                    syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+                    syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta diarahkan ke area jalan</span>';
                 }
-                showModalGeoHint(`Peta digeser otomatis ke: ${data.display_name.substring(0, 75)}...`, 'success');
+                showModalGeoHint(`Peta diarahkan ke: ${data.display_name.substring(0, 60)}... Geser pin biru pada foto satelit jika perlu memposisikan tepat di toko/kantor.`, 'info');
             } else {
                 fallbackClientNominatim(query, isManual, syncStatus);
             }
@@ -1250,9 +1266,9 @@
                     }
 
                     if (syncStatus) {
-                        syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+                        syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta diarahkan ke area jalan</span>';
                     }
-                    showModalGeoHint(`Peta digeser otomatis ke: ${result.display_name.substring(0, 75)}...`, 'success');
+                    showModalGeoHint(`Peta diarahkan ke: ${result.display_name.substring(0, 60)}... Geser pin biru pada foto satelit untuk titik toko yang tepat.`, 'info');
                 } else {
                     if (syncStatus) {
                         syncStatus.innerHTML = '<span class="text-warning"><i class="mdi mdi-alert-circle me-0.5"></i>Alamat belum cocok di peta</span>';
@@ -1371,20 +1387,53 @@
             });
         }
 
-        const latInput = document.getElementById('modal-input-lat');
-        if (latInput) {
-            latInput.addEventListener('paste', function (e) {
-                const text = (e.clipboardData || window.clipboardData).getData('text');
-                const match = text.match(/([-+]?[0-9]{1,2}(?:\.[0-9]+)?)[,\s]+([-+]?[0-9]{1,3}(?:\.[0-9]+)?)/);
-                if (match) {
-                    e.preventDefault();
-                    const lat = parseFloat(match[1]);
-                    const lng = parseFloat(match[2]);
-                    setCoordsInput(lat, lng);
-                    showModalGeoHint(`Koordinat disetel: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
-                }
-            });
+        function handleCoordPaste(e) {
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            if (!text) return;
+
+            // Link Google Maps
+            const gmaps = text.match(/@([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/) ||
+                          text.match(/!3d([-+]?[0-9]{1,2}\.[0-9]+)!4d([-+]?[0-9]{1,3}\.[0-9]+)/);
+            if (gmaps) {
+                e.preventDefault();
+                const lat = parseFloat(gmaps[1]);
+                const lng = parseFloat(gmaps[2]);
+                setCoordsInput(lat, lng);
+                if (modalMap) modalMap.flyTo([lat, lng], 18, { animate: true });
+                showModalGeoHint(`Koordinat presisi Google Maps disetel: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+                return;
+            }
+
+            // Desimal: "-6.2922365, 106.8529506"
+            const matchDec = text.match(/([-+]?[0-9]{1,2}(?:\.[0-9]+)?)[,\s]+([-+]?[0-9]{1,3}(?:\.[0-9]+)?)/);
+            if (matchDec) {
+                e.preventDefault();
+                const lat = parseFloat(matchDec[1]);
+                const lng = parseFloat(matchDec[2]);
+                setCoordsInput(lat, lng);
+                if (modalMap) modalMap.flyTo([lat, lng], 18, { animate: true });
+                showModalGeoHint(`Koordinat disetel: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+                return;
+            }
+
+            // DMS: 6°16'38.3"S 106°51'18.6"E
+            const matchDms = text.match(/([0-9]{1,2})\s*[°]\s*([0-9]{1,2})\s*['′]\s*([0-9]{1,2}(?:\.[0-9]+)?)\s*["″]?\s*([NSns])\s*,?\s*([0-9]{1,3})\s*[°]\s*([0-9]{1,2})\s*['′]\s*([0-9]{1,2}(?:\.[0-9]+)?)\s*["″]?\s*([EWew])/i);
+            if (matchDms) {
+                e.preventDefault();
+                let lat = parseFloat(matchDms[1]) + (parseFloat(matchDms[2]) / 60) + (parseFloat(matchDms[3]) / 3600);
+                if (matchDms[4].toUpperCase() === 'S') lat = -lat;
+                let lng = parseFloat(matchDms[5]) + (parseFloat(matchDms[6]) / 60) + (parseFloat(matchDms[7]) / 3600);
+                if (matchDms[8].toUpperCase() === 'W') lng = -lng;
+                setCoordsInput(lat, lng);
+                if (modalMap) modalMap.flyTo([lat, lng], 18, { animate: true });
+                showModalGeoHint(`Koordinat disetel: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+            }
         }
+
+        const latInput = document.getElementById('modal-input-lat');
+        const lngInput = document.getElementById('modal-input-lng');
+        if (latInput) latInput.addEventListener('paste', handleCoordPaste);
+        if (lngInput) lngInput.addEventListener('paste', handleCoordPaste);
     });
 
     /**
