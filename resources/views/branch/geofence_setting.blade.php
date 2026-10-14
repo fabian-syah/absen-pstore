@@ -566,18 +566,22 @@
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label for="modal-input-address" class="form-label fw-bold small text-dark mb-0">
-                                Alamat Resmi Cabang
+                                <i class="mdi mdi-map-marker-outline text-primary me-1"></i>Alamat Resmi Cabang
                             </label>
                             <span id="address-sync-status" class="small text-muted" style="font-size: 11px;">
                                 <i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif
                             </span>
                         </div>
-                        <textarea class="form-control" id="modal-input-address" name="address" rows="2" placeholder="Masukkan alamat lengkap cabang (misal: Jl. Condet Raya No. 1, Jakarta Timur)..." oninput="handleAddressInputDebounced()"></textarea>
-                        <div class="form-text small text-muted d-flex justify-content-between align-items-center mt-1">
-                            <span>Ketik alamat cabang, peta akan otomatis bergeser dan koordinat terisi otomatis.</span>
-                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold" onclick="geocodeAddressToMap(true)" style="font-size: 11.5px;">
-                                <i class="mdi mdi-crosshairs-gps me-0.5"></i>Sinkronkan Sekarang
+                        <div class="input-group">
+                            <textarea class="form-control" id="modal-input-address" name="address" rows="2" placeholder="Ketik alamat cabang atau tempel link / alamat Google Maps..." oninput="handleAddressInputDebounced()" onpaste="setTimeout(() => geocodeAddressToMap(false), 150)"></textarea>
+                            <button type="button" class="btn btn-primary px-3 d-flex flex-column align-items-center justify-content-center fw-semibold" id="btn-sync-address" onclick="geocodeAddressToMap(true)" style="min-width: 90px;">
+                                <i class="mdi mdi-crosshairs-gps fs-5 mb-0.5"></i>
+                                <span style="font-size: 11px;">Cari di Peta</span>
                             </button>
+                        </div>
+                        <div id="modal-geo-hint" class="d-none mt-2 p-2 rounded-3 small fw-semibold"></div>
+                        <div class="form-text small text-muted mt-1">
+                            <span>Ketik alamat cabang atau tempel link dari Google Maps, peta dan koordinat GPS akan otomatis menyesuaikan posisi.</span>
                         </div>
                     </div>
 
@@ -595,20 +599,6 @@
                                     <i class="mdi mdi-open-in-new me-1"></i>Google Maps
                                 </a>
                             </div>
-                        </div>
-
-                        {{-- PENCARIAN TEMPAT / PASTE KOORDINAT & LINK GOOGLE MAPS --}}
-                        <div class="mb-2">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-slate-300 text-muted">
-                                    <i class="mdi mdi-magnify text-primary"></i>
-                                </span>
-                                <input type="text" id="modal-search-place-input" class="form-control border-slate-300" placeholder="Ketik nama tempat/jalan, atau tempel link/koordinat Google Maps..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchLocationOnMap();}">
-                                <button type="button" class="btn btn-primary px-3 fw-semibold" id="btn-search-map" onclick="searchLocationOnMap()" style="min-height: 38px;">
-                                    <i class="mdi mdi-map-search-outline me-1"></i>Cari di Peta
-                                </button>
-                            </div>
-                            <div id="modal-geo-hint" class="d-none mt-2 p-2 rounded-3 small fw-semibold"></div>
                         </div>
 
                         <div id="modal-map"></div>
@@ -758,9 +748,7 @@
         document.getElementById('modal-input-lng').value = (branch.longitude !== null && branch.longitude !== undefined) ? branch.longitude : '';
         document.getElementById('modal-input-radius').value = branch.radius || 100;
 
-        // Reset Search Input & Hints
-        const searchInput = document.getElementById('modal-search-place-input');
-        if (searchInput) searchInput.value = '';
+        // Reset Hints & Alerts
         const hintEl = document.getElementById('modal-geo-hint');
         if (hintEl) {
             hintEl.className = 'd-none';
@@ -937,10 +925,15 @@
         if (!addrInput) return;
         const query = addrInput.value.trim();
         const syncStatus = document.getElementById('address-sync-status');
+        const btn = document.getElementById('btn-sync-address');
+        const originalBtnHtml = btn ? btn.innerHTML : '';
 
         if (!query || query.length < 3) {
             if (syncStatus) {
                 syncStatus.innerHTML = '<span class="text-muted"><i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif</span>';
+            }
+            if (isManual) {
+                showModalGeoHint('Ketik alamat cabang terlebih dahulu pada kotak di atas.', 'warning');
             }
             return;
         }
@@ -948,6 +941,18 @@
         if (syncStatus) {
             syncStatus.innerHTML = '<span class="text-primary"><i class="mdi mdi-loading mdi-spin me-0.5"></i>Mencari di peta...</span>';
         }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm mb-0.5"></span><span style="font-size: 11px;">Mencari...</span>';
+        }
+
+        const resetBtn = () => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+            }
+        };
 
         fetch(`/branches/geocode?q=${encodeURIComponent(query)}`, {
             headers: {
@@ -957,6 +962,7 @@
         })
         .then(res => res.json())
         .then(data => {
+            resetBtn();
             if (data.success && data.lat && data.lng) {
                 setCoordsInput(data.lat, data.lng);
 
@@ -969,19 +975,27 @@
                 }
                 showModalGeoHint(`Peta digeser otomatis ke: ${data.display_name.substring(0, 75)}...`, 'success');
             } else {
-                fallbackClientNominatim(query, isManual, syncStatus);
+                fallbackClientNominatim(query, isManual, syncStatus, resetBtn);
             }
         })
         .catch(() => {
-            fallbackClientNominatim(query, isManual, syncStatus);
+            fallbackClientNominatim(query, isManual, syncStatus, resetBtn);
         });
     }
 
-    function fallbackClientNominatim(query, isManual, syncStatus) {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=id`;
+    function fallbackClientNominatim(query, isManual, syncStatus, resetBtnCallback) {
+        // Bersihkan komponen RT/RW / No sebelum dikirim ke client OSM
+        let cleanQuery = query.replace(/RT\.?\s*\d+\s*\/?\s*RW\.?\s*\d+/gi, '')
+                              .replace(/No\.?\s*[\w\/-]+/gi, '')
+                              .replace(/\b\d{5}\b/g, '')
+                              .replace(/\b(Daerah Khusus Ibukota|DKI)\b/gi, '')
+                              .replace(/[,\s]+/g, ' ').trim();
+
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery || query)}&limit=1&countrycodes=id`;
         fetch(url, { headers: { 'Accept': 'application/json' } })
             .then(res => res.json())
             .then(data => {
+                if (resetBtnCallback) resetBtnCallback();
                 if (data && data.length > 0) {
                     const result = data[0];
                     const lat = parseFloat(result.lat);
@@ -1001,73 +1015,16 @@
                         syncStatus.innerHTML = '<span class="text-warning"><i class="mdi mdi-alert-circle me-0.5"></i>Alamat belum cocok di peta</span>';
                     }
                     if (isManual) {
-                        showModalGeoHint('Alamat belum ditemukan di peta. Coba tambahkan kelurahan/kecamatan/kota, atau geser pin langsung pada peta.', 'warning');
+                        showModalGeoHint('Alamat belum ditemukan otomatis. Anda dapat menggeser pin biru langsung pada peta.', 'warning');
                     }
                 }
             })
             .catch(() => {
+                if (resetBtnCallback) resetBtnCallback();
                 if (syncStatus) {
                     syncStatus.innerHTML = '<span class="text-muted"><i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif</span>';
                 }
             });
-    }
-
-    /**
-     * Cari Lokasi di Peta via Nama Tempat, Alamat, atau Link/Koordinat Google Maps
-     */
-    function searchLocationOnMap() {
-        const input = document.getElementById('modal-search-place-input');
-        const query = (input ? input.value : '').trim();
-        if (!query) {
-            showModalGeoHint('Ketik nama tempat, alamat, atau tempel link / koordinat Google Maps.', 'warning');
-            return;
-        }
-
-        const btn = document.getElementById('btn-search-map');
-        const originalHtml = btn ? btn.innerHTML : '';
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mencari...';
-        }
-
-        const resetBtn = () => {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-            }
-        };
-
-        // Panggil endpoint proxy server `/branches/geocode?q=...`
-        fetch(`/branches/geocode?q=${encodeURIComponent(query)}`, {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            resetBtn();
-            if (data.success && data.lat && data.lng) {
-                setCoordsInput(data.lat, data.lng);
-
-                if (modalMap) {
-                    modalMap.flyTo([data.lat, data.lng], 16, { animate: true, duration: 1.0 });
-                }
-
-                const addrInput = document.getElementById('modal-input-address');
-                if (addrInput && (!addrInput.value || addrInput.value.trim() === '')) {
-                    addrInput.value = data.display_name;
-                }
-
-                showModalGeoHint(`Lokasi ditemukan: ${data.display_name.substring(0, 75)}...`, 'success');
-            } else {
-                showModalGeoHint('Lokasi tidak ditemukan. Coba ketik nama jalan / wilayah lebih lengkap, atau tempel koordinat dari Google Maps.', 'warning');
-            }
-        })
-        .catch(() => {
-            resetBtn();
-            showModalGeoHint('Gagal memuat pencarian lokasi. Silakan klik langsung pada peta atau tempel koordinat.', 'warning');
-        });
     }
 
     /**

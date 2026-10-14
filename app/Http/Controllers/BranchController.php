@@ -465,14 +465,52 @@ class BranchController extends Controller
             return response()->json(['success' => false, 'message' => 'Alamat tidak boleh kosong.'], 400);
         }
 
-        // 1. Cek apakah link Google Maps
-        if (preg_match('/@([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches) ||
-            preg_match('/[?&]q=([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches)) {
+        // 1. Cek jika input adalah Link Google Maps (termasuk shortlink maps.app.goo.gl atau goo.gl/maps)
+        if (str_contains($query, 'maps.app.goo.gl') || str_contains($query, 'goo.gl/maps')) {
+            try {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $query);
+                curl_setopt($ch, CURLOPT_HEADER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+                curl_exec($ch);
+                $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+                curl_close($ch);
+                if ($finalUrl) {
+                    $query = $finalUrl;
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Error resolving Google Maps shortlink: ' . $e->getMessage());
+            }
+        }
+
+        // Pola A: !3d<lat>!4d<lng> (Presisi pin Google Maps)
+        if (preg_match('/!3d([-+]?[0-9]{1,2}\.[0-9]+)!4d([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches)) {
             return response()->json([
                 'success' => true,
                 'lat' => (float)$matches[1],
                 'lng' => (float)$matches[2],
-                'display_name' => 'Lokasi dari Google Maps',
+                'display_name' => 'Lokasi spesifik dari Google Maps',
+            ]);
+        }
+        // Pola B: @<lat>,<lng>
+        if (preg_match('/@([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches)) {
+            return response()->json([
+                'success' => true,
+                'lat' => (float)$matches[1],
+                'lng' => (float)$matches[2],
+                'display_name' => 'Titik lokasi dari Google Maps',
+            ]);
+        }
+        // Pola C: ?q=<lat>,<lng> atau &ll=<lat>,<lng>
+        if (preg_match('/[?&](?:q|ll|destination)=([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches)) {
+            return response()->json([
+                'success' => true,
+                'lat' => (float)$matches[1],
+                'lng' => (float)$matches[2],
+                'display_name' => 'Koordinat dari link Google Maps',
             ]);
         }
 
@@ -493,36 +531,85 @@ class BranchController extends Controller
             }
         }
 
-        // 3. Request ke Nominatim OpenStreetMap
-        try {
-            $response = \Illuminate\Support\Facades\Http::withHeaders([
-                'User-Agent' => 'AbsensiPStore/1.0 (' . config('app.url', 'https://absenps.com') . ')',
-                'Accept-Language' => 'id,en',
-            ])->timeout(8)->get('https://nominatim.openstreetmap.org/search', [
-                'format' => 'json',
-                'q' => $query,
-                'limit' => 1,
-                'countrycodes' => 'id',
-            ]);
+        // 3. Progressive Search Strategy untuk Alamat Indonesia (dari Google Maps / input user)
+        $searchCandidates = [];
+        $searchCandidates[] = $query; // Kandidat 1: Alamat utuh asli
 
-            if ($response->successful()) {
-                $data = $response->json();
-                if (!empty($data) && isset($data[0])) {
-                    return response()->json([
-                        'success' => true,
-                        'lat' => (float)$data[0]['lat'],
-                        'lng' => (float)$data[0]['lon'],
-                        'display_name' => $data[0]['display_name'] ?? $query,
-                    ]);
+        // Bersihkan komponen yang sering menggagalkan OpenStreetMap (No rumah, RT/RW, Kode Pos, DKI)
+        $clean = $query;
+        $clean = preg_replace('/RT\.?\s*\d+\s*\/?\s*RW\.?\s*\d+/i', '', $clean);
+        $clean = preg_replace('/No\.?\s*[\w\/-]+/i', '', $clean);
+        $clean = preg_replace('/\b\d{5}\b/', '', $clean);
+        $clean = preg_replace('/\b(Daerah Khusus Ibukota|DKI)\b/i', '', $clean);
+        $clean = preg_replace('/\b(Kec\.|Kecamatan|Kel\.|Kelurahan)\s*/i', '', $clean);
+        $clean = preg_replace('/[,\s]+/', ' ', trim($clean));
+
+        if (!empty($clean) && $clean !== $query) {
+            $searchCandidates[] = $clean; // Kandidat 2: Alamat tanpa RT/RW dan No
+        }
+
+        // Kandidat 3 & 4: Ekstrak Nama Jalan + Kota/Kabupaten
+        $parts = array_map('trim', explode(',', $query));
+        if (count($parts) >= 2) {
+            $streetPart = preg_replace('/No\.?\s*[\w\/-]+/i', '', $parts[0]);
+            $streetPart = trim($streetPart);
+
+            $cityPart = '';
+            foreach ($parts as $p) {
+                if (stripos($p, 'Jakarta') !== false || stripos($p, 'Kota') !== false || stripos($p, 'Kabupaten') !== false || stripos($p, 'Makassar') !== false || stripos($p, 'Surabaya') !== false) {
+                    $cityPart = preg_replace('/\b(Kota|Kabupaten|Daerah Khusus Ibukota|DKI|\d{5})\b/i', '', $p);
+                    $cityPart = trim($cityPart);
+                    break;
                 }
             }
-        } catch (\Exception $e) {
-            \Log::warning('Geocode error: ' . $e->getMessage());
+
+            if (!empty($streetPart) && !empty($cityPart)) {
+                $searchCandidates[] = "{$streetPart}, {$cityPart}";
+            }
+
+            if (isset($parts[2]) && !empty($cityPart)) {
+                $subdistrict = trim(preg_replace('/\b(Kec\.|Kel\.|Kecamatan|Kelurahan)\b/i', '', $parts[2]));
+                if (!empty($subdistrict)) {
+                    $searchCandidates[] = "{$subdistrict}, {$cityPart}";
+                }
+            }
+        }
+
+        $searchCandidates = array_unique(array_filter($searchCandidates));
+
+        // Lakukan pencarian bertingkat hingga menemukan hasil
+        foreach ($searchCandidates as $candidate) {
+            try {
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                    'User-Agent' => 'AbsensiPStore/1.0 (' . config('app.url', 'https://absenps.com') . ')',
+                    'Accept-Language' => 'id,en',
+                ])->timeout(6)->get('https://nominatim.openstreetmap.org/search', [
+                    'format' => 'json',
+                    'q' => $candidate,
+                    'limit' => 1,
+                    'countrycodes' => 'id',
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (!empty($data) && isset($data[0])) {
+                        return response()->json([
+                            'success' => true,
+                            'lat' => (float)$data[0]['lat'],
+                            'lng' => (float)$data[0]['lon'],
+                            'display_name' => $data[0]['display_name'] ?? $candidate,
+                            'matched_query' => $candidate,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Geocode candidate error: ' . $e->getMessage());
+            }
         }
 
         return response()->json([
             'success' => false,
-            'message' => 'Alamat tidak ditemukan di peta. Coba lengkapi nama kota atau geser pin langsung pada peta.',
+            'message' => 'Alamat belum cocok di peta. Silakan geser pin biru langsung pada peta.',
         ]);
     }
 }
