@@ -89,46 +89,65 @@
                                 </div>
                             </div>
 
-                            {{-- Peta Interaktif Leaflet --}}
+                            {{-- Peta Interaktif Leaflet (Google Satellite Hybrid) --}}
                             <div class="mb-3">
-                                <div id="branch-create-map" style="width: 100%; height: 260px; border-radius: 10px; border: 1px solid #cbd5e1; background: #ffffff;"></div>
+                                <div class="position-relative">
+                                    <div id="branch-create-map" style="width: 100%; height: 300px; border-radius: 10px; border: 1px solid #cbd5e1; background: #0f172a;"></div>
+                                    {{-- Layer Switcher Satelit vs Peta Jalan --}}
+                                    <div class="position-absolute top-0 end-0 m-2 z-3 d-flex shadow-sm rounded-pill p-1 bg-white border border-slate-300" style="z-index: 1000;">
+                                        <button type="button" class="btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-primary" id="btn-create-layer-hybrid" onclick="setCreateMapLayer('hybrid')">
+                                            <i class="mdi mdi-satellite-variant me-1"></i>Satelit
+                                        </button>
+                                        <button type="button" class="btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-light text-secondary" id="btn-create-layer-streets" onclick="setCreateMapLayer('streets')">
+                                            <i class="mdi mdi-map-outline me-1"></i>Peta Jalan
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="form-text small text-muted mt-1 d-flex justify-content-between align-items-center flex-wrap gap-1">
-                                    <span><i class="mdi mdi-information-outline me-1"></i>Klik pada peta atau geser pin merah untuk menggeser koordinat titik cabang secara presisi.</span>
+                                    <span><i class="mdi mdi-information-outline me-1"></i>Tampilan foto udara satelit aktif. Klik pada peta atau geser pin biru untuk menentukan titik kantor cabang.</span>
                                     <a href="#" id="create-open-gmaps-link" target="_blank" rel="noopener noreferrer" class="text-primary small fw-semibold text-decoration-none d-none">
                                         <i class="mdi mdi-open-in-new me-0.5"></i> Buka di Google Maps
                                     </a>
                                 </div>
                             </div>
 
-                            <div class="row g-3">
-                                <div class="col-12 col-md-4">
-                                    <label for="latitude" class="form-label fw-bold small text-dark mb-1">Latitude</label>
+                            <div class="row g-2 g-md-3">
+                                <div class="col-6 col-md-4">
+                                    <label for="latitude" class="form-label fw-bold small text-dark mb-1">
+                                        <i class="mdi mdi-latitude text-primary me-0.5"></i>Latitude
+                                    </label>
                                     <input type="number" step="any" class="form-control" id="latitude" name="latitude"
-                                        value="{{ old('latitude') }}" placeholder="Contoh: -6.1952300" onchange="syncCreateMapFromInputs()" style="min-height: 44px;">
+                                        value="{{ old('latitude') }}" placeholder="Contoh: -6.1952300" onchange="syncCreateMapFromInputs()" style="min-height: 42px;">
                                 </div>
-                                <div class="col-12 col-md-4">
-                                    <label for="longitude" class="form-label fw-bold small text-dark mb-1">Longitude</label>
+                                <div class="col-6 col-md-4">
+                                    <label for="longitude" class="form-label fw-bold small text-dark mb-1">
+                                        <i class="mdi mdi-longitude text-primary me-0.5"></i>Longitude
+                                    </label>
                                     <input type="number" step="any" class="form-control" id="longitude" name="longitude"
-                                        value="{{ old('longitude') }}" placeholder="Contoh: 106.7865200" onchange="syncCreateMapFromInputs()" style="min-height: 44px;">
+                                        value="{{ old('longitude') }}" placeholder="Contoh: 106.7865200" onchange="syncCreateMapFromInputs()" style="min-height: 42px;">
                                 </div>
                                 <div class="col-12 col-md-4">
-                                    <label for="radius" class="form-label fw-bold small text-dark mb-1">Radius Absensi (Meter)</label>
+                                    <label for="radius" class="form-label fw-bold small text-dark mb-1">
+                                        <i class="mdi mdi-map-marker-radius-outline text-danger me-0.5"></i>Radius Absensi (Meter)
+                                    </label>
                                     <div class="input-group">
                                         <input type="number" class="form-control" id="radius" name="radius" min="10" max="5000"
-                                            value="{{ old('radius', 100) }}" placeholder="100" oninput="syncCreateRadiusFromInput()" style="min-height: 44px;">
-                                        <span class="input-group-text">Meter</span>
+                                            value="{{ old('radius', 100) }}" placeholder="100" oninput="syncCreateRadiusFromInput()" style="min-height: 42px;">
+                                        <span class="input-group-text px-2.5 small">Meter</span>
                                     </div>
                                 </div>
                             </div>
 
                             {{-- Radius Presets --}}
                             <div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <span class="small fw-semibold text-secondary">Pilihan Cepat Radius:</span>
-                                <div class="d-flex gap-1.5 flex-wrap">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1 create-radius-preset-btn {{ (old('radius', 100) == 50) ? 'btn-primary text-white border-primary' : '' }}" onclick="setCreateRadiusPreset(50)">50m</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1 create-radius-preset-btn {{ (old('radius', 100) == 100) ? 'btn-primary text-white border-primary' : '' }}" onclick="setCreateRadiusPreset(100)">100m</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1 create-radius-preset-btn {{ (old('radius', 100) == 150) ? 'btn-primary text-white border-primary' : '' }}" onclick="setCreateRadiusPreset(150)">150m</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1 create-radius-preset-btn {{ (old('radius', 100) == 200) ? 'btn-primary text-white border-primary' : '' }}" onclick="setCreateRadiusPreset(200)">200m</button>
+                                <span class="small fw-semibold text-secondary">
+                                    <i class="mdi mdi-tune-variant text-muted me-1"></i>Pilihan Cepat Radius:
+                                </span>
+                                <div class="d-flex gap-1.5 flex-wrap flex-grow-1 flex-sm-grow-0">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1 flex-fill create-radius-preset-btn {{ (old('radius', 100) == 50) ? 'btn-primary text-white border-primary' : '' }}" onclick="setCreateRadiusPreset(50)">50m</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1 flex-fill create-radius-preset-btn {{ (old('radius', 100) == 100) ? 'btn-primary text-white border-primary' : '' }}" onclick="setCreateRadiusPreset(100)">100m</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1 flex-fill create-radius-preset-btn {{ (old('radius', 100) == 150) ? 'btn-primary text-white border-primary' : '' }}" onclick="setCreateRadiusPreset(150)">150m</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1 flex-fill create-radius-preset-btn {{ (old('radius', 100) == 200) ? 'btn-primary text-white border-primary' : '' }}" onclick="setCreateRadiusPreset(200)">200m</button>
                                 </div>
                             </div>
                         </div>
@@ -156,6 +175,27 @@
         initBranchCreateMap();
     });
 
+    let createHybridLayer = null;
+    let createStreetsLayer = null;
+
+    function setCreateMapLayer(type) {
+        if (!createMap || !createHybridLayer || !createStreetsLayer) return;
+        const btnHybrid = document.getElementById('btn-create-layer-hybrid');
+        const btnStreets = document.getElementById('btn-create-layer-streets');
+
+        if (type === 'hybrid') {
+            if (createMap.hasLayer(createStreetsLayer)) createMap.removeLayer(createStreetsLayer);
+            if (!createMap.hasLayer(createHybridLayer)) createMap.addLayer(createHybridLayer);
+            if (btnHybrid) btnHybrid.className = 'btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-primary';
+            if (btnStreets) btnStreets.className = 'btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-light text-secondary';
+        } else {
+            if (createMap.hasLayer(createHybridLayer)) createMap.removeLayer(createHybridLayer);
+            if (!createMap.hasLayer(createStreetsLayer)) createMap.addLayer(createStreetsLayer);
+            if (btnStreets) btnStreets.className = 'btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-primary';
+            if (btnHybrid) btnHybrid.className = 'btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-light text-secondary';
+        }
+    }
+
     function initBranchCreateMap() {
         const latInput = document.getElementById('latitude');
         const lngInput = document.getElementById('longitude');
@@ -169,21 +209,37 @@
         const mapCenterLat = hasInitialCoords ? initialLat : DEFAULT_CREATE_LAT;
         const mapCenterLng = hasInitialCoords ? initialLng : DEFAULT_CREATE_LNG;
 
-        createMap = L.map('branch-create-map').setView([mapCenterLat, mapCenterLng], hasInitialCoords ? 16 : 12);
+        createMap = L.map('branch-create-map', {
+            center: [mapCenterLat, mapCenterLng],
+            zoom: hasInitialCoords ? 16 : 12,
+            maxZoom: 20
+        });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(createMap);
+        // Layer 1: Google Satellite Hybrid (Foto Udara + Label Jalan & Gedung)
+        createHybridLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps'
+        });
+
+        // Layer 2: Google Streets
+        createStreetsLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps'
+        });
+
+        // Default: Satelit Hybrid
+        createHybridLayer.addTo(createMap);
 
         if (hasInitialCoords) {
             createMarker = L.marker([initialLat, initialLng], { draggable: true }).addTo(createMap);
             createCircle = L.circle([initialLat, initialLng], {
                 radius: initialRadius,
-                color: '#0d6efd',
-                fillColor: '#0d6efd',
-                fillOpacity: 0.16,
-                weight: 2
+                color: '#38bdf8',
+                fillColor: '#0284c7',
+                fillOpacity: 0.28,
+                weight: 2.5
             }).addTo(createMap);
 
             createMarker.on('dragend', function (e) {

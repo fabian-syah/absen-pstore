@@ -107,34 +107,51 @@
                                 </div>
                             </div>
 
-                            {{-- Peta Interaktif Leaflet --}}
+                            {{-- Peta Interaktif Leaflet (Google Satellite Hybrid) --}}
                             <div class="mb-3">
-                                <div id="branch-edit-map" style="width: 100%; height: 260px; border-radius: 10px; border: 1px solid #cbd5e1; background: #ffffff;"></div>
+                                <div class="position-relative">
+                                    <div id="branch-edit-map" style="width: 100%; height: 300px; border-radius: 10px; border: 1px solid #cbd5e1; background: #0f172a;"></div>
+                                    {{-- Layer Switcher Satelit vs Peta Jalan --}}
+                                    <div class="position-absolute top-0 end-0 m-2 z-3 d-flex shadow-sm rounded-pill p-1 bg-white border border-slate-300" style="z-index: 1000;">
+                                        <button type="button" class="btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-primary" id="btn-edit-layer-hybrid" onclick="setEditMapLayer('hybrid')">
+                                            <i class="mdi mdi-satellite-variant me-1"></i>Satelit
+                                        </button>
+                                        <button type="button" class="btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-light text-secondary" id="btn-edit-layer-streets" onclick="setEditMapLayer('streets')">
+                                            <i class="mdi mdi-map-outline me-1"></i>Peta Jalan
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="form-text small text-muted mt-1 d-flex justify-content-between align-items-center flex-wrap gap-1">
-                                    <span><i class="mdi mdi-information-outline me-1"></i>Klik pada peta atau geser pin merah untuk menggeser koordinat titik cabang secara presisi.</span>
+                                    <span><i class="mdi mdi-information-outline me-1"></i>Tampilan foto udara satelit aktif. Klik pada peta atau geser pin biru untuk menyesuaikan titik kantor cabang.</span>
                                     <a href="#" id="edit-open-gmaps-link" target="_blank" rel="noopener noreferrer" class="text-primary small fw-semibold text-decoration-none {{ ($branch->latitude && $branch->longitude) ? '' : 'd-none' }}">
                                         <i class="mdi mdi-open-in-new me-0.5"></i> Buka di Google Maps
                                     </a>
                                 </div>
                             </div>
 
-                            <div class="row g-3">
-                                <div class="col-12 col-md-4">
-                                    <label for="latitude" class="form-label fw-bold small text-dark mb-1">Latitude</label>
+                            <div class="row g-2 g-md-3">
+                                <div class="col-6 col-md-4">
+                                    <label for="latitude" class="form-label fw-bold small text-dark mb-1">
+                                        <i class="mdi mdi-latitude text-primary me-0.5"></i>Latitude
+                                    </label>
                                     <input type="number" step="any" class="form-control" id="latitude" name="latitude"
-                                        value="{{ old('latitude', $branch->latitude) }}" placeholder="Contoh: -6.1952300" onchange="syncEditMapFromInputs()" style="min-height: 44px;">
+                                        value="{{ old('latitude', $branch->latitude) }}" placeholder="Contoh: -6.1952300" onchange="syncEditMapFromInputs()" style="min-height: 42px;">
                                 </div>
-                                <div class="col-12 col-md-4">
-                                    <label for="longitude" class="form-label fw-bold small text-dark mb-1">Longitude</label>
+                                <div class="col-6 col-md-4">
+                                    <label for="longitude" class="form-label fw-bold small text-dark mb-1">
+                                        <i class="mdi mdi-longitude text-primary me-0.5"></i>Longitude
+                                    </label>
                                     <input type="number" step="any" class="form-control" id="longitude" name="longitude"
-                                        value="{{ old('longitude', $branch->longitude) }}" placeholder="Contoh: 106.7865200" onchange="syncEditMapFromInputs()" style="min-height: 44px;">
+                                        value="{{ old('longitude', $branch->longitude) }}" placeholder="Contoh: 106.7865200" onchange="syncEditMapFromInputs()" style="min-height: 42px;">
                                 </div>
                                 <div class="col-12 col-md-4">
-                                    <label for="radius" class="form-label fw-bold small text-dark mb-1">Radius Absensi (Meter)</label>
+                                    <label for="radius" class="form-label fw-bold small text-dark mb-1">
+                                        <i class="mdi mdi-map-marker-radius-outline text-danger me-0.5"></i>Radius Absensi (Meter)
+                                    </label>
                                     <div class="input-group">
                                         <input type="number" class="form-control" id="radius" name="radius" min="10" max="5000"
-                                            value="{{ old('radius', $branch->radius ?? 100) }}" placeholder="100" oninput="syncEditRadiusFromInput()" style="min-height: 44px;">
-                                        <span class="input-group-text">Meter</span>
+                                            value="{{ old('radius', $branch->radius ?? 100) }}" placeholder="100" oninput="syncEditRadiusFromInput()" style="min-height: 42px;">
+                                        <span class="input-group-text px-2.5 small">Meter</span>
                                     </div>
                                 </div>
                             </div>
@@ -196,6 +213,27 @@
         initBranchEditMap();
     });
 
+    let editHybridLayer = null;
+    let editStreetsLayer = null;
+
+    function setEditMapLayer(type) {
+        if (!editMap || !editHybridLayer || !editStreetsLayer) return;
+        const btnHybrid = document.getElementById('btn-edit-layer-hybrid');
+        const btnStreets = document.getElementById('btn-edit-layer-streets');
+
+        if (type === 'hybrid') {
+            if (editMap.hasLayer(editStreetsLayer)) editMap.removeLayer(editStreetsLayer);
+            if (!editMap.hasLayer(editHybridLayer)) editMap.addLayer(editHybridLayer);
+            if (btnHybrid) btnHybrid.className = 'btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-primary';
+            if (btnStreets) btnStreets.className = 'btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-light text-secondary';
+        } else {
+            if (editMap.hasLayer(editHybridLayer)) editMap.removeLayer(editHybridLayer);
+            if (!editMap.hasLayer(editStreetsLayer)) editMap.addLayer(editStreetsLayer);
+            if (btnStreets) btnStreets.className = 'btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-primary';
+            if (btnHybrid) btnHybrid.className = 'btn btn-xs rounded-pill fw-semibold py-1 px-2.5 btn-light text-secondary';
+        }
+    }
+
     function initBranchEditMap() {
         const latInput = document.getElementById('latitude');
         const lngInput = document.getElementById('longitude');
@@ -209,21 +247,37 @@
         const mapCenterLat = hasInitialCoords ? initialLat : DEFAULT_EDIT_LAT;
         const mapCenterLng = hasInitialCoords ? initialLng : DEFAULT_EDIT_LNG;
 
-        editMap = L.map('branch-edit-map').setView([mapCenterLat, mapCenterLng], hasInitialCoords ? 16 : 12);
+        editMap = L.map('branch-edit-map', {
+            center: [mapCenterLat, mapCenterLng],
+            zoom: hasInitialCoords ? 16 : 12,
+            maxZoom: 20
+        });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(editMap);
+        // Layer 1: Google Satellite Hybrid (Foto Udara + Label Jalan & Gedung)
+        editHybridLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps'
+        });
+
+        // Layer 2: Google Streets
+        editStreetsLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps'
+        });
+
+        // Default: Satelit Hybrid
+        editHybridLayer.addTo(editMap);
 
         if (hasInitialCoords) {
             editMarker = L.marker([initialLat, initialLng], { draggable: true }).addTo(editMap);
             editCircle = L.circle([initialLat, initialLng], {
                 radius: initialRadius,
-                color: '#0d6efd',
-                fillColor: '#0d6efd',
-                fillOpacity: 0.16,
-                weight: 2
+                color: '#38bdf8',
+                fillColor: '#0284c7',
+                fillOpacity: 0.28,
+                weight: 2.5
             }).addTo(editMap);
 
             editMarker.on('dragend', function (e) {
