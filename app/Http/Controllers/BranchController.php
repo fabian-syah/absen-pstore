@@ -450,4 +450,79 @@ class BranchController extends Controller
 
         return back()->with('success', "Berhasil menerapkan radius {$radius} meter untuk {$affected} {$targetLabel}.");
     }
+
+    /**
+     * Geocode Alamat ke Latitude & Longitude (Server-side proxy untuk Nominatim OSM)
+     */
+    public function geocodeAddress(Request $request)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $query = trim($request->input('q', ''));
+        if (empty($query)) {
+            return response()->json(['success' => false, 'message' => 'Alamat tidak boleh kosong.'], 400);
+        }
+
+        // 1. Cek apakah link Google Maps
+        if (preg_match('/@([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches) ||
+            preg_match('/[?&]q=([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches)) {
+            return response()->json([
+                'success' => true,
+                'lat' => (float)$matches[1],
+                'lng' => (float)$matches[2],
+                'display_name' => 'Lokasi dari Google Maps',
+            ]);
+        }
+
+        // 2. Cek apakah format koordinat numerik langsung ("-6.2088, 106.8456")
+        if (preg_match('/^[-+]?[0-9]{1,2}(?:\.[0-9]+)?[,\s]+[-+]?[0-9]{1,3}(?:\.[0-9]+)?$/', $query)) {
+            $parts = preg_split('/[\s,]+/', $query);
+            if (count($parts) >= 2) {
+                $lat = (float)$parts[0];
+                $lng = (float)$parts[1];
+                if ($lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
+                    return response()->json([
+                        'success' => true,
+                        'lat' => $lat,
+                        'lng' => $lng,
+                        'display_name' => 'Koordinat langsung',
+                    ]);
+                }
+            }
+        }
+
+        // 3. Request ke Nominatim OpenStreetMap
+        try {
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'User-Agent' => 'AbsensiPStore/1.0 (' . config('app.url', 'https://absenps.com') . ')',
+                'Accept-Language' => 'id,en',
+            ])->timeout(8)->get('https://nominatim.openstreetmap.org/search', [
+                'format' => 'json',
+                'q' => $query,
+                'limit' => 1,
+                'countrycodes' => 'id',
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (!empty($data) && isset($data[0])) {
+                    return response()->json([
+                        'success' => true,
+                        'lat' => (float)$data[0]['lat'],
+                        'lng' => (float)$data[0]['lon'],
+                        'display_name' => $data[0]['display_name'] ?? $query,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Geocode error: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Alamat tidak ditemukan di peta. Coba lengkapi nama kota atau geser pin langsung pada peta.',
+        ]);
+    }
 }

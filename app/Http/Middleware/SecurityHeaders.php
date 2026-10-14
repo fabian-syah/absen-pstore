@@ -39,11 +39,11 @@ class SecurityHeaders
  
         // 7. Content Security Policy (CSP)
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://maps.googleapis.com; " .
-               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://maps.googleapis.com https://unpkg.com; " .
+               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com; " .
                "font-src 'self' https://fonts.gstatic.com data:; " .
-               "img-src 'self' data: https:; " .
-               "connect-src 'self' https://maps.googleapis.com; " .
+               "img-src 'self' data: https: blob:; " .
+               "connect-src 'self' https://maps.googleapis.com https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org https://unpkg.com; " .
                "object-src 'none'; " .
                "frame-ancestors 'self'; " .
                "base-uri 'self'; " .
@@ -51,10 +51,11 @@ class SecurityHeaders
                "upgrade-insecure-requests";
         $response->headers->set('Content-Security-Policy', $csp);
 
-        // 8. Cross-Origin Isolation (Paranoid Mode)
-        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
-        $response->headers->set('Cross-Origin-Embedder-Policy', 'require-corp');
-        $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
+        // 8. Cross-Origin Policy
+        // Using 'unsafe-none' for COEP to allow external tile images (OpenStreetMap)
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+        $response->headers->set('Cross-Origin-Embedder-Policy', 'unsafe-none');
+        $response->headers->set('Cross-Origin-Resource-Policy', 'cross-origin');
 
         // 9. Remove Information Leaks
         $response->headers->remove('X-Powered-By');

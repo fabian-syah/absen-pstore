@@ -564,10 +564,21 @@
 
                     {{-- Alamat --}}
                     <div class="mb-3">
-                        <label for="modal-input-address" class="form-label fw-bold small text-dark mb-1">
-                            Alamat Resmi Cabang
-                        </label>
-                        <textarea class="form-control" id="modal-input-address" name="address" rows="2" placeholder="Masukkan alamat lengkap cabang..."></textarea>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="modal-input-address" class="form-label fw-bold small text-dark mb-0">
+                                Alamat Resmi Cabang
+                            </label>
+                            <span id="address-sync-status" class="small text-muted" style="font-size: 11px;">
+                                <i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif
+                            </span>
+                        </div>
+                        <textarea class="form-control" id="modal-input-address" name="address" rows="2" placeholder="Masukkan alamat lengkap cabang (misal: Jl. Condet Raya No. 1, Jakarta Timur)..." oninput="handleAddressInputDebounced()"></textarea>
+                        <div class="form-text small text-muted d-flex justify-content-between align-items-center mt-1">
+                            <span>Ketik alamat cabang, peta akan otomatis bergeser dan koordinat terisi otomatis.</span>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold" onclick="geocodeAddressToMap(true)" style="font-size: 11.5px;">
+                                <i class="mdi mdi-crosshairs-gps me-0.5"></i>Sinkronkan Sekarang
+                            </button>
+                        </div>
                     </div>
 
                     {{-- MAP PICKER CONTAINER --}}
@@ -777,6 +788,13 @@
         const targetRadius = branch.radius || 100;
 
         initOrUpdateModalMap(targetLat, targetLng, targetRadius);
+
+        // Jika cabang belum memiliki koordinat tapi alamat sudah ada, coba auto-geocoding ke peta
+        if ((!branch.latitude || !branch.longitude) && branch.address && branch.address.trim().length > 3) {
+            setTimeout(() => {
+                geocodeAddressToMap(false);
+            }, 600);
+        }
     }
 
     /**
@@ -894,6 +912,106 @@
         }
     }
 
+    let addressGeocodeTimeout = null;
+
+    /**
+     * Debounced handler saat admin mengetik atau mengubah Alamat Resmi Cabang
+     */
+    function handleAddressInputDebounced() {
+        clearTimeout(addressGeocodeTimeout);
+        const syncStatus = document.getElementById('address-sync-status');
+        if (syncStatus) {
+            syncStatus.innerHTML = '<span class="text-primary"><i class="mdi mdi-loading mdi-spin me-0.5"></i>Mengetik alamat...</span>';
+        }
+
+        addressGeocodeTimeout = setTimeout(() => {
+            geocodeAddressToMap(false);
+        }, 850);
+    }
+
+    /**
+     * Otomatis sinkronkan Alamat ke Latitude, Longitude, dan gerakkan peta ke lokasi tersebut
+     */
+    function geocodeAddressToMap(isManual = false) {
+        const addrInput = document.getElementById('modal-input-address');
+        if (!addrInput) return;
+        const query = addrInput.value.trim();
+        const syncStatus = document.getElementById('address-sync-status');
+
+        if (!query || query.length < 3) {
+            if (syncStatus) {
+                syncStatus.innerHTML = '<span class="text-muted"><i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif</span>';
+            }
+            return;
+        }
+
+        if (syncStatus) {
+            syncStatus.innerHTML = '<span class="text-primary"><i class="mdi mdi-loading mdi-spin me-0.5"></i>Mencari di peta...</span>';
+        }
+
+        fetch(`/branches/geocode?q=${encodeURIComponent(query)}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.lat && data.lng) {
+                setCoordsInput(data.lat, data.lng);
+
+                if (modalMap) {
+                    modalMap.flyTo([data.lat, data.lng], 16, { animate: true, duration: 1.0 });
+                }
+
+                if (syncStatus) {
+                    syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+                }
+                showModalGeoHint(`Peta digeser otomatis ke: ${data.display_name.substring(0, 75)}...`, 'success');
+            } else {
+                fallbackClientNominatim(query, isManual, syncStatus);
+            }
+        })
+        .catch(() => {
+            fallbackClientNominatim(query, isManual, syncStatus);
+        });
+    }
+
+    function fallbackClientNominatim(query, isManual, syncStatus) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=id`;
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    const lat = parseFloat(result.lat);
+                    const lng = parseFloat(result.lon);
+                    setCoordsInput(lat, lng);
+
+                    if (modalMap) {
+                        modalMap.flyTo([lat, lng], 16, { animate: true, duration: 1.0 });
+                    }
+
+                    if (syncStatus) {
+                        syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+                    }
+                    showModalGeoHint(`Peta digeser otomatis ke: ${result.display_name.substring(0, 75)}...`, 'success');
+                } else {
+                    if (syncStatus) {
+                        syncStatus.innerHTML = '<span class="text-warning"><i class="mdi mdi-alert-circle me-0.5"></i>Alamat belum cocok di peta</span>';
+                    }
+                    if (isManual) {
+                        showModalGeoHint('Alamat belum ditemukan di peta. Coba tambahkan kelurahan/kecamatan/kota, atau geser pin langsung pada peta.', 'warning');
+                    }
+                }
+            })
+            .catch(() => {
+                if (syncStatus) {
+                    syncStatus.innerHTML = '<span class="text-muted"><i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat & peta aktif</span>';
+                }
+            });
+    }
+
     /**
      * Cari Lokasi di Peta via Nama Tempat, Alamat, atau Link/Koordinat Google Maps
      */
@@ -919,63 +1037,37 @@
             }
         };
 
-        // 1. Cek apakah format URL Google Maps (e.g. @lat,lng atau ?q=lat,lng)
-        const matchUrlAt = query.match(/@([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/);
-        const matchUrlQ = query.match(/[?&]q=([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/);
-        const matchUrl = matchUrlAt || matchUrlQ;
-
-        if (matchUrl) {
-            const lat = parseFloat(matchUrl[1]);
-            const lng = parseFloat(matchUrl[2]);
-            setCoordsInput(lat, lng);
-            resetBtn();
-            showModalGeoHint(`Koordinat berhasil diambil dari link Google Maps: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
-            return;
-        }
-
-        // 2. Cek apakah format teks koordinat (e.g. "-6.2088, 106.8456")
-        const matchCoord = query.match(/^[-+]?[0-9]{1,2}(?:\.[0-9]+)?[,\s]+[-+]?[0-9]{1,3}(?:\.[0-9]+)?$/);
-        if (matchCoord) {
-            const parts = query.split(/[\s,]+/);
-            if (parts.length >= 2) {
-                const lat = parseFloat(parts[0]);
-                const lng = parseFloat(parts[1]);
-                if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                    setCoordsInput(lat, lng);
-                    resetBtn();
-                    showModalGeoHint(`Koordinat berhasil disetel: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
-                    return;
-                }
+        // Panggil endpoint proxy server `/branches/geocode?q=...`
+        fetch(`/branches/geocode?q=${encodeURIComponent(query)}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        }
+        })
+        .then(res => res.json())
+        .then(data => {
+            resetBtn();
+            if (data.success && data.lat && data.lng) {
+                setCoordsInput(data.lat, data.lng);
 
-        // 3. Pencarian Alamat / Nama Tempat via OpenStreetMap Nominatim
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=id`;
-
-        fetch(url, { headers: { 'Accept': 'application/json' } })
-            .then(res => res.json())
-            .then(data => {
-                resetBtn();
-                if (data && data.length > 0) {
-                    const result = data[0];
-                    const lat = parseFloat(result.lat);
-                    const lng = parseFloat(result.lon);
-                    setCoordsInput(lat, lng);
-
-                    const addrInput = document.getElementById('modal-input-address');
-                    if (addrInput && (!addrInput.value || addrInput.value.trim() === '')) {
-                        addrInput.value = result.display_name;
-                    }
-
-                    showModalGeoHint(`Lokasi ditemukan: ${result.display_name.substring(0, 75)}...`, 'success');
-                } else {
-                    showModalGeoHint('Lokasi tidak ditemukan. Coba ketik nama jalan / wilayah lebih lengkap, atau tempel koordinat dari Google Maps.', 'warning');
+                if (modalMap) {
+                    modalMap.flyTo([data.lat, data.lng], 16, { animate: true, duration: 1.0 });
                 }
-            })
-            .catch(err => {
-                resetBtn();
-                showModalGeoHint('Gagal memuat pencarian lokasi online. Silakan klik langsung pada peta atau tempel koordinat.', 'warning');
-            });
+
+                const addrInput = document.getElementById('modal-input-address');
+                if (addrInput && (!addrInput.value || addrInput.value.trim() === '')) {
+                    addrInput.value = data.display_name;
+                }
+
+                showModalGeoHint(`Lokasi ditemukan: ${data.display_name.substring(0, 75)}...`, 'success');
+            } else {
+                showModalGeoHint('Lokasi tidak ditemukan. Coba ketik nama jalan / wilayah lebih lengkap, atau tempel koordinat dari Google Maps.', 'warning');
+            }
+        })
+        .catch(() => {
+            resetBtn();
+            showModalGeoHint('Gagal memuat pencarian lokasi. Silakan klik langsung pada peta atau tempel koordinat.', 'warning');
+        });
     }
 
     /**

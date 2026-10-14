@@ -459,6 +459,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('/branches/{branch}/export-excel', [BranchController::class, 'exportBranchExcel'])->name('branches.export.excel');
         // Setting Geofencing & Titik Lokasi Cabang (Khusus Role Admin)
         Route::get('/branches/setting-lokasi', [BranchController::class, 'geofenceIndex'])->name('branches.geofence.index');
+        Route::get('/branches/geocode', [BranchController::class, 'geocodeAddress'])->name('branches.geocode');
         Route::put('/branches/{branch}/geofence', [BranchController::class, 'updateGeofence'])->name('branches.geofence.update');
         Route::post('/branches/geofence/batch-radius', [BranchController::class, 'batchUpdateRadius'])->name('branches.geofence.batch');
 

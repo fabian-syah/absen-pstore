@@ -67,9 +67,20 @@
 
                         {{-- Alamat Cabang --}}
                         <div class="form-group mb-3">
-                            <label for="address" class="fw-bold mb-1">Alamat Cabang</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="address" class="fw-bold mb-0">Alamat Cabang</label>
+                                <span id="edit-address-sync-status" class="small text-muted" style="font-size: 11px;">
+                                    <i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat aktif
+                                </span>
+                            </div>
                             <textarea class="form-control" id="address" name="address" rows="3" 
-                                placeholder="Masukkan alamat lengkap cabang">{{ old('address', $branch->address) }}</textarea>
+                                placeholder="Masukkan alamat lengkap cabang" oninput="handleEditAddressInputDebounced()">{{ old('address', $branch->address) }}</textarea>
+                            <small class="form-text text-muted d-flex justify-content-between align-items-center mt-1">
+                                <span>Ketik alamat cabang, peta dan koordinat GPS di bawah akan otomatis menyesuaikan posisi.</span>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold" onclick="geocodeEditAddress(true)" style="font-size: 11.5px;">
+                                    <i class="mdi mdi-crosshairs-gps me-0.5"></i>Sinkronkan Sekarang
+                                </button>
+                            </small>
                         </div>
 
                         {{-- GEOFENCING / LOKASI ABSENSI MANDIRI (INTERAKTIF & MAP PICKER) --}}
@@ -292,6 +303,53 @@
                 btn.classList.remove('btn-primary', 'text-white', 'border-primary');
                 btn.classList.add('btn-outline-secondary');
             }
+        });
+    }
+
+    let editAddressTimeout = null;
+
+    function handleEditAddressInputDebounced() {
+        clearTimeout(editAddressTimeout);
+        const statusEl = document.getElementById('edit-address-sync-status');
+        if (statusEl) {
+            statusEl.innerHTML = '<span class="text-primary"><i class="mdi mdi-loading mdi-spin me-0.5"></i>Mengetik alamat...</span>';
+        }
+        editAddressTimeout = setTimeout(() => {
+            geocodeEditAddress(false);
+        }, 850);
+    }
+
+    function geocodeEditAddress(isManual = false) {
+        const addrInput = document.getElementById('address');
+        if (!addrInput) return;
+        const query = addrInput.value.trim();
+        const statusEl = document.getElementById('edit-address-sync-status');
+
+        if (!query || query.length < 3) {
+            if (statusEl) statusEl.innerHTML = '<span class="text-muted"><i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat aktif</span>';
+            return;
+        }
+
+        if (statusEl) {
+            statusEl.innerHTML = '<span class="text-primary"><i class="mdi mdi-loading mdi-spin me-0.5"></i>Mencari di peta...</span>';
+        }
+
+        fetch(`/branches/geocode?q=${encodeURIComponent(query)}`, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.lat && data.lng) {
+                updateEditCoords(data.lat, data.lng);
+                if (editMap) editMap.flyTo([data.lat, data.lng], 16, { animate: true, duration: 1.0 });
+                if (statusEl) statusEl.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+            } else if (isManual) {
+                if (statusEl) statusEl.innerHTML = '<span class="text-warning"><i class="mdi mdi-alert-circle me-0.5"></i>Alamat belum cocok di peta</span>';
+                alert('Alamat belum ditemukan di peta. Coba lengkapi nama kota/kecamatan, atau geser pin langsung pada peta.');
+            }
+        })
+        .catch(() => {
+            if (statusEl) statusEl.innerHTML = '<span class="text-muted"><i class="mdi mdi-auto-fix text-primary me-0.5"></i>Auto-sync koordinat aktif</span>';
         });
     }
 
