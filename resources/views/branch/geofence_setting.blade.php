@@ -1109,6 +1109,38 @@
             return;
         }
 
+        // 1. Cek apakah input adalah Koordinat Desimal Langsung ("-7.2987, 112.7597")
+        const decimalCoordMatch = query.match(/^[-+]?[0-9]{1,2}(?:\.[0-9]+)?[,\s]+[-+]?[0-9]{1,3}(?:\.[0-9]+)?$/);
+        if (decimalCoordMatch) {
+            const parts = query.split(/[\s,]+/);
+            const lat = parseFloat(parts[0]);
+            const lng = parseFloat(parts[1]);
+            if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                setCoordsInput(lat, lng);
+                if (modalMap) modalMap.flyTo([lat, lng], 17, { animate: true });
+                if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+                showModalGeoHint(`Koordinat langsung diterapkan: ${lat}, ${lng}`, 'success');
+                resetSyncButton();
+                return;
+            }
+        }
+
+        // 2. Cek apakah input adalah Koordinat Derajat DMS (Contoh: 6°16'38.3"S 106°51'18.6"E)
+        const dmsMatch = query.match(/([0-9]{1,2})\s*[°]\s*([0-9]{1,2})\s*['′]\s*([0-9]{1,2}(?:\.[0-9]+)?)\s*["″]?\s*([NSns])\s*,?\s*([0-9]{1,3})\s*[°]\s*([0-9]{1,2})\s*['′]\s*([0-9]{1,2}(?:\.[0-9]+)?)\s*["″]?\s*([EWew])/i);
+        if (dmsMatch) {
+            let lat = parseFloat(dmsMatch[1]) + (parseFloat(dmsMatch[2]) / 60) + (parseFloat(dmsMatch[3]) / 3600);
+            if (dmsMatch[4].toUpperCase() === 'S') lat = -lat;
+            let lng = parseFloat(dmsMatch[5]) + (parseFloat(dmsMatch[6]) / 60) + (parseFloat(dmsMatch[7]) / 3600);
+            if (dmsMatch[8].toUpperCase() === 'W') lng = -lng;
+
+            setCoordsInput(lat, lng);
+            if (modalMap) modalMap.flyTo([lat, lng], 17, { animate: true });
+            if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+            showModalGeoHint(`Koordinat GPS diterapkan: ${lat.toFixed(7)}, ${lng.toFixed(7)}`, 'success');
+            resetSyncButton();
+            return;
+        }
+
         if (syncStatus) {
             syncStatus.innerHTML = '<span class="text-primary"><i class="mdi mdi-loading mdi-spin me-0.5"></i>Mencari di peta...</span>';
         }
@@ -1149,14 +1181,18 @@
     }
 
     function fallbackClientNominatim(query, isManual, syncStatus) {
-        // Bersihkan komponen RT/RW / No sebelum dikirim ke client OSM
-        let cleanQuery = query.replace(/RT\.?\s*\d+\s*\/?\s*RW\.?\s*\d+/gi, '')
-                              .replace(/No\.?\s*[\w\/-]+/gi, '')
-                              .replace(/\b\d{5}\b/g, '')
-                              .replace(/\b(Daerah Khusus Ibukota|DKI)\b/gi, '')
-                              .replace(/[,\s]+/g, ' ').trim();
+        // Bersihkan komponen RT/RW / No
+        let clean = query.replace(/RT\.?\s*\d+\s*\/?\s*RW\.?\s*\d+/gi, '')
+                         .replace(/No\.?\s*[\w\/-]+/gi, '')
+                         .replace(/\b\d{5}\b/g, '')
+                         .replace(/\b(Daerah Khusus Ibukota|DKI)\b/gi, '')
+                         .replace(/[,\s]+/g, ' ').trim();
 
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery || query)}&limit=1&countrycodes=id`;
+        // Coba juga versi tanpa kata "Raya" (karena data peta sering tidak memakai kata Raya)
+        let cleanWithoutRaya = clean.replace(/\bRaya\b/gi, '').replace(/[,\s]+/g, ' ').trim();
+        let targetQuery = cleanWithoutRaya || clean || query;
+
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(targetQuery)}&limit=1&countrycodes=id`;
         fetch(url, { headers: { 'Accept': 'application/json' } })
             .then(res => res.json())
             .then(data => {
@@ -1180,7 +1216,7 @@
                         syncStatus.innerHTML = '<span class="text-warning"><i class="mdi mdi-alert-circle me-0.5"></i>Alamat belum cocok di peta</span>';
                     }
                     if (isManual) {
-                        showModalGeoHint('Alamat belum ditemukan otomatis. Anda dapat menggeser pin biru langsung pada peta.', 'warning');
+                        showModalGeoHint('Alamat belum ditemukan otomatis. Anda dapat menggeser pin biru langsung pada peta atau menempel koordinat.', 'warning');
                     }
                 }
             })

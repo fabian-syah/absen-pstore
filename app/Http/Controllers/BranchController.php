@@ -514,9 +514,25 @@ class BranchController extends Controller
             ]);
         }
 
-        // 2. Cek apakah format koordinat numerik langsung ("-6.2088, 106.8456")
-        if (preg_match('/^[-+]?[0-9]{1,2}(?:\.[0-9]+)?[,\s]+[-+]?[0-9]{1,3}(?:\.[0-9]+)?$/', $query)) {
-            $parts = preg_split('/[\s,]+/', $query);
+        // 2a. Cek format koordinat DMS (Derajat Menit Detik, contoh: 6°16'38.3"S 106°51'18.6"E)
+        if (preg_match('/([0-9]{1,2})\s*[\x{00B0}\°]\s*([0-9]{1,2})\s*[\'′]\s*([0-9]{1,2}(?:\.[0-9]+)?)\s*["″]?\s*([NSns])\s*,?\s*([0-9]{1,3})\s*[\x{00B0}\°]\s*([0-9]{1,2})\s*[\'′]\s*([0-9]{1,2}(?:\.[0-9]+)?)\s*["″]?\s*([EWew])/u', $query, $dms)) {
+            $lat = (float)$dms[1] + ((float)$dms[2] / 60) + ((float)$dms[3] / 3600);
+            if (strtoupper($dms[4]) === 'S') $lat = -$lat;
+
+            $lng = (float)$dms[5] + ((float)$dms[6] / 60) + ((float)$dms[7] / 3600);
+            if (strtoupper($dms[8]) === 'W') $lng = -$lng;
+
+            return response()->json([
+                'success' => true,
+                'lat' => round($lat, 7),
+                'lng' => round($lng, 7),
+                'display_name' => "Koordinat GPS: " . trim($query),
+            ]);
+        }
+
+        // 2b. Cek apakah format koordinat numerik langsung ("-6.2088, 106.8456")
+        if (preg_match('/^[-+]?[0-9]{1,2}(?:\.[0-9]+)?[,\s]+[-+]?[0-9]{1,3}(?:\.[0-9]+)?$/', trim($query))) {
+            $parts = preg_split('/[\s,]+/', trim($query));
             if (count($parts) >= 2) {
                 $lat = (float)$parts[0];
                 $lng = (float)$parts[1];
@@ -525,7 +541,7 @@ class BranchController extends Controller
                         'success' => true,
                         'lat' => $lat,
                         'lng' => $lng,
-                        'display_name' => 'Koordinat langsung',
+                        'display_name' => "Koordinat langsung ({$lat}, {$lng})",
                     ]);
                 }
             }
@@ -539,7 +555,7 @@ class BranchController extends Controller
         $meaningfulParts = [];
         $streetPart = '';
         $cityPart = '';
-        $subdistrictPart = '';
+        $subdistrictParts = [];
 
         foreach ($rawParts as $idx => $part) {
             // Lewati RT/RW
@@ -563,37 +579,78 @@ class BranchController extends Controller
                     $meaningfulParts[] = $streetPart;
                 }
             } else {
-                if (stripos($part, 'Jakarta') !== false || stripos($part, 'Kota') !== false || stripos($part, 'Kabupaten') !== false || stripos($part, 'Makassar') !== false || stripos($part, 'Surabaya') !== false) {
-                    $cityPart = trim(preg_replace('/\b(Kota|Kabupaten|Daerah Khusus Ibukota|DKI)\s*/i', '', $cleanedPart));
+                // Deteksi Kota/Kabupaten
+                if (preg_match('/\b(Kota|Kabupaten|Kab\.)\b/i', $part) ||
+                    stripos($part, 'Jakarta') !== false || stripos($part, 'Surabaya') !== false ||
+                    stripos($part, 'Bandung') !== false || stripos($part, 'Medan') !== false ||
+                    stripos($part, 'Makassar') !== false || stripos($part, 'Semarang') !== false ||
+                    stripos($part, 'Palembang') !== false || stripos($part, 'Batam') !== false ||
+                    stripos($part, 'Pekanbaru') !== false || stripos($part, 'Malang') !== false ||
+                    stripos($part, 'Yogyakarta') !== false || stripos($part, 'Jogja') !== false ||
+                    stripos($part, 'Denpasar') !== false || stripos($part, 'Solo') !== false ||
+                    stripos($part, 'Surakarta') !== false || stripos($part, 'Bekasi') !== false ||
+                    stripos($part, 'Tangerang') !== false || stripos($part, 'Depok') !== false ||
+                    stripos($part, 'Bogor') !== false) {
+                    $cityPart = trim(preg_replace('/\b(Kota|Kabupaten|Kab\.|Daerah Khusus Ibukota|DKI)\s*/i', '', $cleanedPart));
                 }
+
                 $cleanSub = trim(preg_replace('/\b(Kec\.|Kel\.|Kecamatan|Kelurahan)\s*/i', '', $cleanedPart));
                 if (!empty($cleanSub)) {
-                    if (empty($subdistrictPart) && $idx <= 2) {
-                        $subdistrictPart = $cleanSub;
-                    }
+                    $subdistrictParts[] = $cleanSub;
                     $meaningfulParts[] = $cleanSub;
                 }
             }
         }
 
-        // Prioritas 1: Alamat bersih berstruktur koma (Contoh: "Jl. Raya Condet, Batu Ampar, Kramat Jati, Jakarta Timur")
+        // Variasi nama jalan (dengan & tanpa kata "Raya", serta tanpa prefix "Jl.")
+        $streetVariants = [];
+        if (!empty($streetPart)) {
+            $streetVariants[] = $streetPart;
+
+            // Variasi tanpa kata "Raya" (misal: "Jl. Raya Bratang Binangun" -> "Jl. Bratang Binangun")
+            $withoutRaya = trim(preg_replace('/\bRaya\s*/i', '', $streetPart));
+            if (!empty($withoutRaya) && $withoutRaya !== $streetPart) {
+                $streetVariants[] = $withoutRaya;
+            }
+
+            // Variasi nama inti jalan saja (misal: "Bratang Binangun")
+            $coreRoad = trim(preg_replace('/^(?:Jl\.?|Jalan)\s+/i', '', $streetPart));
+            if (!empty($coreRoad)) {
+                $streetVariants[] = $coreRoad;
+                $coreWithoutRaya = trim(preg_replace('/\bRaya\s*/i', '', $coreRoad));
+                if (!empty($coreWithoutRaya) && $coreWithoutRaya !== $coreRoad) {
+                    $streetVariants[] = $coreWithoutRaya;
+                }
+            }
+        }
+        $streetVariants = array_unique(array_filter($streetVariants));
+
+        // Prioritas 1: Alamat bersih berstruktur koma
         if (count($meaningfulParts) >= 2) {
             $searchCandidates[] = implode(', ', $meaningfulParts);
         }
 
-        // Prioritas 2: Jalan + Kelurahan / Kecamatan + Kota (Contoh: "Jl. Raya Condet, Batu Ampar, Jakarta Timur")
-        if (!empty($streetPart) && !empty($subdistrictPart) && !empty($cityPart)) {
-            $searchCandidates[] = "{$streetPart}, {$subdistrictPart}, {$cityPart}";
+        // Prioritas 2 & 3: Setiap variasi jalan dipadukan dengan wilayah
+        foreach ($streetVariants as $st) {
+            if (!empty($subdistrictParts) && !empty($cityPart)) {
+                $searchCandidates[] = "{$st}, {$subdistrictParts[0]}, {$cityPart}";
+                if (count($subdistrictParts) > 1) {
+                    $searchCandidates[] = "{$st}, {$subdistrictParts[1]}, {$cityPart}";
+                }
+            }
+            if (!empty($cityPart)) {
+                $searchCandidates[] = "{$st}, {$cityPart}";
+            }
+            if (!empty($subdistrictParts)) {
+                $searchCandidates[] = "{$st}, {$subdistrictParts[0]}";
+            }
         }
 
-        // Prioritas 3: Jalan + Kota (Contoh: "Jl. Raya Condet, Jakarta Timur")
-        if (!empty($streetPart) && !empty($cityPart)) {
-            $searchCandidates[] = "{$streetPart}, {$cityPart}";
-        }
-
-        // Prioritas 4: Jalan + Kelurahan / Kecamatan (Contoh: "Jl. Raya Condet, Batu Ampar")
-        if (!empty($streetPart) && !empty($subdistrictPart)) {
-            $searchCandidates[] = "{$streetPart}, {$subdistrictPart}";
+        // Prioritas 4: Wilayah Kelurahan / Kecamatan + Kota jika nama jalan tidak terindeks
+        foreach ($subdistrictParts as $sub) {
+            if (!empty($cityPart)) {
+                $searchCandidates[] = "{$sub}, {$cityPart}";
+            }
         }
 
         // Prioritas 5: Query mentah asli
