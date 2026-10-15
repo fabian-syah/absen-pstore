@@ -307,11 +307,14 @@
             if (imgElement) {
                 imgElement.src = imageUrl;
             }
-            try {
-                $('#imageModal').modal('show');
-            } catch (e) {
-                var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-                myModal.show();
+            var modalEl = document.getElementById('imageModal');
+            if (modalEl) {
+                if (window.bootstrap && window.bootstrap.Modal) {
+                    var myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    myModal.show();
+                } else if (window.$ && $.fn && $.fn.modal) {
+                    $('#imageModal').modal('show');
+                }
             }
         };
 

@@ -39,11 +39,12 @@ class SecurityHeaders
  
         // 7. Content Security Policy (CSP)
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://maps.googleapis.com https://unpkg.com; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://maps.googleapis.com https://unpkg.com https://www.gstatic.com https://code.jquery.com; " .
                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com; " .
                "font-src 'self' https://fonts.gstatic.com data:; " .
                "img-src 'self' data: https: blob:; " .
-               "connect-src 'self' https://maps.googleapis.com https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org https://*.google.com https://server.arcgisonline.com https://unpkg.com; " .
+               "connect-src 'self' https://maps.googleapis.com https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org https://*.google.com https://*.googleapis.com https://*.firebaseio.com https://server.arcgisonline.com https://unpkg.com; " .
+               "worker-src 'self' blob:; " .
                "object-src 'none'; " .
                "frame-ancestors 'self'; " .
                "base-uri 'self'; " .

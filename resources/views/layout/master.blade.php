@@ -1247,15 +1247,22 @@
         };
         console.log("🔥 Firebase Config:", firebaseConfig); // DEBUG LOG
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        var messaging = null;
+        if (typeof firebase !== 'undefined' && firebase && firebase.apps) {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            try {
+                messaging = firebase.messaging();
+            } catch (err) {
+                console.warn("FCM messaging init error:", err);
+            }
         }
-
-        const messaging = firebase.messaging();
 
         @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji'))
             function sendTokenToServer(token) {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
                 fetch("{{ route('update.fcm.token') }}", {
                     method: "POST",
                     headers: {
@@ -1269,31 +1276,33 @@
             }
 
 
-            messaging.onMessage((payload) => {
-                console.log("🔥 Foreground Message Received:", payload); // DEBUG LOG
-                const title = (payload.notification && payload.notification.title) 
-                    || (payload.data && payload.data.title) 
-                    || "Notifikasi Baru";
-                const body = (payload.notification && payload.notification.body) 
-                    || (payload.data && payload.data.body) 
-                    || "";
-                const url = (payload.data && payload.data.url) 
-                    || (payload.data && payload.data.click_action) 
-                    || '/';
+            if (messaging && typeof messaging.onMessage === 'function') {
+                messaging.onMessage((payload) => {
+                    console.log("🔥 Foreground Message Received:", payload); // DEBUG LOG
+                    const title = (payload.notification && payload.notification.title) 
+                        || (payload.data && payload.data.title) 
+                        || "Notifikasi Baru";
+                    const body = (payload.notification && payload.notification.body) 
+                        || (payload.data && payload.data.body) 
+                        || "";
+                    const url = (payload.data && payload.data.url) 
+                        || (payload.data && payload.data.click_action) 
+                        || '/';
 
-                if (Notification.permission === 'granted') {
-                    var notif = new Notification(title, {
-                        body: body,
-                        icon: '/assets/images/logo-mini.svg',
-                        tag: 'push-alert-' + Date.now()
-                    });
-                    notif.onclick = function () {
-                        window.focus();
-                        window.location.href = url;
-                        this.close();
-                    };
-                }
-            });
+                    if (Notification.permission === 'granted') {
+                        var notif = new Notification(title, {
+                            body: body,
+                            icon: '/assets/images/logo-mini.svg',
+                            tag: 'push-alert-' + Date.now()
+                        });
+                        notif.onclick = function () {
+                            window.focus();
+                            window.location.href = url;
+                            this.close();
+                        };
+                    }
+                });
+            }
         @endif
     </script>
 
@@ -1340,12 +1349,14 @@
                 function performSubscription(registration) {
                     // 1. Firebase Messaging (Only for specific roles)
                     @if(auth()->check() && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin' || auth()->user()->role == 'admin_gaji'))
-                    messaging.getToken({
-                        vapidKey: "{{ config('services.firebase.vapid_key') }}",
-                        serviceWorkerRegistration: registration
-                    }).then(function(token) {
-                        if (token) sendTokenToServer(token);
-                    }).catch(function(e) { console.log('FCM Token Error:', e); });
+                    if (typeof messaging !== 'undefined' && messaging && typeof messaging.getToken === 'function') {
+                        messaging.getToken({
+                            vapidKey: "{{ config('services.firebase.vapid_key') }}",
+                            serviceWorkerRegistration: registration
+                        }).then(function(token) {
+                            if (token) sendTokenToServer(token);
+                        }).catch(function(e) { console.log('FCM Token Error:', e); });
+                    }
                     @endif
 
                     // 2. VAPID Web Push (For ALL roles)

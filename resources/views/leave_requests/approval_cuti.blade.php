@@ -222,13 +222,17 @@
         // FUNGSI UNTUK PREVIEW GAMBAR
         window.showImageModal = function (imageUrl) {
             var imgElement = document.getElementById('modalImagePreview');
-            imgElement.src = imageUrl;
-
-            try {
-                var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-                myModal.show();
-            } catch (e) {
-                $('#imageModal').modal('show');
+            if (imgElement) {
+                imgElement.src = imageUrl;
+            }
+            var modalEl = document.getElementById('imageModal');
+            if (modalEl) {
+                if (window.bootstrap && window.bootstrap.Modal) {
+                    var myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    myModal.show();
+                } else if (window.$ && $.fn && $.fn.modal) {
+                    $('#imageModal').modal('show');
+                }
             }
         };
     </script>

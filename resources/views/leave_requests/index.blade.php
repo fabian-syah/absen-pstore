@@ -826,8 +826,41 @@
         </div>
     </div>
 
-    {{-- SCRIPTS --}}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {{-- SCRIPT DEFINISI GLOBAL (LANGSUNG TERSEDIA SAAT KLIK TANPA MENUNGGU DEPENDENCY LAIN) --}}
+    <script>
+        window.showImageModal = function (imageUrl) {
+            var imgElement = document.getElementById('modalImagePreview');
+            if (imgElement) {
+                imgElement.src = imageUrl;
+            }
+            var modalEl = document.getElementById('imageModal');
+            if (modalEl) {
+                if (window.bootstrap && window.bootstrap.Modal) {
+                    var myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    myModal.show();
+                } else if (window.$ && $.fn && $.fn.modal) {
+                    $('#imageModal').modal('show');
+                }
+            }
+        };
+
+        window.openRejectModal = function (reqId, actionUrl) {
+            var modalElement = document.getElementById('rejectModalDynamic');
+            var formElement = document.getElementById('formRejectDynamic');
+            if (formElement) formElement.action = actionUrl;
+            if (modalElement) {
+                if (window.bootstrap && window.bootstrap.Modal) {
+                    var myModal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                    myModal.show();
+                } else if (window.$ && $.fn && $.fn.modal) {
+                    $(modalElement).modal('show');
+                }
+            }
+        };
+    </script>
+@endsection
+
+@push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -1423,4 +1456,4 @@
         };
         @endif
     </script>
-@endsection
+@endpush
