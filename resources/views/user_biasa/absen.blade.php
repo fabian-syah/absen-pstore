@@ -1395,7 +1395,10 @@
                     coordDisplay.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
                     accBadge.textContent = `±${Math.round(accuracy)}m`;
                     accBadge.className = 'info-badge success';
-                    if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
+                    if (gpsPermissionHelp) {
+                        gpsPermissionHelp.classList.add('d-none');
+                        gpsPermissionHelp.innerHTML = '';
+                    }
 
                     let matchedBranch = null;
                     let isCross = false;
@@ -1492,6 +1495,11 @@
                     checkGlobalValidity();
                 },
                 err => {
+                    // Jika koordinat sudah berhasil didapatkan, abaikan error yang tertunda
+                    if (latInput.value !== '') {
+                        return;
+                    }
+
                     if (highAccuracy && err.code === 3) {
                         getLocation(false);
                         return;
@@ -1503,6 +1511,7 @@
 
                         if (navigator.permissions && navigator.permissions.query) {
                             navigator.permissions.query({ name: 'geolocation' }).then(p => {
+                                if (latInput.value !== '') return; // Jangan timpa jika lokasi sudah terkunci
                                 if (p.state === 'granted') {
                                     // Izin di browser sudah aktif (toggle gembok ON), tetapi Windows Location Services mati
                                     coordDisplay.textContent = 'Layanan Lokasi Windows/Perangkat Mati';
@@ -1518,7 +1527,7 @@
                                     }
                                 }
                             }).catch(() => {
-                                if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
+                                if (latInput.value === '' && gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
                             });
                         } else {
                             if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
@@ -1529,7 +1538,7 @@
                         accBadge.className = 'info-badge error';
                     }
 
-                    if (stepGpsStatus) {
+                    if (stepGpsStatus && latInput.value === '') {
                         stepGpsStatus.textContent = err.code === 1 ? 'Izin Ditolak' : 'Gagal';
                         stepGpsStatus.className = 'badge-step-status text-danger';
                     }
