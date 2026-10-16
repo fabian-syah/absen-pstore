@@ -43,7 +43,7 @@ class SecurityHeaders
                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com; " .
                "font-src 'self' https://fonts.gstatic.com data:; " .
                "img-src 'self' data: https: blob:; " .
-               "connect-src 'self' https://maps.googleapis.com https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org https://*.google.com https://*.googleapis.com https://*.firebaseio.com https://server.arcgisonline.com https://unpkg.com; " .
+               "connect-src 'self' https://maps.googleapis.com https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org https://*.google.com https://*.googleapis.com https://*.gstatic.com https://www.gstatic.com https://*.firebaseio.com https://server.arcgisonline.com https://unpkg.com https://dummyjson.com https://api.mymemory.translated.net https://api.aladhan.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " .
                "worker-src 'self' blob:; " .
                "object-src 'none'; " .
                "frame-ancestors 'self'; " .

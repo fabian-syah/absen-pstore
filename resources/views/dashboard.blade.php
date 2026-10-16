@@ -5473,8 +5473,9 @@
 
 
             // Handle Delete Attendance Day
-            if (btnDeleteDay) {
-                btnDeleteDay.addEventListener('click', function() {
+            const btnDeleteAttendanceDay = document.getElementById('btnDeleteDay');
+            if (btnDeleteAttendanceDay) {
+                btnDeleteAttendanceDay.addEventListener('click', function() {
                     if (!currentCellData.userId || !currentCellData.date) return;
                     const confirmMsg = `HAPUS BERSIH: Yakin ingin menghapus semua data (Absen & Izin/Libur) untuk karyawan "${currentCellData.userName}" pada tanggal ${currentCellData.dateFormatted}?\n\nData absensi hari ini akan dihapus dan kembali bersih (seperti belum pernah absen).`;
                     if (confirm(confirmMsg)) {
