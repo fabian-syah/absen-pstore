@@ -275,7 +275,7 @@
                                     <small class="text-muted" style="font-size: 11px;">Penempatan: {{ Auth::user()->branch->name ?? 'Cabang Pusat' }}</small>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-primary btn-refresh-gps" onclick="getLocation(true)" title="Perbarui Titik Lokasi">
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-refresh-gps" id="btn-refresh-gps" onclick="window.getLocation ? window.getLocation(true) : null" title="Perbarui Titik Lokasi">
                                 <i class="mdi mdi-refresh me-1"></i> Perbarui
                             </button>
                         </div>
@@ -992,6 +992,13 @@
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
 
 <script>
+    // Global bridge for getLocation to avoid ReferenceError on early clicks
+    window.getLocation = function(highAccuracy = true) {
+        if (typeof window._doGetLocation === 'function') {
+            window._doGetLocation(highAccuracy);
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
         // === CONFIGURATIONS ===
         const AI_INPUT_SIZE = 160;
@@ -1507,6 +1514,16 @@
                 },
                 { enableHighAccuracy: highAccuracy, timeout: 15000, maximumAge: 0 }
             );
+        }
+        window._doGetLocation = getLocation;
+        window.getLocation = getLocation;
+
+        const btnRefreshGps = document.getElementById('btn-refresh-gps');
+        if (btnRefreshGps) {
+            btnRefreshGps.addEventListener('click', function (e) {
+                e.preventDefault();
+                getLocation(true);
+            });
         }
 
         // Auto trigger GPS on initial page load
