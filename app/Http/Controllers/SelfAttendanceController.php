@@ -135,6 +135,10 @@ class SelfAttendanceController extends Controller
         $allBranchesGeofence = \App\Models\Branch::whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->whereNotNull('radius')
+            ->where('latitude', '!=', '')
+            ->where('longitude', '!=', '')
+            ->where('latitude', '!=', 0)
+            ->where('longitude', '!=', 0)
             ->where('radius', '>', 0)
             ->get(['id', 'name', 'latitude', 'longitude', 'radius']);
 
@@ -185,48 +189,81 @@ class SelfAttendanceController extends Controller
         $userLng = (float) $request->longitude;
 
         if ($userLat != 0.0 && $userLng != 0.0) {
-            if ($primaryBranch && method_exists($primaryBranch, 'hasGeofence') && $primaryBranch->hasGeofence()) {
-                $distanceToPrimary = $primaryBranch->calculateDistanceTo($userLat, $userLng);
-                $distanceFromBranch = round($distanceToPrimary);
+            $hasPrimaryGeofence = ($primaryBranch && method_exists($primaryBranch, 'hasGeofence') && $primaryBranch->hasGeofence());
+            $matchedBranch = null;
+            $matchedDistance = null;
+            $isCross = false;
 
-                if ($distanceToPrimary <= $primaryBranch->radius) {
-                    $activeBranchForAttendance = $primaryBranch;
-                    $isUnknownLocation = false;
-                } else {
-                    // Cek cabang PStore lainnya jika karyawan sedang jadwal di cabang lain (seperti Toddopuli)
-                    $otherBranches = \App\Models\Branch::where('id', '!=', $primaryBranch->id)
-                        ->whereNotNull('latitude')
-                        ->whereNotNull('longitude')
-                        ->whereNotNull('radius')
-                        ->where('radius', '>', 0)
-                        ->get();
+            // 1. Cek cabang utama jika memiliki geofence aktif
+            if ($hasPrimaryGeofence) {
+                $distPrimary = $primaryBranch->calculateDistanceTo($userLat, $userLng);
+                $distanceFromBranch = round($distPrimary);
 
-                    $foundOtherBranch = null;
-                    foreach ($otherBranches as $otherBranch) {
-                        $distOther = $otherBranch->calculateDistanceTo($userLat, $userLng);
-                        if ($distOther <= $otherBranch->radius) {
-                            $foundOtherBranch = $otherBranch;
-                            break;
+                if ($distPrimary <= $primaryBranch->radius) {
+                    $matchedBranch = $primaryBranch;
+                    $matchedDistance = $distPrimary;
+                    $isCross = false;
+                }
+            }
+
+            // 2. Jika tidak cocok di cabang utama (atau cabang utama belum disetting radius),
+            // cek apakah berada di dalam radius cabang PStore lainnya (kunjungan / rotasi jadwal / lintas cabang)
+            if (!$matchedBranch) {
+                $otherBranchesQuery = \App\Models\Branch::whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->whereNotNull('radius')
+                    ->where('latitude', '!=', '')
+                    ->where('longitude', '!=', '')
+                    ->where('latitude', '!=', 0)
+                    ->where('longitude', '!=', 0)
+                    ->where('radius', '>', 0);
+
+                if ($primaryBranch) {
+                    $otherBranchesQuery->where('id', '!=', $primaryBranch->id);
+                }
+
+                $otherBranches = $otherBranchesQuery->get();
+
+                $closestBranch = null;
+                $closestDistance = null;
+
+                foreach ($otherBranches as $otherBranch) {
+                    $distOther = $otherBranch->calculateDistanceTo($userLat, $userLng);
+                    if ($distOther <= $otherBranch->radius) {
+                        if ($closestDistance === null || $distOther < $closestDistance) {
+                            $closestBranch = $otherBranch;
+                            $closestDistance = $distOther;
                         }
                     }
-
-                    if ($foundOtherBranch) {
-                        $activeBranchForAttendance = $foundOtherBranch;
-                        $isCrossBranch = true;
-                        $isUnknownLocation = false;
-                    } else {
-                        // Sesuai kebijakan: Karyawan tetap bisa absen walau di luar radius,
-                        // tetapi status lokasi ditandai "Unknown"
-                        $isUnknownLocation = true;
-                    }
                 }
-            } else {
-                // Cabang belum di-setting radius / geofence:
-                // Berjalan normal persis seperti awal default tanpa perubahan apa pun
-                $activeBranchForAttendance = $primaryBranch;
-                $isCrossBranch = false;
+
+                if ($closestBranch) {
+                    $matchedBranch = $closestBranch;
+                    $matchedDistance = $closestDistance;
+                    $isCross = ($primaryBranch ? ($closestBranch->id !== $primaryBranch->id) : true);
+                }
+            }
+
+            // 3. Tentukan status akhir absensi
+            if ($matchedBranch) {
+                $activeBranchForAttendance = $matchedBranch;
+                $isCrossBranch = $isCross;
                 $isUnknownLocation = false;
-                $distanceFromBranch = null;
+                $distanceFromBranch = round($matchedDistance);
+            } else {
+                // Di luar radius semua cabang yang memiliki geofence
+                if ($hasPrimaryGeofence) {
+                    $activeBranchForAttendance = $primaryBranch;
+                    $isCrossBranch = false;
+                    $isUnknownLocation = true;
+                } else {
+                    // Cabang utama belum disetting geofence & tidak berada di cabang lain manapun:
+                    // Berjalan normal default
+                    $activeBranchForAttendance = $primaryBranch;
+                    $isCrossBranch = false;
+                    $isUnknownLocation = false;
+                    $distanceFromBranch = null;
+                }
             }
         }
 
@@ -334,7 +371,7 @@ class SelfAttendanceController extends Controller
             }
 
             $crossNote = $isCrossBranch ? "[Lokasi: {$activeBranchForAttendance->name} (Lintas Cabang)] " : "";
-            $unknownNote = $isUnknownLocation ? "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari {$primaryBranch->name})" : "") . "] " : "";
+            $unknownNote = $isUnknownLocation ? "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari " . ($primaryBranch?->name ?? 'Cabang') . ")" : "") . "] " : "";
             $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $unknownNote . $crossNote . $extraNote . "Pulang (Selfie)" . $userNote;
 
             $updateCheckoutData = [
@@ -414,7 +451,7 @@ class SelfAttendanceController extends Controller
             $finalNotes = $request->notes;
 
             if ($isUnknownLocation) {
-                $unknownNote = "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari {$primaryBranch->name})" : "") . "]";
+                $unknownNote = "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari " . ($primaryBranch?->name ?? 'Cabang') . ")" : "") . "]";
                 $finalNotes = ($finalNotes ? $finalNotes . " | " : "") . $unknownNote;
             } elseif ($isCrossBranch) {
                 $crossNote = "[Lokasi: {$activeBranchForAttendance->name} (Lintas Cabang)]";
@@ -454,7 +491,7 @@ class SelfAttendanceController extends Controller
             if ($existingAttendanceToday) {
                 $locNote = "";
                 if ($isUnknownLocation) {
-                    $locNote = "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari {$primaryBranch->name})" : "") . "] ";
+                    $locNote = "[Lokasi: Unknown" . ($distanceFromBranch ? " ({$distanceFromBranch}m dari " . ($primaryBranch?->name ?? 'Cabang') . ")" : "") . "] ";
                 } elseif ($isCrossBranch) {
                     $locNote = "[Lokasi: {$activeBranchForAttendance->name} (Lintas Cabang)] ";
                 }

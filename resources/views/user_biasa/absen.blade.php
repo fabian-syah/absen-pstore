@@ -1390,57 +1390,75 @@
                     accBadge.className = 'info-badge success';
                     if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
 
+                    let matchedBranch = null;
+                    let isCross = false;
+
+                    // 1. Cek cabang utama (jika cabang utama memiliki konfigurasi geofence)
                     if (hasBranchGeofence) {
-                        // 1. Cek cabang utama
                         const distPrimary = calculateDistanceInMeters(latitude, longitude, branchLat, branchLng);
                         currentDistanceToBranch = distPrimary;
-
-                        let matchedBranch = null;
-                        let isCross = false;
 
                         if (distPrimary <= branchRadius) {
                             matchedBranch = { name: branchName, dist: distPrimary, radius: branchRadius };
                             isCross = false;
-                        } else {
-                            // 2. Cek cabang PStore lain jika rotasi jadwal
-                            if (Array.isArray(allBranchesGeofence) && allBranchesGeofence.length > 0) {
-                                for (let b of allBranchesGeofence) {
-                                    if (b.latitude && b.longitude && b.radius) {
-                                        if (b.name === branchName) continue;
+                        }
+                    }
 
-                                        const d = calculateDistanceInMeters(latitude, longitude, parseFloat(b.latitude), parseFloat(b.longitude));
-                                        if (d <= parseInt(b.radius)) {
-                                            matchedBranch = { id: b.id, name: b.name, dist: d, radius: parseInt(b.radius) };
-                                            isCross = true;
-                                            break;
-                                        }
+                    // 2. Jika di luar cabang utama ATAU cabang utama belum disetting radius geofence,
+                    // periksa apakah user berada di dalam radius cabang PStore lainnya (misal lintas cabang / rotasi jadwal)
+                    if (!matchedBranch && Array.isArray(allBranchesGeofence) && allBranchesGeofence.length > 0) {
+                        let closestBranch = null;
+                        let minDistance = Infinity;
+
+                        for (let b of allBranchesGeofence) {
+                            if (b.latitude && b.longitude && b.radius) {
+                                // Jika cabang utama punya geofence dan nama sama, sudah dicek di atas
+                                if (hasBranchGeofence && b.name === branchName) continue;
+
+                                const bLat = parseFloat(b.latitude);
+                                const bLng = parseFloat(b.longitude);
+                                const bRad = parseInt(b.radius);
+                                if (isNaN(bLat) || isNaN(bLng) || isNaN(bRad) || bRad <= 0) continue;
+
+                                const d = calculateDistanceInMeters(latitude, longitude, bLat, bLng);
+                                if (d <= bRad) {
+                                    if (d < minDistance) {
+                                        minDistance = d;
+                                        closestBranch = { id: b.id, name: b.name, dist: d, radius: bRad };
                                     }
                                 }
                             }
                         }
 
-                        // 3. Terapkan hasil pencocokan
-                        if (matchedBranch) {
-                            isWithinRadius = true;
-                            activeMatchedBranchName = matchedBranch.name;
-                            isCrossBranchAttendance = isCross;
-                            currentDistanceToBranch = matchedBranch.dist;
-                            updateGeofenceDisplay(matchedBranch.dist, matchedBranch.name, isCross, matchedBranch.radius);
-                        } else {
-                            // Di luar radius semua cabang -> Unknown
+                        if (closestBranch) {
+                            matchedBranch = closestBranch;
+                            isCross = (closestBranch.name !== branchName);
+                        }
+                    }
+
+                    // 3. Terapkan hasil pencocokan
+                    const geofenceBox = document.getElementById('geofence-status-box');
+                    if (matchedBranch) {
+                        isWithinRadius = true;
+                        activeMatchedBranchName = matchedBranch.name;
+                        isCrossBranchAttendance = isCross;
+                        currentDistanceToBranch = matchedBranch.dist;
+                        updateGeofenceDisplay(matchedBranch.dist, matchedBranch.name, isCross, matchedBranch.radius);
+                    } else {
+                        // User tidak berada di dalam radius cabang manapun
+                        isCrossBranchAttendance = false;
+                        if (hasBranchGeofence) {
+                            // Cabang utama memiliki geofence, tetapi user di luar radius toko -> Unknown
                             isWithinRadius = false;
                             activeMatchedBranchName = branchName;
-                            isCrossBranchAttendance = false;
                             updateGeofenceDisplay(currentDistanceToBranch, branchName, false, branchRadius);
+                        } else {
+                            // Cabang utama tidak memiliki geofence dan tidak berada di cabang lain:
+                            // Berjalan default awal (sembunyikan info radius)
+                            isWithinRadius = true;
+                            activeMatchedBranchName = branchName;
+                            if (geofenceBox) geofenceBox.classList.add('d-none');
                         }
-                    } else {
-                        // CABANG BELUM SETTING RADIUS / GEOFENCE:
-                        // Berjalan normal persis seperti awal default tanpa perubahan apa pun
-                        isWithinRadius = true;
-                        activeMatchedBranchName = branchName;
-                        isCrossBranchAttendance = false;
-                        const geofenceBox = document.getElementById('geofence-status-box');
-                        if (geofenceBox) geofenceBox.classList.add('d-none');
                     }
 
                     // Update Step 2 Status di Checklist
@@ -1448,19 +1466,19 @@
                         stepGpsCircle.classList.add('done');
                     }
                     if (stepGpsStatus) {
-                        if (!hasBranchGeofence) {
-                            // Sesuai awal: Hanya tampilkan 'Terkunci' biasa tanpa info radius/lokasi
-                            stepGpsStatus.textContent = 'Terkunci';
-                            stepGpsStatus.className = 'badge-step-status done';
-                        } else if (isCrossBranchAttendance) {
+                        if (isCrossBranchAttendance) {
                             stepGpsStatus.textContent = `Terkunci (${activeMatchedBranchName})`;
                             stepGpsStatus.className = 'badge-step-status done';
-                        } else if (isWithinRadius) {
+                        } else if (hasBranchGeofence && !isWithinRadius) {
+                            stepGpsStatus.textContent = 'Lokasi Unknown';
+                            stepGpsStatus.className = 'badge-step-status text-warning';
+                        } else if (hasBranchGeofence && isWithinRadius) {
                             stepGpsStatus.textContent = 'Terkunci (Area Toko)';
                             stepGpsStatus.className = 'badge-step-status done';
                         } else {
-                            stepGpsStatus.textContent = 'Lokasi Unknown';
-                            stepGpsStatus.className = 'badge-step-status text-warning';
+                            // Cabang default tanpa geofence & tidak berada di cabang lain
+                            stepGpsStatus.textContent = 'Terkunci';
+                            stepGpsStatus.className = 'badge-step-status done';
                         }
                     }
 
