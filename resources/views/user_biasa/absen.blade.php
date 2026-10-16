@@ -1373,191 +1373,263 @@
             }
         }
 
-        // === GPS GEOLOCATION ===
-        function getLocation(highAccuracy = true, isFallback = false) {
+        // === GPS GEOLOCATION ENGINE ===
+        let gpsRetryCount = 0;
+        const MAX_GPS_RETRIES = 5;
+        let gpsRetryTimer = null;
+        let gpsWatchId = null;
+
+        function setGpsLoadingUI() {
+            coordDisplay.textContent = 'Mencari sinyal GPS...';
+            accBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
+            accBadge.className = 'info-badge';
+            if (gpsPermissionHelp) {
+                gpsPermissionHelp.classList.add('d-none');
+                gpsPermissionHelp.innerHTML = '';
+            }
+            if (stepGpsStatus && latInput.value === '') {
+                stepGpsStatus.textContent = 'Mencari...';
+                stepGpsStatus.className = 'badge-step-status text-muted';
+            }
+        }
+
+        function handleGpsSuccess(pos) {
+            if (gpsRetryTimer) {
+                clearTimeout(gpsRetryTimer);
+                gpsRetryTimer = null;
+            }
+            gpsRetryCount = 0;
+
+            const { latitude, longitude, accuracy } = pos.coords;
+            latInput.value = latitude;
+            lngInput.value = longitude;
+            accInput.value = accuracy;
+
+            coordDisplay.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            accBadge.textContent = `±${Math.round(accuracy)}m`;
+            accBadge.className = 'info-badge success';
+            if (gpsPermissionHelp) {
+                gpsPermissionHelp.classList.add('d-none');
+                gpsPermissionHelp.innerHTML = '';
+            }
+
+            let matchedBranch = null;
+            let isCross = false;
+
+            // 1. Cek cabang utama (jika cabang utama memiliki konfigurasi geofence)
+            if (hasBranchGeofence) {
+                const distPrimary = calculateDistanceInMeters(latitude, longitude, branchLat, branchLng);
+                currentDistanceToBranch = distPrimary;
+
+                if (distPrimary <= branchRadius) {
+                    matchedBranch = { name: branchName, dist: distPrimary, radius: branchRadius };
+                    isCross = false;
+                }
+            }
+
+            // 2. Jika di luar cabang utama ATAU cabang utama belum disetting radius geofence,
+            // periksa apakah user berada di dalam radius cabang PStore lainnya (misal lintas cabang / rotasi jadwal)
+            if (!matchedBranch && Array.isArray(allBranchesGeofence) && allBranchesGeofence.length > 0) {
+                let closestBranch = null;
+                let minDistance = Infinity;
+
+                for (let b of allBranchesGeofence) {
+                    if (b.latitude && b.longitude && b.radius) {
+                        // Jika cabang utama punya geofence dan nama sama, sudah dicek di atas
+                        if (hasBranchGeofence && b.name === branchName) continue;
+
+                        const bLat = parseFloat(b.latitude);
+                        const bLng = parseFloat(b.longitude);
+                        const bRad = parseInt(b.radius);
+                        if (isNaN(bLat) || isNaN(bLng) || isNaN(bRad) || bRad <= 0) continue;
+
+                        const d = calculateDistanceInMeters(latitude, longitude, bLat, bLng);
+                        if (d <= bRad) {
+                            if (d < minDistance) {
+                                minDistance = d;
+                                closestBranch = { id: b.id, name: b.name, dist: d, radius: bRad };
+                            }
+                        }
+                    }
+                }
+
+                if (closestBranch) {
+                    matchedBranch = closestBranch;
+                    isCross = (closestBranch.name !== branchName);
+                }
+            }
+
+            // 3. Terapkan hasil pencocokan
+            const geofenceBox = document.getElementById('geofence-status-box');
+            if (matchedBranch) {
+                isWithinRadius = true;
+                activeMatchedBranchName = matchedBranch.name;
+                isCrossBranchAttendance = isCross;
+                currentDistanceToBranch = matchedBranch.dist;
+                updateGeofenceDisplay(matchedBranch.dist, matchedBranch.name, isCross, matchedBranch.radius);
+            } else {
+                // User tidak berada di dalam radius cabang manapun
+                isCrossBranchAttendance = false;
+                if (hasBranchGeofence) {
+                    // Cabang utama memiliki geofence, tetapi user di luar radius toko -> Unknown
+                    isWithinRadius = false;
+                    activeMatchedBranchName = branchName;
+                    updateGeofenceDisplay(currentDistanceToBranch, branchName, false, branchRadius);
+                } else {
+                    // Cabang utama tidak memiliki geofence dan tidak berada di cabang lain:
+                    // Berjalan default awal (sembunyikan info radius)
+                    isWithinRadius = true;
+                    activeMatchedBranchName = branchName;
+                    if (geofenceBox) geofenceBox.classList.add('d-none');
+                }
+            }
+
+            // Update Step 2 Status di Checklist
+            if (stepGpsCircle) {
+                stepGpsCircle.classList.add('done');
+            }
+            if (stepGpsStatus) {
+                if (isCrossBranchAttendance) {
+                    stepGpsStatus.textContent = `Terkunci (${activeMatchedBranchName})`;
+                    stepGpsStatus.className = 'badge-step-status done';
+                } else if (hasBranchGeofence && !isWithinRadius) {
+                    stepGpsStatus.textContent = 'Lokasi Unknown';
+                    stepGpsStatus.className = 'badge-step-status text-warning';
+                } else if (hasBranchGeofence && isWithinRadius) {
+                    stepGpsStatus.textContent = 'Terkunci (Area Toko)';
+                    stepGpsStatus.className = 'badge-step-status done';
+                } else {
+                    // Cabang default tanpa geofence & tidak berada di cabang lain
+                    stepGpsStatus.textContent = 'Terkunci';
+                    stepGpsStatus.className = 'badge-step-status done';
+                }
+            }
+
+            checkGlobalValidity();
+        }
+
+        function displayGpsErrorUI(err) {
+            if (latInput.value !== '') return;
+
+            if (err && err.code === 1) {
+                coordDisplay.textContent = 'Izin Lokasi Ditolak';
+                accBadge.textContent = 'Izin Ditolak';
+                accBadge.className = 'info-badge error';
+
+                if (navigator.permissions && navigator.permissions.query) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(p => {
+                        if (latInput.value !== '') return;
+                        if (p.state === 'granted') {
+                            coordDisplay.textContent = 'Layanan Lokasi Windows/Perangkat Mati';
+                            if (gpsPermissionHelp) {
+                                gpsPermissionHelp.innerHTML = '<i class="mdi mdi-alert-circle-outline me-1"></i> Izin di browser sudah aktif, namun <strong>Layanan Lokasi di Windows/HP Anda masih nonaktif</strong>. Buka <strong>Settings &gt; Privacy & Security &gt; Location</strong> di Windows lalu aktifkan "Location services", kemudian klik <strong>Perbarui</strong> atau reload halaman.';
+                                gpsPermissionHelp.classList.remove('d-none');
+                            }
+                        } else {
+                            coordDisplay.textContent = 'Izin GPS Ditolak di Browser';
+                            if (gpsPermissionHelp) {
+                                gpsPermissionHelp.innerHTML = '<i class="mdi mdi-alert-circle-outline me-1"></i> Izin lokasi ditolak. Silahkan aktifkan izin lokasi di ikon gembok browser (samping URL) lalu klik <strong>Perbarui</strong>.';
+                                gpsPermissionHelp.classList.remove('d-none');
+                            }
+                        }
+                    }).catch(() => {
+                        if (latInput.value === '' && gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
+                    });
+                } else {
+                    if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
+                }
+            } else if (err && err.code === 3) {
+                coordDisplay.textContent = 'Waktu pencarian GPS habis';
+                accBadge.textContent = 'Timeout';
+                accBadge.className = 'info-badge error';
+            } else {
+                coordDisplay.textContent = 'Gagal mendeteksi lokasi GPS';
+                accBadge.textContent = 'Error';
+                accBadge.className = 'info-badge error';
+            }
+
+            if (stepGpsStatus && latInput.value === '') {
+                stepGpsStatus.textContent = (err && err.code === 1) ? 'Izin Ditolak' : 'Gagal';
+                stepGpsStatus.className = 'badge-step-status text-danger';
+            }
+        }
+
+        function executeGetPosition(highAccuracy = false) {
             if (!navigator.geolocation) {
                 coordDisplay.textContent = 'GPS tidak didukung perangkat';
                 return;
             }
 
-            if (!isFallback && latInput.value === '') {
-                coordDisplay.textContent = 'Mencari sinyal GPS...';
-                accBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
-                accBadge.className = 'info-badge';
-                if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
-            }
-
             navigator.geolocation.getCurrentPosition(
-                pos => {
-                    const { latitude, longitude, accuracy } = pos.coords;
-                    latInput.value = latitude;
-                    lngInput.value = longitude;
-                    accInput.value = accuracy;
-
-                    coordDisplay.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-                    accBadge.textContent = `±${Math.round(accuracy)}m`;
-                    accBadge.className = 'info-badge success';
-                    if (gpsPermissionHelp) {
-                        gpsPermissionHelp.classList.add('d-none');
-                        gpsPermissionHelp.innerHTML = '';
-                    }
-
-                    let matchedBranch = null;
-                    let isCross = false;
-
-                    // 1. Cek cabang utama (jika cabang utama memiliki konfigurasi geofence)
-                    if (hasBranchGeofence) {
-                        const distPrimary = calculateDistanceInMeters(latitude, longitude, branchLat, branchLng);
-                        currentDistanceToBranch = distPrimary;
-
-                        if (distPrimary <= branchRadius) {
-                            matchedBranch = { name: branchName, dist: distPrimary, radius: branchRadius };
-                            isCross = false;
-                        }
-                    }
-
-                    // 2. Jika di luar cabang utama ATAU cabang utama belum disetting radius geofence,
-                    // periksa apakah user berada di dalam radius cabang PStore lainnya (misal lintas cabang / rotasi jadwal)
-                    if (!matchedBranch && Array.isArray(allBranchesGeofence) && allBranchesGeofence.length > 0) {
-                        let closestBranch = null;
-                        let minDistance = Infinity;
-
-                        for (let b of allBranchesGeofence) {
-                            if (b.latitude && b.longitude && b.radius) {
-                                // Jika cabang utama punya geofence dan nama sama, sudah dicek di atas
-                                if (hasBranchGeofence && b.name === branchName) continue;
-
-                                const bLat = parseFloat(b.latitude);
-                                const bLng = parseFloat(b.longitude);
-                                const bRad = parseInt(b.radius);
-                                if (isNaN(bLat) || isNaN(bLng) || isNaN(bRad) || bRad <= 0) continue;
-
-                                const d = calculateDistanceInMeters(latitude, longitude, bLat, bLng);
-                                if (d <= bRad) {
-                                    if (d < minDistance) {
-                                        minDistance = d;
-                                        closestBranch = { id: b.id, name: b.name, dist: d, radius: bRad };
-                                    }
-                                }
-                            }
-                        }
-
-                        if (closestBranch) {
-                            matchedBranch = closestBranch;
-                            isCross = (closestBranch.name !== branchName);
-                        }
-                    }
-
-                    // 3. Terapkan hasil pencocokan
-                    const geofenceBox = document.getElementById('geofence-status-box');
-                    if (matchedBranch) {
-                        isWithinRadius = true;
-                        activeMatchedBranchName = matchedBranch.name;
-                        isCrossBranchAttendance = isCross;
-                        currentDistanceToBranch = matchedBranch.dist;
-                        updateGeofenceDisplay(matchedBranch.dist, matchedBranch.name, isCross, matchedBranch.radius);
-                    } else {
-                        // User tidak berada di dalam radius cabang manapun
-                        isCrossBranchAttendance = false;
-                        if (hasBranchGeofence) {
-                            // Cabang utama memiliki geofence, tetapi user di luar radius toko -> Unknown
-                            isWithinRadius = false;
-                            activeMatchedBranchName = branchName;
-                            updateGeofenceDisplay(currentDistanceToBranch, branchName, false, branchRadius);
-                        } else {
-                            // Cabang utama tidak memiliki geofence dan tidak berada di cabang lain:
-                            // Berjalan default awal (sembunyikan info radius)
-                            isWithinRadius = true;
-                            activeMatchedBranchName = branchName;
-                            if (geofenceBox) geofenceBox.classList.add('d-none');
-                        }
-                    }
-
-                    // Update Step 2 Status di Checklist
-                    if (stepGpsCircle) {
-                        stepGpsCircle.classList.add('done');
-                    }
-                    if (stepGpsStatus) {
-                        if (isCrossBranchAttendance) {
-                            stepGpsStatus.textContent = `Terkunci (${activeMatchedBranchName})`;
-                            stepGpsStatus.className = 'badge-step-status done';
-                        } else if (hasBranchGeofence && !isWithinRadius) {
-                            stepGpsStatus.textContent = 'Lokasi Unknown';
-                            stepGpsStatus.className = 'badge-step-status text-warning';
-                        } else if (hasBranchGeofence && isWithinRadius) {
-                            stepGpsStatus.textContent = 'Terkunci (Area Toko)';
-                            stepGpsStatus.className = 'badge-step-status done';
-                        } else {
-                            // Cabang default tanpa geofence & tidak berada di cabang lain
-                            stepGpsStatus.textContent = 'Terkunci';
-                            stepGpsStatus.className = 'badge-step-status done';
-                        }
-                    }
-
-                    checkGlobalValidity();
-                },
+                pos => handleGpsSuccess(pos),
                 err => {
-                    // Jika koordinat sudah berhasil didapatkan, abaikan error yang tertunda
-                    if (latInput.value !== '') {
+                    if (latInput.value !== '') return;
+
+                    // Jika masih dalam batas retry, jangan panik dan jangan tampilkan UI error merah
+                    if (gpsRetryCount < MAX_GPS_RETRIES) {
+                        gpsRetryCount++;
+                        setGpsLoadingUI();
+
+                        if (gpsRetryTimer) clearTimeout(gpsRetryTimer);
+                        gpsRetryTimer = setTimeout(() => {
+                            if (latInput.value !== '') return;
+                            // Percobaan berkala: utamakan standard accuracy (cepat di Wi-Fi/desktop), sesekali coba high accuracy
+                            const nextHighAccuracy = (gpsRetryCount % 3 === 0);
+                            executeGetPosition(nextHighAccuracy);
+                        }, 1200);
                         return;
                     }
 
-                    // Percobaan pertama gagal? Jangan panik & jangan tampilkan pesan merah ke user!
-                    // Langsung coba secara hening dengan standard accuracy (Wi-Fi/Network)
-                    if (!isFallback) {
-                        getLocation(false, true);
-                        return;
-                    }
-
-                    // Hanya tampilkan error jika mode fallback (standard accuracy) juga gagal
-                    if (err.code === 1) {
-                        coordDisplay.textContent = 'Izin Lokasi Ditolak';
-                        accBadge.textContent = 'Izin Ditolak';
-                        accBadge.className = 'info-badge error';
-
-                        if (navigator.permissions && navigator.permissions.query) {
-                            navigator.permissions.query({ name: 'geolocation' }).then(p => {
-                                if (latInput.value !== '') return; // Jangan timpa jika lokasi sudah terkunci
-                                if (p.state === 'granted') {
-                                    // Izin di browser sudah aktif (toggle gembok ON), tetapi Windows Location Services mati
-                                    coordDisplay.textContent = 'Layanan Lokasi Windows/Perangkat Mati';
-                                    if (gpsPermissionHelp) {
-                                        gpsPermissionHelp.innerHTML = '<i class="mdi mdi-alert-circle-outline me-1"></i> Izin di browser sudah aktif, namun <strong>Layanan Lokasi di Windows/HP Anda masih nonaktif</strong>. Buka <strong>Settings &gt; Privacy & Security &gt; Location</strong> di Windows lalu aktifkan "Location services", kemudian klik <strong>Perbarui</strong> atau reload halaman.';
-                                        gpsPermissionHelp.classList.remove('d-none');
-                                    }
-                                } else {
-                                    coordDisplay.textContent = 'Izin GPS Ditolak di Browser';
-                                    if (gpsPermissionHelp) {
-                                        gpsPermissionHelp.innerHTML = '<i class="mdi mdi-alert-circle-outline me-1"></i> Izin lokasi ditolak. Silahkan aktifkan izin lokasi di ikon gembok browser (samping URL) lalu klik <strong>Perbarui</strong>.';
-                                        gpsPermissionHelp.classList.remove('d-none');
-                                    }
-                                }
-                            }).catch(() => {
-                                if (latInput.value === '' && gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
-                            });
-                        } else {
-                            if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
-                        }
-                    } else if (err.code === 3) {
-                        coordDisplay.textContent = 'Waktu pencarian GPS habis';
-                        accBadge.textContent = 'Timeout';
-                        accBadge.className = 'info-badge error';
-                    } else {
-                        coordDisplay.textContent = 'Gagal mendeteksi lokasi GPS';
-                        accBadge.textContent = 'Error';
-                        accBadge.className = 'info-badge error';
-                    }
-
-                    if (stepGpsStatus && latInput.value === '') {
-                        stepGpsStatus.textContent = err.code === 1 ? 'Izin Ditolak' : 'Gagal';
-                        stepGpsStatus.className = 'badge-step-status text-danger';
-                    }
+                    // Tampilkan UI error hanya jika seluruh percobaan retry habis
+                    displayGpsErrorUI(err);
                 },
-                { enableHighAccuracy: highAccuracy, timeout: 8000, maximumAge: 60000 }
+                { enableHighAccuracy: highAccuracy, timeout: 6000, maximumAge: 60000 }
             );
         }
-        window._doGetLocation = (h) => getLocation(h, false);
-        window.getLocation = (h) => getLocation(h, false);
+
+        function startWatchingPosition() {
+            if (!navigator.geolocation) return;
+            if (gpsWatchId !== null) return;
+
+            try {
+                gpsWatchId = navigator.geolocation.watchPosition(
+                    pos => handleGpsSuccess(pos),
+                    err => {
+                        // watchPosition transient error diabaikan agar tidak mengganggu UI loading
+                    },
+                    { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 }
+                );
+            } catch(e) {}
+        }
+
+        function getLocation(force = false) {
+            // Jika koordinat sudah berhasil didapatkan dan bukan permintaan refresh paksa, pertahankan
+            if (latInput.value !== '' && !force) {
+                return;
+            }
+
+            if (force) {
+                latInput.value = '';
+                lngInput.value = '';
+                accInput.value = '';
+            }
+
+            if (gpsRetryTimer) {
+                clearTimeout(gpsRetryTimer);
+                gpsRetryTimer = null;
+            }
+            gpsRetryCount = 0;
+            setGpsLoadingUI();
+
+            startWatchingPosition();
+
+            // Mulai dengan standard accuracy terlebih dahulu karena di laptop/desktop Windows
+            // standard accuracy (Wi-Fi triangulation) jauh lebih cepat dan tidak memicu penolakan sensor hardware!
+            executeGetPosition(false);
+        }
+
+        window._doGetLocation = (force) => getLocation(force);
+        window.getLocation = (force) => getLocation(force);
 
         // Auto re-check saat izin lokasi diubah di browser (toggle gembok ON)
         if (navigator.permissions && navigator.permissions.query) {
@@ -1580,7 +1652,7 @@
         }
 
         // Auto trigger GPS on initial page load
-        getLocation(true);
+        getLocation(false);
 
         // === VALIDITY CHECK & SLIDER ENABLER ===
         function checkGlobalValidity() {
