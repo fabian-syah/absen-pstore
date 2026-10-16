@@ -1374,16 +1374,18 @@
         }
 
         // === GPS GEOLOCATION ===
-        function getLocation(highAccuracy = true) {
+        function getLocation(highAccuracy = true, isFallback = false) {
             if (!navigator.geolocation) {
                 coordDisplay.textContent = 'GPS tidak didukung perangkat';
                 return;
             }
 
-            coordDisplay.textContent = 'Mencari sinyal GPS...';
-            accBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
-            accBadge.className = 'info-badge';
-            if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
+            if (!isFallback && latInput.value === '') {
+                coordDisplay.textContent = 'Mencari sinyal GPS...';
+                accBadge.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i>';
+                accBadge.className = 'info-badge';
+                if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
+            }
 
             navigator.geolocation.getCurrentPosition(
                 pos => {
@@ -1500,10 +1502,14 @@
                         return;
                     }
 
-                    if (highAccuracy && err.code === 3) {
-                        getLocation(false);
+                    // Percobaan pertama gagal? Jangan panik & jangan tampilkan pesan merah ke user!
+                    // Langsung coba secara hening dengan standard accuracy (Wi-Fi/Network)
+                    if (!isFallback) {
+                        getLocation(false, true);
                         return;
                     }
+
+                    // Hanya tampilkan error jika mode fallback (standard accuracy) juga gagal
                     if (err.code === 1) {
                         coordDisplay.textContent = 'Izin Lokasi Ditolak';
                         accBadge.textContent = 'Izin Ditolak';
@@ -1532,6 +1538,10 @@
                         } else {
                             if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
                         }
+                    } else if (err.code === 3) {
+                        coordDisplay.textContent = 'Waktu pencarian GPS habis';
+                        accBadge.textContent = 'Timeout';
+                        accBadge.className = 'info-badge error';
                     } else {
                         coordDisplay.textContent = 'Gagal mendeteksi lokasi GPS';
                         accBadge.textContent = 'Error';
@@ -1543,11 +1553,11 @@
                         stepGpsStatus.className = 'badge-step-status text-danger';
                     }
                 },
-                { enableHighAccuracy: highAccuracy, timeout: 15000, maximumAge: 10000 }
+                { enableHighAccuracy: highAccuracy, timeout: 8000, maximumAge: 60000 }
             );
         }
-        window._doGetLocation = getLocation;
-        window.getLocation = getLocation;
+        window._doGetLocation = (h) => getLocation(h, false);
+        window.getLocation = (h) => getLocation(h, false);
 
         // Auto re-check saat izin lokasi diubah di browser (toggle gembok ON)
         if (navigator.permissions && navigator.permissions.query) {
