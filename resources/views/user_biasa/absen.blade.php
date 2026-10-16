@@ -1497,10 +1497,32 @@
                         return;
                     }
                     if (err.code === 1) {
-                        coordDisplay.textContent = 'Izin GPS Ditolak di Browser';
+                        coordDisplay.textContent = 'Izin Lokasi Ditolak';
                         accBadge.textContent = 'Izin Ditolak';
                         accBadge.className = 'info-badge error';
-                        if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
+
+                        if (navigator.permissions && navigator.permissions.query) {
+                            navigator.permissions.query({ name: 'geolocation' }).then(p => {
+                                if (p.state === 'granted') {
+                                    // Izin di browser sudah aktif (toggle gembok ON), tetapi Windows Location Services mati
+                                    coordDisplay.textContent = 'Layanan Lokasi Windows/Perangkat Mati';
+                                    if (gpsPermissionHelp) {
+                                        gpsPermissionHelp.innerHTML = '<i class="mdi mdi-alert-circle-outline me-1"></i> Izin di browser sudah aktif, namun <strong>Layanan Lokasi di Windows/HP Anda masih nonaktif</strong>. Buka <strong>Settings &gt; Privacy & Security &gt; Location</strong> di Windows lalu aktifkan "Location services", kemudian klik <strong>Perbarui</strong> atau reload halaman.';
+                                        gpsPermissionHelp.classList.remove('d-none');
+                                    }
+                                } else {
+                                    coordDisplay.textContent = 'Izin GPS Ditolak di Browser';
+                                    if (gpsPermissionHelp) {
+                                        gpsPermissionHelp.innerHTML = '<i class="mdi mdi-alert-circle-outline me-1"></i> Izin lokasi ditolak. Silahkan aktifkan izin lokasi di ikon gembok browser (samping URL) lalu klik <strong>Perbarui</strong>.';
+                                        gpsPermissionHelp.classList.remove('d-none');
+                                    }
+                                }
+                            }).catch(() => {
+                                if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
+                            });
+                        } else {
+                            if (gpsPermissionHelp) gpsPermissionHelp.classList.remove('d-none');
+                        }
                     } else {
                         coordDisplay.textContent = 'Gagal mendeteksi lokasi GPS';
                         accBadge.textContent = 'Error';
@@ -1512,11 +1534,23 @@
                         stepGpsStatus.className = 'badge-step-status text-danger';
                     }
                 },
-                { enableHighAccuracy: highAccuracy, timeout: 15000, maximumAge: 0 }
+                { enableHighAccuracy: highAccuracy, timeout: 15000, maximumAge: 10000 }
             );
         }
         window._doGetLocation = getLocation;
         window.getLocation = getLocation;
+
+        // Auto re-check saat izin lokasi diubah di browser (toggle gembok ON)
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then(p => {
+                p.onchange = () => {
+                    if (p.state === 'granted') {
+                        if (gpsPermissionHelp) gpsPermissionHelp.classList.add('d-none');
+                        getLocation(true);
+                    }
+                };
+            }).catch(() => {});
+        }
 
         const btnRefreshGps = document.getElementById('btn-refresh-gps');
         if (btnRefreshGps) {
