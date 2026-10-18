@@ -816,8 +816,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center p-4" style="background: #f8fafc;">
+                    <div id="modalImageError" class="d-none py-4 text-muted">
+                        <i class="mdi mdi-image-broken-variant text-secondary d-block mb-2" style="font-size: 48px;"></i>
+                        <span class="fw-semibold">Bukti foto tidak ditemukan di server atau gagal dimuat.</span>
+                    </div>
                     <img id="modalImagePreview" src="" alt="Bukti" class="img-fluid rounded-3 shadow-sm"
-                        style="max-height: 70vh; width: auto;">
+                        style="max-height: 70vh; width: auto;"
+                        onerror="this.style.display='none'; var errEl = document.getElementById('modalImageError'); if(errEl) errEl.classList.remove('d-none');"
+                        onload="this.style.display='inline-block'; var errEl = document.getElementById('modalImageError'); if(errEl) errEl.classList.add('d-none');">
                 </div>
                 <div class="modal-footer bg-light px-4 py-2">
                     <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal" data-dismiss="modal">Tutup</button>
@@ -830,7 +836,10 @@
     <script>
         window.showImageModal = function (imageUrl) {
             var imgElement = document.getElementById('modalImagePreview');
+            var errElement = document.getElementById('modalImageError');
+            if (errElement) errElement.classList.add('d-none');
             if (imgElement) {
+                imgElement.style.display = 'inline-block';
                 imgElement.src = imageUrl;
             }
             var modalEl = document.getElementById('imageModal');
@@ -916,25 +925,13 @@
             }
         };
 
-        // FUNGSI UNTUK PREVIEW GAMBAR
-        window.showImageModal = function (imageUrl) {
-            var imgElement = document.getElementById('modalImagePreview');
-            if (imgElement) {
-                imgElement.src = imageUrl;
-            }
-
-            try {
-                $('#imageModal').modal('show');
-            } catch (e) {
-                var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-                myModal.show();
-            }
-        };
-
         // Reset data saat modal ditutup agar tidak conflict
         $(document).ready(function () {
             $('#imageModal').on('hidden.bs.modal', function () {
-                $('#modalImagePreview').attr('src', '');
+                var img = document.getElementById('modalImagePreview');
+                if (img) img.src = '';
+                var err = document.getElementById('modalImageError');
+                if (err) err.classList.add('d-none');
             });
 
             $('#rejectModalDynamic').on('hidden.bs.modal', function () {

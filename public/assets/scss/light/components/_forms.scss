@@ -34,7 +34,7 @@ select {
     outline: 1px solid $border-color;
     color: $input-placeholder-color;
     appearance: none;
-    background: url("../../images/arrow-down.svg");
+    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 8L12 15L5 8' stroke='%23c9c8c8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: 99% center;
 
@@ -59,7 +59,7 @@ select {
     outline: 1px solid $border-color;
     color: $input-placeholder-color;
     appearance: none;
-    background: url("../../images/arrow-down.svg");
+    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 8L12 15L5 8' stroke='%23c9c8c8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: 99% center;
 
