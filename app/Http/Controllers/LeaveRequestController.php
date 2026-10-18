@@ -750,15 +750,15 @@ class LeaveRequestController extends Controller
             abort(403);
         }
 
-        if ($leaveRequest->status !== 'approved' || $leaveRequest->type !== 'cuti') {
-            return back()->with('error', 'Hanya data cuti yang sudah disetujui yang bisa diproses.');
+        if ($leaveRequest->status !== 'approved' || !in_array($leaveRequest->type, ['cuti', 'wfh', 'izin', 'sakit'])) {
+            return back()->with('error', 'Hanya data izin/cuti yang sudah disetujui yang bisa diproses.');
         }
 
         $startDate = Carbon::parse($leaveRequest->start_date)->startOfDay();
 
-        // Jika hari ini adalah hari pertama cuti, lebih baik gunakan fitur HAPUS saja
+        // Jika hari ini adalah hari pertama izin/cuti, sarankan gunakan fitur Hapus
         if (now()->startOfDay()->lte($startDate)) {
-            return back()->with('info', 'Cuti baru dimulai hari ini atau belum dimulai. Silakan gunakan fitur Hapus Permanen jika ingin membatalkan seluruhnya.');
+            return back()->with('info', 'Izin baru dimulai hari ini atau belum dimulai. Silakan gunakan tombol Hapus Permanen (ikon sampah merah) untuk membatalkannya agar karyawan bisa langsung absen.');
         }
 
         DB::beginTransaction();
@@ -772,7 +772,7 @@ class LeaveRequestController extends Controller
             ]);
 
             DB::commit();
-            return back()->with('success', 'Cuti berhasil diselesaikan lebih awal. Saldo sisa telah dikembalikan ke user.');
+            return back()->with('success', 'Izin/WFH berhasil diselesaikan lebih awal. Karyawan sekarang sudah bisa absen masuk.');
         } catch (\Exception $e) {
             DB::rollback();
             return back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
