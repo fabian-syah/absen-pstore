@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendors/datatables.net-bs4/dataTables.bootstrap4.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/js/select.dataTables.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ file_exists(public_path('assets/css/style.css')) ? filemtime(public_path('assets/css/style.css')) : '2.3' }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ pstoreFaviconDataUri() }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ pstoreFaviconDataUri() }}">
     <link rel="shortcut icon" type="image/png" href="{{ pstoreFaviconDataUri() }}">

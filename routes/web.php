@@ -799,14 +799,11 @@ Route::get('/storage/{path}', function ($path) {
     }
 
     $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])) {
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200" fill="#f8fafc">
-            <rect width="300" height="200" rx="8" fill="#e2e8f0"/>
-            <text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#64748b" font-weight="bold">Gambar Tidak Ditemukan</text>
-            <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#94a3b8">Berkas tidak tersedia di server</text>
-        </svg>';
-        return response($svg, 200, [
-            'Content-Type' => 'image/svg+xml',
+    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+        // Return 1x1 transparent PNG binary (valid image format to prevent CDN 422 Unprocessable Content)
+        $png1x1 = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+        return response($png1x1, 200, [
+            'Content-Type' => 'image/png',
             'Cache-Control' => 'no-cache, private',
         ]);
     }
@@ -814,8 +811,22 @@ Route::get('/storage/{path}', function ($path) {
     abort(404);
 })->where('path', '.*');
 
+Route::get('/images/arrow-down.svg', function () {
+    $path = public_path('images/arrow-down.svg');
+    if (!file_exists($path)) {
+        $path = public_path('assets/images/arrow-down.svg');
+    }
+    if (file_exists($path)) {
+        return response()->file($path, ['Content-Type' => 'image/svg+xml']);
+    }
+    return response('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 8L12 15L5 8" stroke="#c9c8c8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>', 200, ['Content-Type' => 'image/svg+xml']);
+});
+
 Route::get('/assets/images/arrow-down.svg', function () {
     $path = public_path('assets/images/arrow-down.svg');
+    if (!file_exists($path)) {
+        $path = public_path('images/arrow-down.svg');
+    }
     if (file_exists($path)) {
         return response()->file($path, ['Content-Type' => 'image/svg+xml']);
     }
@@ -823,7 +834,10 @@ Route::get('/assets/images/arrow-down.svg', function () {
 });
 
 Route::get('/arrow-down.svg', function () {
-    $path = public_path('assets/images/arrow-down.svg');
+    $path = public_path('arrow-down.svg');
+    if (!file_exists($path)) {
+        $path = public_path('images/arrow-down.svg');
+    }
     if (file_exists($path)) {
         return response()->file($path, ['Content-Type' => 'image/svg+xml']);
     }

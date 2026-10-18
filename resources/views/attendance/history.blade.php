@@ -1315,6 +1315,7 @@
                                                     <img src="{{ $leavePhoto }}" class="history-thumb-img mx-auto"
                                                         data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                         data-img-src="{{ $leavePhoto }}" data-img-title="Lampiran Bukti Izin"
+                                                        onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'1.5\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\'/><circle cx=\'8.5\' cy=\'8.5\' r=\'1.5\'/><path d=\'M21 15l-5-5L5 21\'/></svg>';"
                                                         alt="Bukti Izin">
                                                     <span class="badge mt-1" style="font-size: 9px; font-weight: 700; background: #fef3c7; color: #b45309; padding: 2px 5px; border-radius: 4px;">IZIN</span>
                                                 </div>
@@ -1325,6 +1326,7 @@
                                                     <img src="{{ asset('storage/' . $att->audit_photo_path) }}" class="history-thumb-img mx-auto"
                                                         data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                         data-img-src="{{ asset('storage/' . $att->audit_photo_path) }}" data-img-title="Lampiran Bukti Koreksi Audit"
+                                                        onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'1.5\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\'/><circle cx=\'8.5\' cy=\'8.5\' r=\'1.5\'/><path d=\'M21 15l-5-5L5 21\'/></svg>';"
                                                         alt="Bukti Audit">
                                                     <span class="badge mt-1" style="font-size: 9px; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 2px 5px; border-radius: 4px;">AUDIT</span>
                                                 </div>
