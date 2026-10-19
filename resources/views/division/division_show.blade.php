@@ -29,6 +29,7 @@
                                 <tr>
                                     <th> # </th>
                                     <th> Nama Anggota </th>
+                                    <th> Kepribadian </th>
                                     <th> Role </th>
                                     <th> Cabang (Lokasi Kerja) </th>
                                     <th> Status </th>
@@ -59,6 +60,19 @@
                                                 </div>
                                             </div>
                                         </td>
+                                        <td style="min-width: 130px; max-width: 170px;">
+                                            @if($member->personality)
+                                                @php $p = $member->personality; @endphp
+                                                <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                                                      style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 11px; font-weight: 700; max-width: 100%;"
+                                                      title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                                                    <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 12px;"></i>
+                                                    <span>{{ $p['full'] }}</span>
+                                                </span>
+                                            @else
+                                                <span class="text-muted small fst-italic">-</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @if($member->role == 'admin')
                                                 <span class="badge badge-danger">Super Admin</span>
@@ -79,7 +93,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-4">
+                                        <td colspan="6" class="text-center py-4">
                                             <i class="mdi mdi-account-off text-muted display-4"></i>
                                             <p class="text-muted mt-2">Belum ada anggota di divisi ini.</p>
                                         </td>

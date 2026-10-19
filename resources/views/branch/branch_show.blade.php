@@ -256,6 +256,7 @@
                                 <tr>
                                     <th>Foto</th>
                                     <th>Nama / ID</th>
+                                    <th>Kepribadian</th>
                                     <th>Status Login</th> {{-- KOLOM BARU --}}
                                     <th>Jabatan</th>
                                     <th>Divisi</th>
@@ -294,6 +295,21 @@
                                             <small class="text-muted d-block mt-1">{{ $user->login_id }}</small>
                                         </td>
 
+                                        {{-- KEPRIBADIAN --}}
+                                        <td style="min-width: 130px; max-width: 170px;">
+                                            @if($user->personality)
+                                                @php $p = $user->personality; @endphp
+                                                <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                                                      style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 11px; font-weight: 700; max-width: 100%;"
+                                                      title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                                                    <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 12px;"></i>
+                                                    <span>{{ $p['full'] }}</span>
+                                                </span>
+                                            @else
+                                                <span class="text-muted small fst-italic">-</span>
+                                            @endif
+                                        </td>
+
                                         {{-- LOGIKA LAST SEEN SESUAI TIMEZONE CABANG --}}
                                         <td>
                                             @php
@@ -322,7 +338,7 @@
                                                     </small>
                                                 </div>
                                             @else
-                                                <span class="text-muted small fst-italic">Belum Login</span>
+                                                <span class="text-muted small fst-italic">{{ __('Belum Login') }}</span>
                                             @endif
                                         </td>
 
@@ -364,7 +380,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-5 text-muted">
+                                        <td colspan="8" class="text-center py-5 text-muted">
                                             <div class="d-flex flex-column align-items-center">
                                                 <div class="bg-light rounded-circle p-3 mb-2"><i
                                                         class="mdi mdi-account-off fs-2 text-secondary"></i></div>

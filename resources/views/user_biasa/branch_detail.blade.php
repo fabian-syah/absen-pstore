@@ -77,6 +77,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Nama Karyawan</th>
+                                    <th>Kepribadian</th>
                                     <th>Posisi</th>
                                     <th>Status Hari Ini</th>
                                     <th>Jam Masuk</th>
@@ -113,26 +114,26 @@
                                                         class="text-decoration-none text-dark">
                                                         <div class="d-flex align-items-center gap-2">
                                                             <div class="fw-bold hover-text-primary">{{ $emp->name }}</div>
-                                                            {{-- Rank Badge - HIDDEN PER USER REQUEST
-                                                            @php 
-                                                                $rank = $emp->calculateRank(); 
-                                                                $isDarkText = in_array($rank['level'], [5, 7, 8, 12, 14, 16, 19]);
-                                                            @endphp
-                                                            <span class="badge shadow-sm {{ $rank['effect_class'] }}" 
-                                                                  style="background-color: {{ $rank['color'] }}; color: {{ $isDarkText ? '#000' : '#fff' }}; font-size: 8px; font-weight: 800; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1); display: inline-flex; align-items: center; gap: 3px;">
-                                                                @if($rank['rank_image'])
-                                                                    <img src="{{ asset($rank['rank_image']) }}" alt="{{ $rank['name'] }}" style="width: 10px; height: 10px; object-fit: contain;">
-                                                                @else
-                                                                    <i class="mdi {{ $rank['icon'] }}"></i>
-                                                                @endif
-                                                                {{ $emp->rank_title ?? 'Novice' }}
-                                                            </span>
-                                                            --}}
                                                         </div>
                                                     </a>
                                                     <small class="text-muted">{{ $emp->email }}</small>
                                                 </div>
                                             </div>
+                                        </td>
+
+                                        {{-- KEPRIBADIAN --}}
+                                        <td style="min-width: 130px; max-width: 170px;">
+                                            @if($emp->personality)
+                                                @php $p = $emp->personality; @endphp
+                                                <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                                                      style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 11px; font-weight: 700; max-width: 100%;"
+                                                      title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                                                    <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 12px;"></i>
+                                                    <span>{{ $p['full'] }}</span>
+                                                </span>
+                                            @else
+                                                <span class="text-muted small fst-italic">-</span>
+                                            @endif
                                         </td>
 
                                         {{-- POSISI --}}
@@ -219,7 +220,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center py-5 text-muted">
+                                        <td colspan="7" class="text-center py-5 text-muted">
                                             <i class="mdi mdi-account-off fs-1 d-block mb-2"></i>
                                             Tidak ada karyawan aktif di cabang ini.
                                         </td>
