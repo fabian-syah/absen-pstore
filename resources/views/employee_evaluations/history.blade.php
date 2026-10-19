@@ -216,8 +216,8 @@
                                                     <div class="small text-muted text-capitalize d-flex align-items-center gap-1 flex-wrap">
                                                         <span>{{ str_replace('_', ' ', $eval->user->role) }}</span>
                                                         @if($eval->user->personality)
-                                                            <span class="badge rounded-pill" style="background-color: {{ $eval->user->personality['bg_color'] }}; color: {{ $eval->user->personality['text_color'] }}; border: 1px solid {{ $eval->user->personality['border_color'] }}; font-size: 10px; font-weight: 600;" title="Kepribadian: {{ $eval->user->personality['full'] }}">
-                                                                {{ $eval->user->personality['code'] }}
+                                                            <span class="badge rounded-pill" style="background-color: {{ $eval->user->personality['bg_color'] }}; color: {{ $eval->user->personality['text_color'] }}; border: 1.5px solid {{ $eval->user->personality['color'] }}; font-size: 10px; font-weight: 700;" title="Kepribadian: {{ $eval->user->personality['full'] }} ({{ $eval->user->personality['description'] }})">
+                                                                <i class="mdi {{ $eval->user->personality['icon'] }} me-0.5" style="color: {{ $eval->user->personality['color'] }};"></i>{{ $eval->user->personality['code'] }}
                                                             </span>
                                                         @endif
                                                     </div>

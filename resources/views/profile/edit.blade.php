@@ -125,7 +125,7 @@
                         </span>
                         @if($user->personality)
                             @php $p = $user->personality; @endphp
-                            <span class="badge-meta-pill shadow-sm" style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-weight: 600;" title="{{ $p['description'] }}">
+                            <span class="badge-meta-pill shadow-sm" style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-weight: 700;" title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
                                 <i class="mdi {{ $p['icon'] }} me-1.5" style="color: {{ $p['color'] }};"></i>Kepribadian: {{ $p['full'] }}
                             </span>
                         @endif
@@ -537,9 +537,9 @@
 
                                 {{-- Kepribadian --}}
                                 <div class="col-12">
-                                    <div class="info-tile p-3 rounded-3 border" style="background: {{ $user->personality['bg_color'] ?? '#f8fafc' }}; border-color: {{ $user->personality['border_color'] ?? '#e2e8f0' }} !important;">
+                                    <div class="info-tile p-3 rounded-3 border" style="background: {{ $user->personality['bg_color'] ?? '#f8fafc' }}; border: 1.5px solid {{ $user->personality['color'] ?? '#e2e8f0' }} !important;">
                                         <div class="d-flex align-items-center justify-content-between mb-1">
-                                            <div class="d-flex align-items-center" style="font-size: 11px; font-weight: 600; color: {{ $user->personality['text_color'] ?? '#64748b' }};">
+                                            <div class="d-flex align-items-center" style="font-size: 11px; font-weight: 700; color: {{ $user->personality['text_color'] ?? '#64748b' }};">
                                                 <i class="mdi {{ $user->personality['icon'] ?? 'mdi-account-outline' }} fs-6 me-1.5" style="color: {{ $user->personality['color'] ?? '#3b82f6' }};"></i>
                                                 <span class="text-uppercase" style="letter-spacing: 0.5px;">Kepribadian</span>
                                             </div>

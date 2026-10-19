@@ -56,6 +56,15 @@
                 <span class="header-division-badge">
                     <i class="mdi mdi-office-building-marker me-1"></i>{{ Auth::user()->division->name ?? 'Headquarters' }}
                 </span>
+                @if(Auth::user()->personality)
+                    @php $p = Auth::user()->personality; @endphp
+                    <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 11px; font-weight: 700;"
+                          title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                        <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }}; font-size: 13px;"></i>
+                        <span>{{ $p['full'] }}</span>
+                    </span>
+                @endif
             </div>
         </div>
 
@@ -268,7 +277,7 @@
                                     @if(Auth::user()->personality)
                                         @php $p = Auth::user()->personality; @endphp
                                         <span class="badge rounded-pill px-2 py-0.5 d-inline-flex align-items-center gap-1"
-                                              style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 10.5px; font-weight: 600;"
+                                              style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 10.5px; font-weight: 700;"
                                               title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
                                             <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
                                             <span>{{ $p['full'] }}</span>

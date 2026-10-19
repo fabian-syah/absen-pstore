@@ -59,10 +59,10 @@
                             @php $p = $user->personality; @endphp
                             <div class="mt-2">
                                 <span class="badge rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
-                                      style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 12px; font-weight: 600; max-width: 100%;"
-                                      title="{{ $p['description'] }}">
-                                    <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }};"></i>
-                                    <span>Kepribadian: {{ $p['full'] }}</span>
+                                      style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 12px; font-weight: 700; max-width: 100%;"
+                                      title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                                    <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 14px;"></i>
+                                    <span>{{ $p['full'] }}</span>
                                 </span>
                             </div>
                         @endif
@@ -423,12 +423,12 @@
                                 @php $p = $user->personality; @endphp
                                 <div>
                                     <span class="badge rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
-                                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 12px; font-weight: 700; max-width: 100%;"
-                                          title="{{ $p['description'] }}">
+                                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 12px; font-weight: 700; max-width: 100%;"
+                                          title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
                                         <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 14px;"></i>
                                         <span>{{ $p['full'] }}</span>
                                     </span>
-                                    <div class="text-muted mt-1 small" style="font-size: 11px; line-height: 1.4;">{{ $p['description'] }}</div>
+                                    <div class="mt-1 small" style="font-size: 11.5px; color: {{ $p['text_color'] }}; line-height: 1.4;">{{ $p['description'] }}</div>
                                 </div>
                             @else
                                 <p class="h6 text-muted mb-0"><i>- (Tanggal lahir belum diisi)</i></p>

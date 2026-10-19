@@ -56,9 +56,9 @@
                         @if(Auth::user()->personality)
                             @php $p = Auth::user()->personality; @endphp
                             <div class="badge px-3 py-2 border d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
-                                 style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border-color: {{ $p['border_color'] }} !important;"
-                                 title="{{ $p['description'] }}">
-                                <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
+                                 style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }} !important; font-weight: 700;"
+                                 title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                                <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }}; font-size: 14px;"></i>
                                 <span>Kepribadian: {{ $p['full'] }}</span>
                             </div>
                         @endif

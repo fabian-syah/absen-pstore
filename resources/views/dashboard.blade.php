@@ -392,9 +392,9 @@
                 @if(Auth::user()->personality)
                     @php $p = Auth::user()->personality; @endphp
                     <span class="badge d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill shadow-sm" 
-                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 0.82rem; font-weight: 600;" 
+                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 0.82rem; font-weight: 700;" 
                           title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
-                        <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
+                        <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }}; font-size: 14px;"></i>
                         <span>{{ $p['full'] }}</span>
                     </span>
                 @endif
@@ -482,9 +482,9 @@
                 @if(Auth::user()->personality)
                     @php $p = Auth::user()->personality; @endphp
                     <span class="badge d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill shadow-sm text-wrap text-start" 
-                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 0.75rem; font-weight: 600; max-width: 100%;"
-                          title="Kepribadian: {{ $p['full'] }}">
-                        <i class="mdi {{ $p['icon'] }} flex-shrink-0"></i>
+                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 0.75rem; font-weight: 700; max-width: 100%;"
+                          title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                        <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 13px;"></i>
                         <span>{{ $p['full'] }}</span>
                     </span>
                 @endif
@@ -1052,8 +1052,11 @@
                                     <p class="mb-0" style="color: #cbd5e1 !important; font-size: 0.8rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</p>
                                     @if(Auth::user()->personality)
                                         @php $p = Auth::user()->personality; @endphp
-                                        <span class="badge rounded-pill px-2 py-0.5" style="background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.3); font-size: 0.72rem;" title="Kepribadian: {{ $p['full'] }}">
-                                            <i class="mdi {{ $p['icon'] }} me-1"></i>{{ $p['code'] }}
+                                        <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm" 
+                                              style="background-color: #ffffff; color: {{ $p['color'] }}; font-size: 0.75rem; font-weight: 700; border: 1.5px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.25);" 
+                                              title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                                            <i class="mdi {{ $p['icon'] }}" style="font-size: 13px;"></i>
+                                            <span>{{ $p['full'] }}</span>
                                         </span>
                                     @endif
                                 </div>
@@ -1080,10 +1083,10 @@
                                 @endif
                                 @if(Auth::user()->personality)
                                     @php $p = Auth::user()->personality; @endphp
-                                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2 px-2.5 py-1 rounded-pill shadow-sm d-flex align-items-center gap-1"
-                                         style="background: rgba(15, 23, 42, 0.85); color: #fff; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.72rem; font-weight: 600; max-width: 90%; z-index: 2;"
-                                         title="{{ $p['description'] }}">
-                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }};"></i>
+                                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2.5 px-3 py-1.5 rounded-pill d-flex align-items-center gap-1.5"
+                                         style="background: #ffffff; color: {{ $p['color'] }}; border: 1.5px solid {{ $p['color'] }}; font-size: 0.75rem; font-weight: 700; max-width: 92%; z-index: 2; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);"
+                                         title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 14px;"></i>
                                         <span class="text-truncate">{{ $p['full'] }}</span>
                                     </div>
                                 @endif
@@ -2173,9 +2176,9 @@
                                     @php $p = Auth::user()->personality; @endphp
                                     <p class="card-id-label mt-2">KEPRIBADIAN</p>
                                     <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
-                                          style="background: rgba(255,255,255,0.22); color: #fff; backdrop-filter: blur(6px); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.35); max-width: 100%;"
-                                          title="{{ $p['description'] }}">
-                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0"></i>
+                                          style="background-color: #ffffff; color: {{ $p['color'] }}; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; border: 1.5px solid #ffffff; max-width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.25);"
+                                          title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
+                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 13px;"></i>
                                         <span>{{ $p['full'] }}</span>
                                     </span>
                                 @endif
