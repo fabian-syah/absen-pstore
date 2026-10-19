@@ -191,6 +191,15 @@
                                                             Belum Pasang GPS
                                                         </span>
                                                     @endif
+
+                                                    @if($branch->isAddressUrl() && auth()->user()->role == 'admin')
+                                                        <form action="{{ route('branches.convert-address', $branch->id) }}" method="POST" class="d-inline ms-1">
+                                                            @csrf
+                                                            <button type="submit" class="badge bg-warning text-dark border-0 px-1 py-0.5" style="font-size: 0.7rem;" title="Konversi link Google Maps menjadi teks alamat resmi">
+                                                                <i class="mdi mdi-auto-fix"></i> Konversi Link
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>

@@ -61,9 +61,9 @@
                                 </span>
                             </div>
                             <textarea class="form-control" id="address" name="address"
-                                rows="3" placeholder="Masukkan alamat lengkap cabang" oninput="handleCreateAddressInputDebounced()">{{ old('address') }}</textarea>
+                                rows="3" placeholder="Ketik alamat lengkap atau tempel link Google Maps cabang..." oninput="handleCreateAddressInputDebounced()" onpaste="setTimeout(() => geocodeCreateAddress(false), 200)">{{ old('address') }}</textarea>
                             <small class="form-text text-muted d-flex justify-content-between align-items-center mt-1">
-                                <span>Ketik alamat cabang, peta dan koordinat GPS di bawah akan otomatis menyesuaikan posisi.</span>
+                                <span>Ketik alamat atau tempel link Google Maps, sistem otomatis mengonversi ke teks alamat dan koordinat GPS.</span>
                                 <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold" onclick="geocodeCreateAddress(true)" style="font-size: 11.5px;">
                                     <i class="mdi mdi-crosshairs-gps me-0.5"></i>Sinkronkan Sekarang
                                 </button>
@@ -358,7 +358,14 @@
             if (data.success && data.lat && data.lng) {
                 updateCreateCoords(data.lat, data.lng);
                 if (createMap) createMap.flyTo([data.lat, data.lng], 16, { animate: true, duration: 1.0 });
-                if (statusEl) statusEl.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+
+                // Jika input berupa link Google Maps / koordinat dan berhasil dikonversi ke teks alamat
+                if (data.resolved_address && (query.startsWith('http') || query.includes('maps') || query.includes('goo.gl') || query.includes('@') || query.includes('!3d') || query.includes('°'))) {
+                    addrInput.value = data.resolved_address;
+                    if (statusEl) statusEl.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Link dikonversi ke teks alamat & peta sinkron!</span>';
+                } else {
+                    if (statusEl) statusEl.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta & koordinat sinkron!</span>';
+                }
             } else if (isManual) {
                 if (statusEl) statusEl.innerHTML = '<span class="text-warning"><i class="mdi mdi-alert-circle me-0.5"></i>Alamat belum cocok di peta</span>';
                 alert('Alamat belum ditemukan di peta. Coba lengkapi nama kota/kecamatan, atau geser pin langsung pada peta.');

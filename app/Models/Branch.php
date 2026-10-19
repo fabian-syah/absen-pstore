@@ -28,6 +28,50 @@ class Branch extends Model
     ];
 
     /**
+     * Cek apakah kolom alamat saat ini berisi link URL atau koordinat
+     */
+    public function isAddressUrl(): bool
+    {
+        return \App\Services\AddressResolverService::isLinkOrCoordinate($this->address);
+    }
+
+    /**
+     * Konversi link URL / koordinat pada kolom address menjadi teks alamat resmi
+     */
+    public function convertAddressToText(): bool
+    {
+        $resolved = \App\Services\AddressResolverService::resolve($this->address, $this->latitude, $this->longitude);
+        if ($resolved['is_converted'] && !empty($resolved['address'])) {
+            $this->address = $resolved['address'];
+            if (is_null($this->latitude) && !is_null($resolved['lat'])) {
+                $this->latitude = $resolved['lat'];
+            }
+            if (is_null($this->longitude) && !is_null($resolved['lng'])) {
+                $this->longitude = $resolved['lng'];
+            }
+            return $this->save();
+        }
+        return false;
+    }
+
+    /**
+     * Dapatkan link Google Maps yang bersih untuk cabang ini
+     */
+    public function getGoogleMapsUrlAttribute(): ?string
+    {
+        if (!is_null($this->latitude) && !is_null($this->longitude)) {
+            return "https://www.google.com/maps/place/{$this->latitude},{$this->longitude}/@{$this->latitude},{$this->longitude},17z";
+        }
+        if (!empty($this->address) && \App\Services\AddressResolverService::isLinkOrCoordinate($this->address)) {
+            return $this->address;
+        }
+        if (!empty($this->address)) {
+            return "https://www.google.com/maps/search/?api=1&query=" . urlencode($this->name . ' ' . $this->address);
+        }
+        return null;
+    }
+
+    /**
      * Cek apakah cabang ini memiliki pembatasan radius aktif (koordinat dan radius terisi)
      */
     public function hasGeofence(): bool

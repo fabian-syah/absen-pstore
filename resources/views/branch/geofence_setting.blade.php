@@ -389,6 +389,13 @@
                 </p>
             </div>
             <div class="d-flex flex-wrap align-items-center gap-2">
+                <form action="{{ route('branches.convert-all-addresses') }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin mengonversi semua alamat cabang yang masih berupa link Google Maps menjadi teks alamat resmi?')">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-success px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center" style="min-height: 44px;" title="Konversi semua link Google Maps di kolom alamat cabang menjadi teks alamat resmi">
+                        <i class="mdi mdi-auto-fix me-1.5 fs-5"></i>
+                        <span>Konversi Semua Link</span>
+                    </button>
+                </form>
                 <button type="button" class="btn btn-primary px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center shadow-sm" data-bs-toggle="modal" data-bs-target="#batchRadiusModal" style="min-height: 44px;">
                     <i class="mdi mdi-tune-vertical me-1.5 fs-5"></i>
                     <span>Atur Radius Massal</span>
@@ -1161,9 +1168,26 @@
             if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
                 setCoordsInput(lat, lng);
                 if (modalMap) modalMap.flyTo([lat, lng], 18, { animate: true });
-                if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Titik Google Maps akurat terpasang!</span>';
-                showModalGeoHint(`Koordinat presisi Google Maps diterapkan: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
-                resetSyncButton();
+                if (syncStatus) syncStatus.innerHTML = '<span class="text-primary"><i class="mdi mdi-loading mdi-spin me-0.5"></i>Mengonversi link ke teks alamat...</span>';
+                
+                // Panggil endpoint geocode server untuk mengonversi link menjadi teks alamat resmi
+                fetch(`/branches/geocode?q=${encodeURIComponent(query)}`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(resData => {
+                    if (resData.success && resData.resolved_address) {
+                        addrInput.value = resData.resolved_address;
+                        if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Link dikonversi ke teks alamat & koordinat aktif!</span>';
+                        showModalGeoHint(`Alamat resmi dikonversi: ${resData.resolved_address.substring(0, 60)}...`, 'success');
+                    } else {
+                        if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Titik Google Maps akurat terpasang!</span>';
+                    }
+                })
+                .catch(() => {
+                    if (syncStatus) syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Titik Google Maps akurat terpasang!</span>';
+                })
+                .finally(() => resetSyncButton());
                 return;
             }
         }
@@ -1225,10 +1249,18 @@
                     modalMap.flyTo([data.lat, data.lng], 16, { animate: true, duration: 1.0 });
                 }
 
-                if (syncStatus) {
-                    syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta diarahkan ke area jalan</span>';
+                if (data.resolved_address && (query.startsWith('http') || query.includes('maps') || query.includes('goo.gl') || query.includes('@') || query.includes('!3d') || query.includes('°'))) {
+                    addrInput.value = data.resolved_address;
+                    if (syncStatus) {
+                        syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Link dikonversi ke teks alamat & peta sinkron!</span>';
+                    }
+                    showModalGeoHint(`Alamat resmi dikonversi: ${data.resolved_address.substring(0, 60)}...`, 'success');
+                } else {
+                    if (syncStatus) {
+                        syncStatus.innerHTML = '<span class="text-success fw-bold"><i class="mdi mdi-check-circle me-0.5"></i>Peta diarahkan ke area jalan</span>';
+                    }
+                    showModalGeoHint(`Peta diarahkan ke: ${data.display_name.substring(0, 60)}... Geser pin biru pada foto satelit jika perlu memposisikan tepat di toko/kantor.`, 'info');
                 }
-                showModalGeoHint(`Peta diarahkan ke: ${data.display_name.substring(0, 60)}... Geser pin biru pada foto satelit jika perlu memposisikan tepat di toko/kantor.`, 'info');
             } else {
                 fallbackClientNominatim(query, isManual, syncStatus);
             }

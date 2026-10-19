@@ -469,6 +469,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::resource('branches', BranchController::class);
         Route::post('/branches/{branch}/toggle-status', [BranchController::class, 'toggleStatus'])->name('branches.toggle-status');
+        Route::post('/branches/{branch}/convert-address', [BranchController::class, 'convertAddress'])->name('branches.convert-address');
+        Route::post('/branches/convert-all-addresses', [BranchController::class, 'convertAllAddresses'])->name('branches.convert-all-addresses');
 
         Route::resource('divisions', DivisionController::class);
         Route::post('/divisions/{division}/toggle-status', [DivisionController::class, 'toggleStatus'])->name('divisions.toggle-status');

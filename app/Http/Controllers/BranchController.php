@@ -13,6 +13,7 @@ use App\Exports\BranchAttendanceExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use App\Services\AddressResolverService;
 
 class BranchController extends Controller
 {
@@ -75,6 +76,12 @@ class BranchController extends Controller
 
             if (!in_array($branch->id, $allowedBranchIds))
                 abort(403, 'Akses Ditolak. Cabang ini bukan wilayah Anda.');
+        }
+
+        // Otomatis konversi jika alamat cabang masih berupa link Google Maps
+        if ($branch->isAddressUrl()) {
+            $branch->convertAddressToText();
+            $branch->refresh();
         }
 
         // Mengambil data karyawan (termasuk last_login_at secara otomatis dari model User)
@@ -148,7 +155,21 @@ class BranchController extends Controller
             'kemenag_city_id' => 'nullable|string',
         ]);
 
-        Branch::create($request->all());
+        $data = $request->all();
+        if (!empty($data['address']) && AddressResolverService::isLinkOrCoordinate($data['address'])) {
+            $resolved = AddressResolverService::resolve($data['address'], $data['latitude'] ?? null, $data['longitude'] ?? null);
+            if ($resolved['is_converted'] && !empty($resolved['address'])) {
+                $data['address'] = $resolved['address'];
+                if (empty($data['latitude']) && !empty($resolved['lat'])) {
+                    $data['latitude'] = $resolved['lat'];
+                }
+                if (empty($data['longitude']) && !empty($resolved['lng'])) {
+                    $data['longitude'] = $resolved['lng'];
+                }
+            }
+        }
+
+        Branch::create($data);
 
         return redirect()->route('branches.index')
             ->with('success', 'Cabang baru berhasil ditambahkan.');
@@ -189,7 +210,21 @@ class BranchController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
-        $branch->update($request->all());
+        $data = $request->all();
+        if (!empty($data['address']) && AddressResolverService::isLinkOrCoordinate($data['address'])) {
+            $resolved = AddressResolverService::resolve($data['address'], $data['latitude'] ?? $branch->latitude, $data['longitude'] ?? $branch->longitude);
+            if ($resolved['is_converted'] && !empty($resolved['address'])) {
+                $data['address'] = $resolved['address'];
+                if (empty($data['latitude']) && !empty($resolved['lat'])) {
+                    $data['latitude'] = $resolved['lat'];
+                }
+                if (empty($data['longitude']) && !empty($resolved['lng'])) {
+                    $data['longitude'] = $resolved['lng'];
+                }
+            }
+        }
+
+        $branch->update($data);
 
         return redirect()->route('branches.index')
             ->with('success', 'Data cabang berhasil diperbarui.');
@@ -383,11 +418,28 @@ class BranchController extends Controller
             $radiusVal = null; // Nilai 0 atau kosong berarti geofence dinonaktifkan
         }
 
+        $newAddress = $request->filled('address') ? $request->address : $branch->address;
+        $latVal = $request->filled('latitude') ? (float)$request->latitude : $branch->latitude;
+        $lngVal = $request->filled('longitude') ? (float)$request->longitude : $branch->longitude;
+
+        if (!empty($newAddress) && AddressResolverService::isLinkOrCoordinate($newAddress)) {
+            $resolved = AddressResolverService::resolve($newAddress, $latVal, $lngVal);
+            if ($resolved['is_converted'] && !empty($resolved['address'])) {
+                $newAddress = $resolved['address'];
+                if (is_null($latVal) && !empty($resolved['lat'])) {
+                    $latVal = $resolved['lat'];
+                }
+                if (is_null($lngVal) && !empty($resolved['lng'])) {
+                    $lngVal = $resolved['lng'];
+                }
+            }
+        }
+
         $branch->update([
-            'latitude' => $request->filled('latitude') ? (float)$request->latitude : null,
-            'longitude' => $request->filled('longitude') ? (float)$request->longitude : null,
+            'latitude' => $latVal,
+            'longitude' => $lngVal,
             'radius' => $radiusVal,
-            'address' => $request->filled('address') ? $request->address : $branch->address,
+            'address' => $newAddress,
         ]);
 
         if ($request->expectsJson() || $request->ajax()) {
@@ -465,53 +517,19 @@ class BranchController extends Controller
             return response()->json(['success' => false, 'message' => 'Alamat tidak boleh kosong.'], 400);
         }
 
-        // 1. Cek jika input adalah Link Google Maps (termasuk shortlink maps.app.goo.gl atau goo.gl/maps)
-        if (str_contains($query, 'maps.app.goo.gl') || str_contains($query, 'goo.gl/maps')) {
-            try {
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $query);
-                curl_setopt($ch, CURLOPT_HEADER, true);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 6);
-                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
-                curl_exec($ch);
-                $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-                curl_close($ch);
-                if ($finalUrl) {
-                    $query = $finalUrl;
-                }
-            } catch (\Exception $e) {
-                \Log::warning('Error resolving Google Maps shortlink: ' . $e->getMessage());
+        // 1. Cek jika input adalah Link Google Maps atau Koordinat (DMS / Desimal)
+        if (AddressResolverService::isLinkOrCoordinate($query)) {
+            $resolved = AddressResolverService::resolve($query);
+            if ($resolved['success'] && !is_null($resolved['lat']) && !is_null($resolved['lng'])) {
+                return response()->json([
+                    'success' => true,
+                    'lat' => $resolved['lat'],
+                    'lng' => $resolved['lng'],
+                    'display_name' => $resolved['address'],
+                    'resolved_address' => $resolved['address'],
+                    'is_link' => $resolved['is_converted'],
+                ]);
             }
-        }
-
-        // Pola A: !3d<lat>!4d<lng> (Presisi pin Google Maps)
-        if (preg_match('/!3d([-+]?[0-9]{1,2}\.[0-9]+)!4d([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches)) {
-            return response()->json([
-                'success' => true,
-                'lat' => (float)$matches[1],
-                'lng' => (float)$matches[2],
-                'display_name' => 'Lokasi spesifik dari Google Maps',
-            ]);
-        }
-        // Pola B: @<lat>,<lng>
-        if (preg_match('/@([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches)) {
-            return response()->json([
-                'success' => true,
-                'lat' => (float)$matches[1],
-                'lng' => (float)$matches[2],
-                'display_name' => 'Titik lokasi dari Google Maps',
-            ]);
-        }
-        // Pola C: ?q=<lat>,<lng> atau &ll=<lat>,<lng>
-        if (preg_match('/[?&](?:q|ll|destination)=([-+]?[0-9]{1,2}\.[0-9]+),([-+]?[0-9]{1,3}\.[0-9]+)/', $query, $matches)) {
-            return response()->json([
-                'success' => true,
-                'lat' => (float)$matches[1],
-                'lng' => (float)$matches[2],
-                'display_name' => 'Koordinat dari link Google Maps',
-            ]);
         }
 
         // 2a. Cek format koordinat DMS (Derajat Menit Detik, contoh: 6°16'38.3"S 106°51'18.6"E)
@@ -702,5 +720,70 @@ class BranchController extends Controller
             'success' => false,
             'message' => 'Alamat belum cocok di peta. Silakan geser pin biru langsung pada peta.',
         ]);
+    }
+
+    /**
+     * Konversi link Google Maps di kolom alamat cabang menjadi teks alamat resmi
+     */
+    public function convertAddress(Request $request, Branch $branch)
+    {
+        $user = Auth::user();
+        if (!in_array($user->role, ['admin', 'super_admin'])) {
+            abort(403);
+        }
+
+        $success = $branch->convertAddressToText();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => $success,
+                'address' => $branch->address,
+                'latitude' => $branch->latitude,
+                'longitude' => $branch->longitude,
+                'message' => $success 
+                    ? 'Alamat cabang berhasil dikonversi dari link menjadi teks alamat resmi!' 
+                    : 'Alamat cabang sudah berupa teks atau gagal dikonversi.'
+            ]);
+        }
+
+        return back()->with(
+            $success ? 'success' : 'info', 
+            $success 
+                ? 'Alamat cabang berhasil dikonversi dari link menjadi teks alamat resmi.' 
+                : 'Alamat cabang sudah berupa teks atau tidak dapat dikonversi.'
+        );
+    }
+
+    /**
+     * Konversi massal seluruh cabang yang alamatnya masih berupa link Google Maps
+     */
+    public function convertAllAddresses(Request $request)
+    {
+        $user = Auth::user();
+        if (!in_array($user->role, ['admin', 'super_admin'])) {
+            abort(403);
+        }
+
+        $branches = Branch::where('address', 'LIKE', '%http%')
+            ->orWhere('address', 'LIKE', '%maps%')
+            ->orWhere('address', 'LIKE', '%goo.gl%')
+            ->get();
+
+        $convertedCount = 0;
+        foreach ($branches as $branch) {
+            if ($branch->convertAddressToText()) {
+                $convertedCount++;
+            }
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'converted_count' => $convertedCount,
+                'message' => "Berhasil mengonversi {$convertedCount} alamat cabang menjadi teks resmi."
+            ]);
+        }
+
+        return back()->with('success', "Berhasil mengonversi {$convertedCount} alamat cabang menjadi teks resmi.");
     }
 }

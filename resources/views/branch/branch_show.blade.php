@@ -112,10 +112,38 @@
                             <span class="fw-bold text-muted">Nama Cabang</span>
                             <span class="text-dark">{{ $branch->name }}</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start py-2 border-bottom">
                             <span class="fw-bold text-muted">Alamat</span>
-                            <span class="text-dark text-end" style="max-width: 200px;">{{ $branch->address ?? '-' }}</span>
+                            <div class="text-end" style="max-width: 230px;">
+                                <span class="text-dark small d-block" id="branch-address-text" style="word-break: break-word;">
+                                    {{ $branch->address ?? '-' }}
+                                </span>
+                                <div class="d-flex align-items-center justify-content-end gap-1 mt-1 flex-wrap">
+                                    @if($branch->google_maps_url)
+                                        <a href="{{ $branch->google_maps_url }}" id="branch-gmaps-link" target="_blank" rel="noopener noreferrer" class="badge bg-light text-primary border text-decoration-none" style="font-size: 11px;">
+                                            <i class="mdi mdi-google-maps text-danger"></i> Maps
+                                        </a>
+                                    @endif
+                                    @if(auth()->user()->role == 'admin')
+                                        <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 fw-semibold" id="btn-convert-address" onclick="convertAddressAjax({{ $branch->id }})" title="Konversi link Google Maps menjadi teks alamat resmi">
+                                            <i class="mdi mdi-auto-fix me-0.5"></i> <span id="btn-convert-text">Konversi Alamat</span>
+                                        </button>
+                                    @endif
+                                </div>
+                                <div id="convert-address-feedback" class="small mt-1 text-success d-none" style="font-size: 11px;"></div>
+                            </div>
                         </div>
+                        @if($branch->latitude && $branch->longitude)
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <span class="fw-bold text-muted">Koordinat GPS</span>
+                                <span class="text-dark small text-end">
+                                    {{ round($branch->latitude, 6) }}, {{ round($branch->longitude, 6) }}
+                                    @if($branch->radius)
+                                        <span class="badge bg-light text-dark border ms-1">{{ $branch->radius }}m</span>
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                             <span class="fw-bold text-muted">Total Karyawan</span>
                             <span class="badge bg-primary fs-6">{{ $totalEmployees }}</span>
@@ -356,3 +384,60 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    function convertAddressAjax(branchId) {
+        const btn = document.getElementById('btn-convert-address');
+        const btnText = document.getElementById('btn-convert-text');
+        const feedback = document.getElementById('convert-address-feedback');
+        const addrEl = document.getElementById('branch-address-text');
+        const gmapsLink = document.getElementById('branch-gmaps-link');
+
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.textContent = 'Mengonversi...';
+        if (feedback) feedback.classList.add('d-none');
+
+        fetch(`/branches/${branchId}/convert-address`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.address) {
+                if (addrEl) addrEl.textContent = data.address;
+                if (feedback) {
+                    feedback.className = 'small mt-1 text-success fw-bold';
+                    feedback.innerHTML = '<i class="mdi mdi-check-circle me-1"></i>Alamat berhasil dikonversi!';
+                    feedback.classList.remove('d-none');
+                }
+                if (data.latitude && data.longitude && gmapsLink) {
+                    gmapsLink.href = `https://www.google.com/maps/place/${data.latitude},${data.longitude}/@${data.latitude},${data.longitude},17z`;
+                }
+            } else {
+                if (feedback) {
+                    feedback.className = 'small mt-1 text-warning fw-semibold';
+                    feedback.innerHTML = '<i class="mdi mdi-information-outline me-1"></i>' + (data.message || 'Alamat tidak perlu dikonversi.');
+                    feedback.classList.remove('d-none');
+                }
+            }
+        })
+        .catch(() => {
+            if (feedback) {
+                feedback.className = 'small mt-1 text-danger';
+                feedback.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i>Gagal menghubungi server.';
+                feedback.classList.remove('d-none');
+            }
+        })
+        .finally(() => {
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = 'Konversi Alamat';
+        });
+    }
+</script>
+@endpush
