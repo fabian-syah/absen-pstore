@@ -58,10 +58,10 @@
                         @if ($user->personality)
                             @php $p = $user->personality; @endphp
                             <div class="mt-2">
-                                <span class="badge rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-1 shadow-sm"
-                                      style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 12px; font-weight: 600;"
+                                <span class="badge rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                                      style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 12px; font-weight: 600; max-width: 100%;"
                                       title="{{ $p['description'] }}">
-                                    <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
+                                    <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }};"></i>
                                     <span>Kepribadian: {{ $p['full'] }}</span>
                                 </span>
                             </div>
@@ -418,7 +418,7 @@
                             <p class="h6 mb-0 text-dark"><i class="mdi mdi-cake-variant text-warning me-1"></i> {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') . ' (' . \Carbon\Carbon::parse($user->birth_date)->age . ' Tahun)' : '-' }}</p>
                         </div>
                         <div class="col-12 col-sm-6 mb-3">
-                            <label class="fw-bold text-muted small">Tipe Kepribadian (STIFIn)</label>
+                            <label class="fw-bold text-muted small">Kepribadian</label>
                             @if($user->personality)
                                 @php $p = $user->personality; @endphp
                                 <div>

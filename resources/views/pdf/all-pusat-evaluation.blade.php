@@ -308,7 +308,7 @@
                                         <div class="user-name">{{ $user->name }}</div>
                                         <div class="user-meta">Role: <strong>{{ ucwords(str_replace('_', ' ', $user->role)) }}</strong></div>
                                         <div class="user-meta">Divisi: <strong>{{ $user->divisions && $user->divisions->count() > 0 ? $user->divisions->pluck('name')->join(', ') : ($user->division ? $user->division->name : '-') }}</strong></div>
-                                        <div class="user-meta">Kepribadian: <strong>{{ $user->personality['full'] ?? '-' }}</strong></div>
+                                        <div class="user-meta">Kepribadian: <strong style="color: {{ $user->personality['color'] ?? '#0f172a' }};">{{ $user->personality['full'] ?? '-' }}</strong></div>
                                         @if($eval && $eval->assessor)
                                         <div class="user-meta">Dinilai Oleh: <strong>{{ $eval->assessor->name }}</strong></div>
                                         @endif

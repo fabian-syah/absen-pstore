@@ -63,7 +63,7 @@
         </tr>
         <tr>
             <th>Kepribadian</th>
-            <td style="font-weight: bold; color: #1e3a8a;">{{ $user->personality['full'] ?? '-' }}</td>
+            <td style="font-weight: bold; color: {{ $user->personality['color'] ?? '#1e3a8a' }};">{{ $user->personality['full'] ?? '-' }}</td>
         </tr>
     </table>
 

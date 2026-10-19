@@ -393,7 +393,7 @@
                     @php $p = Auth::user()->personality; @endphp
                     <span class="badge d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill shadow-sm" 
                           style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 0.82rem; font-weight: 600;" 
-                          title="Tipe Kepribadian: {{ $p['full'] }} - {{ $p['description'] }}">
+                          title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
                         <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
                         <span>{{ $p['full'] }}</span>
                     </span>
@@ -483,7 +483,7 @@
                     @php $p = Auth::user()->personality; @endphp
                     <span class="badge d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill shadow-sm text-wrap text-start" 
                           style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 0.75rem; font-weight: 600; max-width: 100%;"
-                          title="Tipe Kepribadian: {{ $p['full'] }}">
+                          title="Kepribadian: {{ $p['full'] }}">
                         <i class="mdi {{ $p['icon'] }} flex-shrink-0"></i>
                         <span>{{ $p['full'] }}</span>
                     </span>
@@ -1081,10 +1081,10 @@
                                 @if(Auth::user()->personality)
                                     @php $p = Auth::user()->personality; @endphp
                                     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2 px-2.5 py-1 rounded-pill shadow-sm d-flex align-items-center gap-1"
-                                         style="background: rgba(15, 23, 42, 0.85); color: #fff; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.72rem; font-weight: 600; white-space: nowrap; z-index: 2;"
+                                         style="background: rgba(15, 23, 42, 0.85); color: #fff; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.72rem; font-weight: 600; max-width: 90%; z-index: 2;"
                                          title="{{ $p['description'] }}">
-                                        <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
-                                        <span>{{ $p['full'] }}</span>
+                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }};"></i>
+                                        <span class="text-truncate">{{ $p['full'] }}</span>
                                     </div>
                                 @endif
                             </div>

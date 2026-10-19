@@ -535,22 +535,26 @@
                                     </div>
                                 </div>
 
-                                {{-- Tipe Kepribadian (STIFIn Typology) --}}
+                                {{-- Kepribadian --}}
                                 <div class="col-12">
                                     <div class="info-tile p-3 rounded-3 border" style="background: {{ $user->personality['bg_color'] ?? '#f8fafc' }}; border-color: {{ $user->personality['border_color'] ?? '#e2e8f0' }} !important;">
                                         <div class="d-flex align-items-center justify-content-between mb-1">
                                             <div class="d-flex align-items-center" style="font-size: 11px; font-weight: 600; color: {{ $user->personality['text_color'] ?? '#64748b' }};">
-                                                <i class="mdi {{ $user->personality['icon'] ?? 'mdi-account-star-outline' }} fs-6 me-1.5" style="color: {{ $user->personality['color'] ?? '#3b82f6' }};"></i>
-                                                <span class="text-uppercase">Tipe Kepribadian (Karakter)</span>
+                                                <i class="mdi {{ $user->personality['icon'] ?? 'mdi-account-outline' }} fs-6 me-1.5" style="color: {{ $user->personality['color'] ?? '#3b82f6' }};"></i>
+                                                <span class="text-uppercase" style="letter-spacing: 0.5px;">Kepribadian</span>
                                             </div>
                                             @if($user->personality)
                                                 <span class="badge rounded-pill px-2.5 py-1" style="background-color: {{ $user->personality['color'] }}; color: #fff; font-size: 10px; font-weight: 700;">
-                                                    Tipe {{ $user->personality['number'] }} &bull; {{ $user->personality['code'] }}
+                                                    @if($user->personality['number'] == 9)
+                                                        Tipe 9
+                                                    @else
+                                                        Tipe {{ $user->personality['number'] }} &bull; {{ $user->personality['code'] }}
+                                                    @endif
                                                 </span>
                                             @endif
                                         </div>
                                         <div class="fw-bold" style="font-size: 14px; color: {{ $user->personality['text_color'] ?? '#0f172a' }};">
-                                            {{ $user->personality['full'] ?? 'Belum teridentifikasi (Tanggal lahir belum diisi)' }}
+                                            {{ $user->personality['full'] ?? 'Belum ada data (Tanggal lahir belum diisi)' }}
                                         </div>
                                         @if($user->personality)
                                             <div class="mt-1" style="font-size: 12px; color: {{ $user->personality['text_color'] }}; opacity: 0.9;">

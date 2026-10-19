@@ -142,13 +142,13 @@
                     @if($employee->personality)
                         @php $ep = $employee->personality; @endphp
                         <div class="px-3 py-2 rounded-3 border d-flex align-items-center gap-2 shadow-sm" 
-                             style="background-color: {{ $ep['bg_color'] }}; border-color: {{ $ep['border_color'] }} !important;"
+                             style="background-color: {{ $ep['bg_color'] }}; border-color: {{ $ep['border_color'] }} !important; max-width: 100%;"
                              title="{{ $ep['description'] }}">
                             <div style="width: 32px; height: 32px; background-color: {{ $ep['color'] }}; color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center;" class="flex-shrink-0">
                                 <i class="mdi {{ $ep['icon'] }} fs-5"></i>
                             </div>
                             <div>
-                                <div class="text-uppercase" style="font-size: 10px; font-weight: 700; color: {{ $ep['text_color'] }};">Kepribadian (STIFIn)</div>
+                                <div class="text-uppercase" style="font-size: 10px; font-weight: 700; color: {{ $ep['text_color'] }}; letter-spacing: 0.5px;">Kepribadian</div>
                                 <div class="fw-bold" style="font-size: 13px; color: {{ $ep['text_color'] }};">{{ $ep['full'] }}</div>
                             </div>
                         </div>

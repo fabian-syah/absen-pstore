@@ -126,7 +126,7 @@
                             @php $ep = $employee->personality; @endphp
                             <span class="badge rounded-pill px-2 py-0.5" 
                                   style="background-color: {{ $ep['bg_color'] }}; color: {{ $ep['text_color'] }}; border: 1px solid {{ $ep['border_color'] }}; font-size: 10px; font-weight: 700;" 
-                                  title="Kepribadian: {{ $ep['full'] }} - {{ $ep['description'] }}">
+                                  title="Kepribadian: {{ $ep['full'] }} ({{ $ep['description'] }})">
                                 <i class="mdi {{ $ep['icon'] }} me-0.5"></i>{{ $ep['code'] }}
                             </span>
                         @endif

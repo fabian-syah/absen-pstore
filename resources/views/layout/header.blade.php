@@ -269,7 +269,7 @@
                                         @php $p = Auth::user()->personality; @endphp
                                         <span class="badge rounded-pill px-2 py-0.5 d-inline-flex align-items-center gap-1"
                                               style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 10.5px; font-weight: 600;"
-                                              title="{{ $p['full'] }} - {{ $p['description'] }}">
+                                              title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
                                             <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
                                             <span>{{ $p['full'] }}</span>
                                         </span>
