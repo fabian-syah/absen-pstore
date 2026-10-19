@@ -55,6 +55,18 @@
                             <span class="badge rounded-pill bg-danger px-3 py-2"><i class="mdi mdi-account-off me-1"></i> NON-AKTIF</span>
                         @endif
 
+                        @if ($user->personality)
+                            @php $p = $user->personality; @endphp
+                            <div class="mt-2">
+                                <span class="badge rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-1 shadow-sm"
+                                      style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 12px; font-weight: 600;"
+                                      title="{{ $p['description'] }}">
+                                    <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
+                                    <span>Kepribadian: {{ $p['full'] }}</span>
+                                </span>
+                            </div>
+                        @endif
+
                         {{-- [GAMIFICATION] USER RANK & XP - HIDDEN PER USER REQUEST
                         @php 
                             $rank = $user->calculateRank(); 
@@ -374,13 +386,13 @@
                         @endif
                         
                         @if(auth()->user()->role == 'admin_gaji')
-                             <div class="col-md-6 mb-3">
+                            <div class="col-12 col-sm-6 mb-3">
                                 <label class="fw-bold text-muted small">Rekening</label>
                                 <p class="h6 text-dark">
                                     {{ $user->employeeSalary->bank_name ?? '-' }} - {{ $user->employeeSalary->bank_account_number ?? '-' }}
                                 </p>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-12 col-sm-6 mb-3">
                                 <label class="fw-bold text-muted small">Kategori Gaji</label>
                                 <p class="h6 text-dark">
                                     @if($user->employeeSalary)
@@ -391,7 +403,7 @@
                                 </p>
                             </div>
                         @else
-                            <div class="col-md-6 mb-3">
+                            <div class="col-12 col-sm-6 mb-3">
                                 <label class="fw-bold text-muted small">Tipe Absensi</label>
                                 @if ($user->only_security_scan)
                                     <p class="h6 text-danger fw-bold"><i class="mdi mdi-qrcode-scan"></i> Wajib Scan Security (Locked)</p>
@@ -399,11 +411,29 @@
                                     <p class="h6 text-success"><i class="mdi mdi-cellphone"></i> Bisa Mandiri & Scan</p>
                                 @endif
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="fw-bold text-muted small">Tanggal Lahir</label>
-                                <p class="h6"><i class="mdi mdi-cake-variant text-warning me-1"></i> {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') . ' (' . \Carbon\Carbon::parse($user->birth_date)->age . ' Tahun)' : '-' }}</p>
-                            </div>
                         @endif
+
+                        <div class="col-12 col-sm-6 mb-3">
+                            <label class="fw-bold text-muted small">Tanggal Lahir</label>
+                            <p class="h6 mb-0 text-dark"><i class="mdi mdi-cake-variant text-warning me-1"></i> {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') . ' (' . \Carbon\Carbon::parse($user->birth_date)->age . ' Tahun)' : '-' }}</p>
+                        </div>
+                        <div class="col-12 col-sm-6 mb-3">
+                            <label class="fw-bold text-muted small">Tipe Kepribadian (STIFIn)</label>
+                            @if($user->personality)
+                                @php $p = $user->personality; @endphp
+                                <div>
+                                    <span class="badge rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 12px; font-weight: 700; max-width: 100%;"
+                                          title="{{ $p['description'] }}">
+                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 14px;"></i>
+                                        <span>{{ $p['full'] }}</span>
+                                    </span>
+                                    <div class="text-muted mt-1 small" style="font-size: 11px; line-height: 1.4;">{{ $p['description'] }}</div>
+                                </div>
+                            @else
+                                <p class="h6 text-muted mb-0"><i>- (Tanggal lahir belum diisi)</i></p>
+                            @endif
+                        </div>
                     </div>
 
                     {{-- TARGET & PENCAPAIAN (HANYA BUKAN ADMIN GAJI) --}}

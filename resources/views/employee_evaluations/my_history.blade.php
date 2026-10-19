@@ -27,12 +27,12 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card info-card">
-            <div class="d-flex align-items-center">
-                <div class="me-4">
+            <div class="d-flex align-items-center flex-column flex-sm-row text-center text-sm-start gap-3">
+                <div class="flex-shrink-0">
                     @if(Auth::user()->profile_photo_path)
                         <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="rounded-circle shadow-sm" width="70" height="70" style="object-fit: cover;">
                     @else
-                        <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center shadow-sm" style="width: 70px; height: 70px; font-size: 24px; font-weight: bold;">
+                        <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center shadow-sm mx-auto" style="width: 70px; height: 70px; font-size: 24px; font-weight: bold;">
                             {{ substr(Auth::user()->name, 0, 1) }}
                         </div>
                     @endif
@@ -43,13 +43,24 @@
                         <i class="mdi mdi-office-building-marker me-1"></i> {{ Auth::user()->branch->name ?? 'Pusat' }} | 
                         <i class="mdi mdi-account-badge-outline me-1"></i> {{ str_replace('_', ' ', Auth::user()->role) }}
                     </p>
-                    <div class="badge bg-white text-primary border px-3 py-2">
-                        <i class="mdi mdi-calendar-check me-1"></i> 
-                        Evaluasi Terakhir: 
-                        @if($evaluations->first())
-                            {{ \Carbon\Carbon::parse($evaluations->first()->evaluation_date)->translatedFormat('d F Y') }}
-                        @else
-                            Belum Ada Evaluasi
+                    <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-2 flex-wrap">
+                        <div class="badge bg-white text-primary border px-3 py-2 text-wrap text-start">
+                            <i class="mdi mdi-calendar-check me-1"></i> 
+                            Evaluasi Terakhir: 
+                            @if($evaluations->first())
+                                {{ \Carbon\Carbon::parse($evaluations->first()->evaluation_date)->translatedFormat('d F Y') }}
+                            @else
+                                Belum Ada Evaluasi
+                            @endif
+                        </div>
+                        @if(Auth::user()->personality)
+                            @php $p = Auth::user()->personality; @endphp
+                            <div class="badge px-3 py-2 border d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                                 style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border-color: {{ $p['border_color'] }} !important;"
+                                 title="{{ $p['description'] }}">
+                                <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
+                                <span>Kepribadian: {{ $p['full'] }}</span>
+                            </div>
                         @endif
                     </div>
                 </div>

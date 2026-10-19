@@ -123,6 +123,12 @@
                         <span class="badge-meta-pill">
                             <i class="mdi mdi-calendar-check me-1.5"></i>Bergabung {{ $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->translatedFormat('d M Y') : '-' }}
                         </span>
+                        @if($user->personality)
+                            @php $p = $user->personality; @endphp
+                            <span class="badge-meta-pill shadow-sm" style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-weight: 600;" title="{{ $p['description'] }}">
+                                <i class="mdi {{ $p['icon'] }} me-1.5" style="color: {{ $p['color'] }};"></i>Kepribadian: {{ $p['full'] }}
+                            </span>
+                        @endif
                     </div>
                 </div>
 
@@ -423,6 +429,13 @@
                                                value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}" readonly>
                                     </div>
                                     <div class="form-text text-muted" style="font-size: 11px;">Tanggal lahir tercatat di arsip kepegawaian.</div>
+                                    @if($user->personality)
+                                        @php $p = $user->personality; @endphp
+                                        <div class="form-text mt-1 fw-semibold d-flex align-items-center gap-1" style="font-size: 11.5px; color: {{ $p['color'] }};">
+                                            <i class="mdi {{ $p['icon'] }}"></i>
+                                            <span>Kepribadian: <strong>{{ $p['full'] }}</strong></span>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 {{-- Email Login --}}
@@ -519,6 +532,31 @@
                                                 </span>
                                             @endif
                                         </div>
+                                    </div>
+                                </div>
+
+                                {{-- Tipe Kepribadian (STIFIn Typology) --}}
+                                <div class="col-12">
+                                    <div class="info-tile p-3 rounded-3 border" style="background: {{ $user->personality['bg_color'] ?? '#f8fafc' }}; border-color: {{ $user->personality['border_color'] ?? '#e2e8f0' }} !important;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <div class="d-flex align-items-center" style="font-size: 11px; font-weight: 600; color: {{ $user->personality['text_color'] ?? '#64748b' }};">
+                                                <i class="mdi {{ $user->personality['icon'] ?? 'mdi-account-star-outline' }} fs-6 me-1.5" style="color: {{ $user->personality['color'] ?? '#3b82f6' }};"></i>
+                                                <span class="text-uppercase">Tipe Kepribadian (Karakter)</span>
+                                            </div>
+                                            @if($user->personality)
+                                                <span class="badge rounded-pill px-2.5 py-1" style="background-color: {{ $user->personality['color'] }}; color: #fff; font-size: 10px; font-weight: 700;">
+                                                    Tipe {{ $user->personality['number'] }} &bull; {{ $user->personality['code'] }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="fw-bold" style="font-size: 14px; color: {{ $user->personality['text_color'] ?? '#0f172a' }};">
+                                            {{ $user->personality['full'] ?? 'Belum teridentifikasi (Tanggal lahir belum diisi)' }}
+                                        </div>
+                                        @if($user->personality)
+                                            <div class="mt-1" style="font-size: 12px; color: {{ $user->personality['text_color'] }}; opacity: 0.9;">
+                                                {{ $user->personality['description'] }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

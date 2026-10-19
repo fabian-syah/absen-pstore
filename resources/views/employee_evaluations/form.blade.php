@@ -134,20 +134,36 @@
                     </div>
                 @endif
 
-                <div class="mb-4 p-3 bg-white border rounded-3 shadow-sm d-flex justify-content-between align-items-center">
+                <div class="mb-4 p-3 bg-white border rounded-3 shadow-sm d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
                         <label class="form-label text-muted small fw-bold mb-1">Tanggal Evaluasi</label>
                         <h5 class="mb-0 text-dark fw-bold"><i class="mdi mdi-calendar-today me-2 text-primary"></i>{{ \Carbon\Carbon::parse($date)->translatedFormat('d F Y') }}</h5>
                     </div>
-                    @if($isReadOnly)
-                        <div class="badge bg-danger px-3 py-2 rounded-3 fs-6 shadow-sm">
-                            <i class="mdi mdi-lock me-1"></i> Sudah Dinilai Hari Ini
-                        </div>
-                    @else
-                        <div class="badge bg-success px-3 py-2 rounded-3 fs-6 shadow-sm">
-                            <i class="mdi mdi-check-circle-outline me-1"></i> Belum Dinilai
+                    @if($employee->personality)
+                        @php $ep = $employee->personality; @endphp
+                        <div class="px-3 py-2 rounded-3 border d-flex align-items-center gap-2 shadow-sm" 
+                             style="background-color: {{ $ep['bg_color'] }}; border-color: {{ $ep['border_color'] }} !important;"
+                             title="{{ $ep['description'] }}">
+                            <div style="width: 32px; height: 32px; background-color: {{ $ep['color'] }}; color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center;" class="flex-shrink-0">
+                                <i class="mdi {{ $ep['icon'] }} fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="text-uppercase" style="font-size: 10px; font-weight: 700; color: {{ $ep['text_color'] }};">Kepribadian (STIFIn)</div>
+                                <div class="fw-bold" style="font-size: 13px; color: {{ $ep['text_color'] }};">{{ $ep['full'] }}</div>
+                            </div>
                         </div>
                     @endif
+                    <div>
+                        @if($isReadOnly)
+                            <div class="badge bg-danger px-3 py-2 rounded-3 fs-6 shadow-sm">
+                                <i class="mdi mdi-lock me-1"></i> Sudah Dinilai Hari Ini
+                            </div>
+                        @else
+                            <div class="badge bg-success px-3 py-2 rounded-3 fs-6 shadow-sm">
+                                <i class="mdi mdi-check-circle-outline me-1"></i> Belum Dinilai
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
                 <form action="{{ route('employee-evaluations.store', $employee->id) }}" method="POST">

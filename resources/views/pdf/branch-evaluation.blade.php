@@ -93,6 +93,7 @@
                                         <div class="user-name">{{ $user->name }}</div>
                                         <div class="user-meta">Cabang: <strong>{{ $branch->name }}</strong></div>
                                         <div class="user-meta">Divisi: <strong>{{ $user->divisions && $user->divisions->count() > 0 ? $user->divisions->pluck('name')->join(', ') : ($user->division ? $user->division->name : '-') }}</strong></div>
+                                        <div class="user-meta">Kepribadian: <strong>{{ $user->personality['full'] ?? '-' }}</strong></div>
                                     </td>
                                     <td class="score-box-wrapper">
                                         <div class="score-box">

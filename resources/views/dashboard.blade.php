@@ -387,7 +387,18 @@
     <div class="d-none d-lg-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <span class="text-muted small d-block mb-1" id="greeting-text">Selamat Datang,</span>
-            <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
+                @if(Auth::user()->personality)
+                    @php $p = Auth::user()->personality; @endphp
+                    <span class="badge d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill shadow-sm" 
+                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 0.82rem; font-weight: 600;" 
+                          title="Tipe Kepribadian: {{ $p['full'] }} - {{ $p['description'] }}">
+                        <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
+                        <span>{{ $p['full'] }}</span>
+                    </span>
+                @endif
+            </div>
         </div>
         @if(in_array(Auth::user()->role, ['audit', 'admin']))
             <div class="text-end d-none d-md-block">
@@ -466,7 +477,18 @@
         {{-- Sapaan Khusus Mobile (Karena di desktop sudah ada di Top Navbar) --}}
         <div class="d-block d-lg-none mb-2">
             <span class="text-muted small d-block mb-1 greeting-text-mobile">Selamat Datang,</span>
-            <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h3 class="fw-bold mb-0 text-dark">{{ Auth::user()->name }}!</h3>
+                @if(Auth::user()->personality)
+                    @php $p = Auth::user()->personality; @endphp
+                    <span class="badge d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill shadow-sm text-wrap text-start" 
+                          style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 0.75rem; font-weight: 600; max-width: 100%;"
+                          title="Tipe Kepribadian: {{ $p['full'] }}">
+                        <i class="mdi {{ $p['icon'] }} flex-shrink-0"></i>
+                        <span>{{ $p['full'] }}</span>
+                    </span>
+                @endif
+            </div>
         </div>
 
         {{-- Quick Search Bar khusus Mobile Dashboard (Admin, Audit, Leader, Admin Gaji) --}}
@@ -1026,7 +1048,15 @@
                                     {{ Auth::user()->name }}
                                     <i class="mdi mdi-check-decagram" style="color: #38bdf8 !important; font-size: 1.15rem; vertical-align: middle;" title="Terverifikasi"></i>
                                 </h5>
-                                <p class="mb-0" style="color: #cbd5e1 !important; font-size: 0.8rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</p>
+                                <div class="d-flex align-items-center justify-content-end gap-2">
+                                    <p class="mb-0" style="color: #cbd5e1 !important; font-size: 0.8rem;">{{ Auth::user()->division->name ?? 'DIVISI PENGEMBANGAN PRODUK' }}</p>
+                                    @if(Auth::user()->personality)
+                                        @php $p = Auth::user()->personality; @endphp
+                                        <span class="badge rounded-pill px-2 py-0.5" style="background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.3); font-size: 0.72rem;" title="Kepribadian: {{ $p['full'] }}">
+                                            <i class="mdi {{ $p['icon'] }} me-1"></i>{{ $p['code'] }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                             <div class="px-3 px-md-4 py-2 shadow-lg d-flex align-items-center gap-2" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);">
                                 <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>
@@ -1047,6 +1077,15 @@
                                     <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto" class="img-fluid w-100 h-100" style="object-fit: cover; border-radius: 18px;">
                                 @else
                                     <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=e2e8f0&color=475569&size=400" alt="Foto" class="img-fluid w-100 h-100" style="object-fit: cover; border-radius: 18px;">
+                                @endif
+                                @if(Auth::user()->personality)
+                                    @php $p = Auth::user()->personality; @endphp
+                                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2 px-2.5 py-1 rounded-pill shadow-sm d-flex align-items-center gap-1"
+                                         style="background: rgba(15, 23, 42, 0.85); color: #fff; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.72rem; font-weight: 600; white-space: nowrap; z-index: 2;"
+                                         title="{{ $p['description'] }}">
+                                        <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
+                                        <span>{{ $p['full'] }}</span>
+                                    </div>
                                 @endif
                             </div>
 
@@ -2130,6 +2169,16 @@
                                 <h4 class="card-id-division">
                                     {{ strtoupper(Auth::user()->division->name ?? 'BELUM ADA DIVISI') }}
                                 </h4>
+                                @if(Auth::user()->personality)
+                                    @php $p = Auth::user()->personality; @endphp
+                                    <p class="card-id-label mt-2">KEPRIBADIAN</p>
+                                    <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                                          style="background: rgba(255,255,255,0.22); color: #fff; backdrop-filter: blur(6px); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.35); max-width: 100%;"
+                                          title="{{ $p['description'] }}">
+                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0"></i>
+                                        <span>{{ $p['full'] }}</span>
+                                    </span>
+                                @endif
                             </div>
                             <div class="card-id-footer d-flex justify-content-end align-items-end mt-4">
                                 <div class="text-end">

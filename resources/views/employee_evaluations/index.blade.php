@@ -118,9 +118,19 @@
                             <img src="https://ui-avatars.com/api/?name={{ urlencode($employee->name) }}&background=random" alt="Foto">
                         @endif
                     </div>
-                    <span class="badge bg-light text-secondary border">
-                        ID: {{ $employee->id }}
-                    </span>
+                    <div class="d-flex flex-column align-items-end gap-1">
+                        <span class="badge bg-light text-secondary border">
+                            ID: {{ $employee->id }}
+                        </span>
+                        @if($employee->personality)
+                            @php $ep = $employee->personality; @endphp
+                            <span class="badge rounded-pill px-2 py-0.5" 
+                                  style="background-color: {{ $ep['bg_color'] }}; color: {{ $ep['text_color'] }}; border: 1px solid {{ $ep['border_color'] }}; font-size: 10px; font-weight: 700;" 
+                                  title="Kepribadian: {{ $ep['full'] }} - {{ $ep['description'] }}">
+                                <i class="mdi {{ $ep['icon'] }} me-0.5"></i>{{ $ep['code'] }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Nama --}}
@@ -132,6 +142,13 @@
 
                 {{-- Statistik Terakhir --}}
                 <div class="bg-light rounded p-3 mb-3">
+                    @if($employee->personality)
+                        @php $ep = $employee->personality; @endphp
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted small"><i class="mdi {{ $ep['icon'] }} me-1" style="color: {{ $ep['color'] }};"></i>Kepribadian</span>
+                            <span class="fw-bold text-truncate" style="font-size: 0.8rem; color: {{ $ep['text_color'] }}; max-width: 60%;" title="{{ $ep['full'] }}">{{ $ep['full'] }}</span>
+                        </div>
+                    @endif
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-muted small"><i class="mdi mdi-star text-warning me-1"></i>Skor Rata-rata</span>
                         <span class="fw-bold text-dark">{{ $latestEval ? number_format($latestEval->average_score, 1) : '-' }}</span>

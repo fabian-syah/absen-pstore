@@ -33,7 +33,7 @@
 
     <table class="employee-info" style="border: none;">
         <tr>
-            <td rowspan="3" style="width: 140px; text-align: center; border: none; padding: 0 12px 0 0; vertical-align: middle;">
+            <td rowspan="4" style="width: 140px; text-align: center; border: none; padding: 0 12px 0 0; vertical-align: middle;">
                 @php
                     if (!isset($photoUrl) || !$photoUrl) {
                         $photoUrl = \App\Http\Controllers\EmployeeEvaluationController::getProfilePhotoData($user->profile_photo_path, 280);
@@ -47,7 +47,7 @@
             </td>
             <th>Nama Karyawan</th>
             <td style="font-weight: bold; font-size: 13px;">{{ $user->name }}</td>
-            <td rowspan="3" style="width: 140px; border: 2px solid #1e3a8a; text-align: center; vertical-align: middle; background-color: #f8fafc; padding: 10px;">
+            <td rowspan="4" style="width: 140px; border: 2px solid #1e3a8a; text-align: center; vertical-align: middle; background-color: #f8fafc; padding: 10px;">
                 <div style="font-size: 11px; color: #64748b; font-weight: bold; text-transform: uppercase; margin-bottom: 8px;">Grade Akhir</div>
                 <div style="font-size: 28px; font-weight: bold; color: #10b981; margin-bottom: 5px;">{{ $evaluation->grade }}</div>
                 <div style="font-size: 13px; color: #475569;">Skor: <b>{{ $evaluation->average_score }}</b></div>
@@ -60,6 +60,10 @@
         <tr>
             <th>Divisi / Cabang</th>
             <td>{{ $user->branch->name ?? 'Pusat' }} {{ isset($user->division) ? ' - ' . $user->division->name : '' }}</td>
+        </tr>
+        <tr>
+            <th>Kepribadian</th>
+            <td style="font-weight: bold; color: #1e3a8a;">{{ $user->personality['full'] ?? '-' }}</td>
         </tr>
     </table>
 

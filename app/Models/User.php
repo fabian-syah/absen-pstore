@@ -85,6 +85,7 @@ class User extends Authenticatable
      * The attributes that should be cast.
      */
     protected $casts = [
+        'birth_date' => 'date',
         'email_verified_at' => 'datetime',
         'hire_date' => 'date',
         'is_active' => 'boolean',
@@ -278,5 +279,13 @@ class User extends Authenticatable
         }
 
         return false;
+    }
+
+    /**
+     * Get the user's personality based on birth date (STIFIn typology).
+     */
+    public function getPersonalityAttribute(): ?array
+    {
+        return app(\App\Services\PersonalityService::class)->calculate($this->birth_date);
     }
 }

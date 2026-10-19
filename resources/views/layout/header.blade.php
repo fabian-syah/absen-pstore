@@ -258,13 +258,22 @@
                                     @endif
                                 </h6>
                                 <small class="text-muted d-block text-truncate mt-0.5" style="font-size: 11px;">{{ Auth::user()->email }}</small>
-                                <div class="user-dropdown-badges d-flex align-items-center gap-2 mt-2 flex-wrap">
+                                <div class="user-dropdown-badges d-flex align-items-center gap-1.5 mt-2 flex-wrap">
                                     <span class="dropdown-role-badge">
                                         <i class="mdi mdi-shield-account me-1"></i>{{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}
                                     </span>
                                     <span class="dropdown-division-badge">
                                         <i class="mdi mdi-office-building me-1"></i>{{ Auth::user()->division->name ?? 'Headquarters' }}
                                     </span>
+                                    @if(Auth::user()->personality)
+                                        @php $p = Auth::user()->personality; @endphp
+                                        <span class="badge rounded-pill px-2 py-0.5 d-inline-flex align-items-center gap-1"
+                                              style="background-color: {{ $p['bg_color'] }}; color: {{ $p['text_color'] }}; border: 1px solid {{ $p['border_color'] }}; font-size: 10.5px; font-weight: 600;"
+                                              title="{{ $p['full'] }} - {{ $p['description'] }}">
+                                            <i class="mdi {{ $p['icon'] }}" style="color: {{ $p['color'] }};"></i>
+                                            <span>{{ $p['full'] }}</span>
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
