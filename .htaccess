@@ -1,9 +1,31 @@
+# ==============================================================================
+# Security Mitigation: PHP2Shell (CVE-2026-109618, CVE-2026-109619)
+# ==============================================================================
+# Batasi ukuran payload request ke server untuk mencegah serangan eksploitasi OOM memory exhaustion (8MB)
+LimitRequestBody 8388608
+
+# Nonaktifkan session upload progress di level modul PHP web server
+<IfModule mod_php.c>
+    php_flag session.upload_progress.enabled Off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag session.upload_progress.enabled Off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag session.upload_progress.enabled Off
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # [Security Filter] Blokir injeksi parameter eksploitasi PHP2Shell
+    RewriteCond %{QUERY_STRING} (PHP_SESSION_UPLOAD_PROGRESS|session\.upload_progress) [NC,OR]
+    RewriteCond %{HTTP_COOKIE} (PHP_SESSION_UPLOAD_PROGRESS) [NC]
+    RewriteRule .* - [F,L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
@@ -16,7 +38,7 @@
 
     # ★★★ TAMBAHKAN INI - Redirect /storage to /public/storage ★★★
     RewriteRule ^storage/(.*)$ public/storage/$1 [L]
-#testtt
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
