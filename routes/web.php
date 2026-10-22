@@ -46,6 +46,7 @@ use App\Http\Controllers\CashAdvanceController; // <--- ADD THIS
 use App\Http\Controllers\BonusController; // <--- ADD THIS
 use App\Http\Controllers\AuditMonitoringController;
 use App\Http\Controllers\EmployeeEvaluationController;
+use App\Http\Controllers\DeviceImeiCorrectionController;
 
 
 /*
@@ -176,6 +177,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         // Admin Dzikir Campaign
         Route::resource('dzikir-campaign', App\Http\Controllers\AdminZikirCampaignController::class);
+    });
+
+    // === FITUR KHUSUS SUPER ADMIN: RUBAH TIPE & KOREKSI SPESIFIKASI IMEI ===
+    Route::middleware(['role:admin'])->prefix('superadmin')->name('device-corrections.')->group(function () {
+        Route::get('/rubah-tipe', [DeviceImeiCorrectionController::class, 'index'])->name('index');
+        Route::post('/rubah-tipe', [DeviceImeiCorrectionController::class, 'storeOrUpdate'])->name('store-or-update');
+        Route::get('/rubah-tipe/lacak/{imei}', [DeviceImeiCorrectionController::class, 'track'])->name('track');
+        Route::get('/rubah-tipe/search-ajax', [DeviceImeiCorrectionController::class, 'searchAjax'])->name('search-ajax');
     });
 
     // === RUTE RIWAYAT KARIR & MUTASI (Full Resource kecuali show) ===
