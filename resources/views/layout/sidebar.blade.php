@@ -826,13 +826,6 @@
                     <span class="badge badge-warning ms-2" style="font-size: 0.6rem;">Super Admin</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('device-corrections.*') ? 'active' : '' }}" href="{{ route('device-corrections.index') }}">
-                    <i class="menu-icon mdi mdi-cellphone-cog text-primary"></i>
-                    <span class="menu-title">Rubah Tipe (IMEI)</span>
-                    <span class="badge badge-warning ms-2" style="font-size: 0.6rem;">Super Admin</span>
-                </a>
-            </li>
         @endif
 
         @if (auth()->user()->role == 'admin')
