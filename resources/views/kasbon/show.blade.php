@@ -366,6 +366,41 @@
                     </div>
                 </div>
 
+                {{-- KASBON LAIN KARYAWAN INI --}}
+                @if(isset($otherKasbons) && $otherKasbons->isNotEmpty())
+                    <div class="card mb-3 mb-md-4">
+                        <div class="card-body p-3">
+                            <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;">
+                                <i class="mdi mdi-format-list-bulleted me-1 text-primary"></i> Kasbon Lain Karyawan Ini
+                            </h6>
+                            <div class="list-group list-group-flush">
+                                @foreach($otherKasbons as $ok)
+                                    <a href="{{ route('kasbon.show', $ok->id) }}" class="list-group-item list-group-item-action px-2 py-2 border-0 rounded-2 mb-1 {{ $ok->status == 'paid' ? 'bg-light text-muted' : '' }}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-truncate text-dark" style="max-width: 170px; font-size: 0.8rem;">
+                                                {{ $ok->description }}
+                                            </span>
+                                            @if($ok->status == 'paid')
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 9px;">LUNAS</span>
+                                            @elseif($ok->status == 'approved')
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 9px;">AKTIF</span>
+                                            @else
+                                                <span class="badge bg-secondary-subtle text-secondary" style="font-size: 9px;">{{ strtoupper($ok->status) }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1 text-muted" style="font-size: 11px;">
+                                            <span>Pinjam: Rp {{ number_format($ok->amount, 0, ',', '.') }}</span>
+                                            <span class="{{ $ok->remaining_amount > 0 ? 'text-danger fw-bold' : 'text-success' }}">
+                                                Sisa: Rp {{ number_format($ok->remaining_amount, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @if (in_array(auth()->user()->role, ['admin', 'admin_gaji']) && $kasbon->status == 'pending')
                     <div class="card mt-4 border-2 border-warning border-start-0 border-end-0 border-bottom-0">
                         <div class="card-body">
@@ -480,6 +515,22 @@
                                                 <div
                                                     class="d-inline-block bg-light px-3 py-1 rounded-pill small border text-muted">
                                                     {{ $ins->note }}</div>
+                                                @if($ins->received_by === 'SYSTEM (PAYROLL)')
+                                                    @php
+                                                        $siblingInstallments = \App\Models\CashAdvanceInstallment::where('user_id', $ins->user_id)
+                                                            ->where('id', '!=', $ins->id)
+                                                            ->where('received_by', 'SYSTEM (PAYROLL)')
+                                                            ->where('note', $ins->note)
+                                                            ->get();
+                                                    @endphp
+                                                    @if($siblingInstallments->isNotEmpty())
+                                                        <div class="mt-1 small text-muted">
+                                                            <i class="mdi mdi-information-outline text-info me-1"></i>
+                                                            Total potong gaji periode ini: <strong>Rp {{ number_format($ins->amount_paid + $siblingInstallments->sum('amount_paid'), 0, ',', '.') }}</strong>
+                                                            <span class="text-secondary">(terbagi ke {{ $siblingInstallments->count() + 1 }} kasbon)</span>
+                                                        </div>
+                                                    @endif
+                                                @endif
                                             @endif
 
                                             {{-- ADMIN ACTION BUTTONS --}}
@@ -527,10 +578,29 @@
                                         <div class="text-end">
                                             <h5 class="fw-bold text-dark mb-1">+ Rp
                                                 {{ number_format($ins->amount_paid, 0, ',', '.') }}</h5>
-                                            <button class="btn btn-light btn-sm text-muted border rounded-pill px-3 mt-1"
-                                                onclick="openModal('{{ asset('storage/' . $ins->payment_proof) }}')">
-                                                <i class="mdi mdi-image-outline me-1"></i> Bukti
-                                            </button>
+                                            <div class="d-flex align-items-center justify-content-end gap-1 mt-1">
+                                                @if ($ins->payment_proof)
+                                                    <button type="button" class="btn btn-light btn-sm text-muted border rounded-pill px-2"
+                                                        onclick="openModal('{{ asset('storage/' . $ins->payment_proof) }}')" title="Lihat Bukti">
+                                                        <i class="mdi mdi-image-outline me-1"></i> Bukti
+                                                    </button>
+                                                @endif
+                                                @if (in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+                                                    <a href="{{ route('kasbon.installment.edit', $ins->id) }}"
+                                                        class="btn btn-light btn-sm text-primary border rounded-pill px-2" title="Edit Pembayaran">
+                                                        <i class="mdi mdi-pencil-outline"></i>
+                                                    </a>
+                                                    <form action="{{ route('kasbon.installment.destroy', $ins->id) }}" method="POST"
+                                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus pembayaran cicilan Rp {{ number_format($ins->amount_paid, 0, ',', '.') }} ini? Saldo kasbon akan disesuaikan otomatis.');"
+                                                        class="d-inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-light btn-sm text-danger border rounded-pill px-2" title="Hapus Pembayaran">
+                                                            <i class="mdi mdi-trash-can-outline"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

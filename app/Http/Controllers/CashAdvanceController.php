@@ -239,7 +239,13 @@ class CashAdvanceController extends Controller
 
         $totalOutstanding = $outstandingKasbons->sum('remaining_amount');
 
-        return view('kasbon.show', compact('kasbon', 'totalOutstanding'));
+        // Ambil semua kasbon lain milik user ini (termasuk yang lunas) untuk referensi admin
+        $otherKasbons = CashAdvance::where('user_id', $kasbon->user_id)
+            ->where('id', '!=', $kasbon->id)
+            ->latest()
+            ->get();
+
+        return view('kasbon.show', compact('kasbon', 'totalOutstanding', 'otherKasbons'));
     }
 
     // --- 5. UPDATE STATUS (APPROVE/REJECT) ---
@@ -349,6 +355,110 @@ class CashAdvanceController extends Controller
         ]);
 
         return back()->with('success', 'Pembayaran ditolak.');
+    }
+
+    // --- 9. EDIT CICILAN ---
+    public function editInstallment($installmentId)
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            abort(403);
+
+        $installment = CashAdvanceInstallment::with('cashAdvance.user')->findOrFail($installmentId);
+        return view('kasbon.edit_installment', compact('installment'));
+    }
+
+    // --- 10. UPDATE CICILAN ---
+    public function updateInstallment(Request $request, $installmentId)
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            abort(403);
+
+        $request->validate([
+            'amount_paid' => 'required|numeric|min:0',
+            'received_by' => 'nullable|string|max:100',
+            'status' => 'required|in:pending,approved,rejected',
+            'note' => 'nullable|string'
+        ]);
+
+        $cashAdvanceId = null;
+
+        DB::transaction(function () use ($request, $installmentId, &$cashAdvanceId) {
+            $ins = CashAdvanceInstallment::with('cashAdvance')->findOrFail($installmentId);
+            $kasbon = $ins->cashAdvance;
+            $cashAdvanceId = $ins->cash_advance_id;
+
+            $oldStatus = $ins->status;
+            $oldAmount = (float) $ins->amount_paid;
+
+            $newStatus = $request->status;
+            $newAmount = (float) str_replace('.', '', $request->amount_paid);
+
+            $ins->update([
+                'amount_paid' => $newAmount,
+                'received_by' => $request->received_by,
+                'status' => $newStatus,
+                'note' => $request->note,
+            ]);
+
+            if ($kasbon) {
+                if ($oldStatus === 'approved') {
+                    $kasbon->total_paid -= $oldAmount;
+                }
+                if ($newStatus === 'approved') {
+                    $kasbon->total_paid += $newAmount;
+                }
+
+                $kasbon->total_paid = max(0, $kasbon->total_paid);
+
+                if ($kasbon->total_paid >= $kasbon->amount) {
+                    $kasbon->status = 'paid';
+                    $kasbon->repayment_date = now();
+                } else {
+                    if ($kasbon->status === 'paid') {
+                        $kasbon->status = 'approved';
+                        $kasbon->repayment_date = null;
+                    }
+                }
+                $kasbon->save();
+            }
+        });
+
+        return redirect()->route('kasbon.show', $cashAdvanceId)
+            ->with('success', 'Pembayaran cicilan berhasil diperbarui.');
+    }
+
+    // --- 11. HAPUS CICILAN ---
+    public function destroyInstallment($installmentId)
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'admin_gaji']))
+            abort(403);
+
+        $cashAdvanceId = null;
+
+        DB::transaction(function () use ($installmentId, &$cashAdvanceId) {
+            $ins = CashAdvanceInstallment::with('cashAdvance')->findOrFail($installmentId);
+            $kasbon = $ins->cashAdvance;
+            $cashAdvanceId = $ins->cash_advance_id;
+
+            if ($ins->status === 'approved' && $kasbon) {
+                $kasbon->total_paid = max(0, $kasbon->total_paid - $ins->amount_paid);
+
+                if ($kasbon->total_paid < $kasbon->amount && $kasbon->status === 'paid') {
+                    $kasbon->status = 'approved';
+                    $kasbon->repayment_date = null;
+                }
+                $kasbon->save();
+            }
+
+            if ($ins->payment_proof && Storage::disk('public')->exists($ins->payment_proof)) {
+                Storage::disk('public')->delete($ins->payment_proof);
+            }
+
+            $ins->delete();
+        });
+
+        return redirect()->route('kasbon.show', $cashAdvanceId)
+            ->with('success', 'Pembayaran cicilan berhasil dihapus dan saldo kasbon telah dikembalikan.');
     }
 
     // --- HALAMAN VERIFIKASI PEMBAYARAN MASUK ---

@@ -230,8 +230,40 @@
 
                                 @if($salary->kasbon_deduction > 0)
                                     <tr>
-                                        <td class="ps-4">Potongan Kasbon / Hutang</td>
-                                        <td class="text-end pe-4 text-danger fw-bold">(Rp
+                                        <td class="ps-4">
+                                            <span class="fw-bold">Potongan Kasbon / Hutang</span>
+                                            @php
+                                                $monthFormatted = str_pad($salary->month, 2, '0', STR_PAD_LEFT);
+                                                $kasbonBreakdown = \App\Models\CashAdvanceInstallment::with('cashAdvance')
+                                                    ->where('user_id', $salary->user_id)
+                                                    ->where(function ($q) use ($salary, $monthFormatted) {
+                                                        $q->where('note', 'like', '%Potongan Gaji ' . $salary->month . '/' . $salary->year . '%')
+                                                          ->orWhere('note', 'like', '%Potongan Gaji ' . $monthFormatted . '/' . $salary->year . '%');
+                                                    })
+                                                    ->get();
+                                            @endphp
+                                            @if($kasbonBreakdown->isNotEmpty())
+                                                <div class="mt-2 ps-2 border-start border-2 border-danger-subtle">
+                                                    @foreach($kasbonBreakdown as $kb)
+                                                        <div class="small text-muted py-1 d-flex justify-content-between align-items-center" style="max-width: 420px;">
+                                                            <span>
+                                                                <i class="mdi mdi-arrow-right-thin text-danger me-1"></i>
+                                                                <a href="{{ route('kasbon.show', $kb->cash_advance_id) }}" class="text-decoration-none text-dark fw-semibold" target="_blank" title="Buka Detail Kasbon">
+                                                                    {{ \Illuminate\Support\Str::limit($kb->cashAdvance->description ?? 'Kasbon #' . $kb->cash_advance_id, 32) }}
+                                                                </a>
+                                                                @if($kb->cashAdvance && $kb->cashAdvance->status === 'paid')
+                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle py-0 px-1" style="font-size: 8px;">Lunas</span>
+                                                                @endif
+                                                            </span>
+                                                            <span class="fw-bold text-danger font-monospace ms-2" style="font-size: 11px;">
+                                                                - Rp {{ number_format($kb->amount_paid, 0, ',', '.') }}
+                                                            </span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td class="text-end pe-4 text-danger fw-bold align-top pt-3">(Rp
                                             {{ number_format($salary->kasbon_deduction, 0, ',', '.') }})
                                         </td>
                                     </tr>

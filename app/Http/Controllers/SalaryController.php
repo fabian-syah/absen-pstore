@@ -477,8 +477,31 @@ class SalaryController extends Controller
     }
     public function destroy(Salary $salary)
     {
-        $salary->delete();
-        return back()->with('success', 'Deleted.');
+        DB::transaction(function () use ($salary) {
+            // Jika ada potongan kasbon di payroll ini, kembalikan/hapus installment yang sesuai
+            $note = 'Potongan Gaji ' . $salary->month . '/' . $salary->year;
+            $installments = CashAdvanceInstallment::where('user_id', $salary->user_id)
+                ->where('received_by', 'SYSTEM (PAYROLL)')
+                ->where('note', $note)
+                ->get();
+
+            foreach ($installments as $ins) {
+                if ($ins->status === 'approved' && $ins->cashAdvance) {
+                    $loan = $ins->cashAdvance;
+                    $loan->total_paid = max(0, $loan->total_paid - $ins->amount_paid);
+                    if ($loan->total_paid < $loan->amount && $loan->status === 'paid') {
+                        $loan->status = 'approved';
+                        $loan->repayment_date = null;
+                    }
+                    $loan->save();
+                }
+                $ins->delete();
+            }
+
+            $salary->delete();
+        });
+
+        return back()->with('success', 'Payroll berhasil dihapus dan potongan kasbon telah dikembalikan.');
     }
 
     public function togglePaymentMethod(Salary $salary)
