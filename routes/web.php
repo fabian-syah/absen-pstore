@@ -647,7 +647,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::get('/clear-system-cache', function () {
             \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-            return response('Berhasil membersihkan cache sistem, routing, dan view! Silakan refresh halaman.');
+            try {
+                \Illuminate\Support\Facades\Artisan::call('view:cache');
+                \Illuminate\Support\Facades\Artisan::call('route:cache');
+            } catch (\Throwable $e) {
+                // Ignore if warmup throws in certain envs
+            }
+            return response('<div style="font-family:sans-serif;padding:30px;max-width:600px;margin:40px auto;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;box-shadow:0 4px 6px rgba(0,0,0,0.05);text-align:center;">
+                <h2 style="color:#16a34a;margin-bottom:12px;">✅ Sistem Berhasil Dioptimasi!</h2>
+                <p style="color:#475569;font-size:15px;line-height:1.6;">Cache lama telah dibersihkan, dan View serta Routing telah di-cache ulang agar website berjalan cepat dan responsif.</p>
+                <a href="/dashboard" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Kembali ke Dashboard</a>
+            </div>');
         })->name('system.clear-cache')->middleware('role:admin,admin_gaji');
 
         Route::get('/inventaris-cabang', [BranchInventoryController::class, 'index'])

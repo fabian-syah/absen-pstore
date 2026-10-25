@@ -109,6 +109,8 @@ class DashboardController extends Controller
 
         $todayInBranch = Carbon::now($userTimezone)->format('Y-m-d');
         $nowInBranch = Carbon::now($userTimezone);
+        $branchDayStart = Carbon::parse($todayInBranch . ' 00:00:00', $userTimezone)->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
+        $branchDayEnd = Carbon::parse($todayInBranch . ' 23:59:59', $userTimezone)->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
 
         // =========================================================================
         // 1. LOGIKA ID CARD
@@ -138,12 +140,8 @@ class DashboardController extends Controller
             $end = \Carbon\Carbon::parse($user->workSchedule->end_time)->format('H:i');
             $scheduleText = "$start - $end";
         } else {
-            // Setup Offset untuk query timezone-aware
-            $branchOffset = Carbon::now($userTimezone)->format('P');
-            $storageOffset = Carbon::now(config('app.timezone'))->format('P');
-
             $todaysAttendance = Attendance::where('user_id', $user->id)
-                ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayInBranch])
+                ->whereBetween('check_in_time', [$branchDayStart, $branchDayEnd])
                 ->first();
             if ($todaysAttendance && $todaysAttendance->scheduled_check_in && $todaysAttendance->scheduled_check_out) {
                 $start = \Carbon\Carbon::parse($todaysAttendance->scheduled_check_in)->format('H:i');
@@ -180,21 +178,20 @@ class DashboardController extends Controller
             ->latest('check_in_time')
             ->first();
 
-        // Setup Offset untuk query
-        $branchOffset = Carbon::now($userTimezone)->format('P');
-        $storageOffset = Carbon::now(config('app.timezone'))->format('P');
+        $branchDayStart = Carbon::parse($todayInBranch . ' 00:00:00', $userTimezone)->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
+        $branchDayEnd = Carbon::parse($todayInBranch . ' 23:59:59', $userTimezone)->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
 
         // B. Cek Sesi Selesai Hari Ini
         $finishedSessionToday = Attendance::where('user_id', $user->id)
-            ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayInBranch])
+            ->whereBetween('check_in_time', [$branchDayStart, $branchDayEnd])
             ->whereNotNull('check_out_time')
             ->latest('check_in_time')
             ->first();
 
         // C. Cek Sesi Lembur Lintas Hari (Pulang hari ini tapi masuk kemarin)
         $lastOvertimeSession = Attendance::where('user_id', $user->id)
-            ->whereRaw("DATE(CONVERT_TZ(check_in_time, ?, ?)) < ?", [$storageOffset, $branchOffset, $todayInBranch])
-            ->whereRaw("DATE(CONVERT_TZ(check_out_time, ?, ?)) = ?", [$storageOffset, $branchOffset, $todayInBranch])
+            ->where('check_in_time', '<', $branchDayStart)
+            ->whereBetween('check_out_time', [$branchDayStart, $branchDayEnd])
             ->latest('check_out_time')
             ->first();
 
@@ -393,7 +390,7 @@ class DashboardController extends Controller
                 ->where('is_active', true)
                 ->count();
             $data['totalBranches'] = $branch_id ? 1 : Cache::remember('dash_total_branches', 3600, fn() => Branch::count());
-            $data['attendancesToday'] = (clone $attendanceQuery)->whereDate('check_in_time', $todayInBranch)->count();
+            $data['attendancesToday'] = (clone $attendanceQuery)->whereBetween('check_in_time', [$branchDayStart, $branchDayEnd])->count();
             $data['pendingVerifications'] = (clone $attendanceQuery)->where('status', 'pending_verification')->count();
 
             $leaveQuery = LeaveRequest::where('is_active', true)
@@ -417,19 +414,19 @@ class DashboardController extends Controller
 
             $data['leavesToday'] = $leaveQuery->count();
 
-            $data['stats'] = $this->getAdminAttendanceStats($branch_id, $todayInBranch);
+            $data['stats'] = $this->getAdminAttendanceStats($branch_id, $todayInBranch, $branchDayStart, $branchDayEnd);
         } elseif ($user->role == 'audit') {
             $data['pendingVerifications'] = Attendance::whereIn('branch_id', $allBranchIds)->where('status', 'pending_verification')->count();
             $data['pendingLeaves'] = LeaveRequest::where('status', 'pending')->where('is_active', true)
                 ->whereHas('user', function ($q) use ($allBranchIds) {
                     $q->whereIn('branch_id', $allBranchIds);
                 })->count();
-            $data['attendancesToday'] = Attendance::whereIn('branch_id', $allBranchIds)->whereDate('check_in_time', $todayInBranch)->count();
-            $data['stats'] = $this->getAuditAttendanceStats($allBranchIds, $todayInBranch);
+            $data['attendancesToday'] = Attendance::whereIn('branch_id', $allBranchIds)->whereBetween('check_in_time', [$branchDayStart, $branchDayEnd])->count();
+            $data['stats'] = $this->getAuditAttendanceStats($allBranchIds, $todayInBranch, $branchDayStart, $branchDayEnd);
         } elseif ($user->role == 'security') {
-            $data['myScansToday'] = Attendance::where('scanned_by_user_id', $user->id)->whereDate('check_in_time', $todayInBranch)->count();
+            $data['myScansToday'] = Attendance::where('scanned_by_user_id', $user->id)->whereBetween('check_in_time', [$branchDayStart, $branchDayEnd])->count();
             $data['totalUsers'] = User::whereIn('branch_id', $allBranchIds)->whereIn('role', ['user_biasa', 'leader'])->where('is_active', true)->count();
-            $data['stats'] = $this->getSecurityAttendanceStats($user->id, $allBranchIds, $todayInBranch);
+            $data['stats'] = $this->getSecurityAttendanceStats($user->id, $allBranchIds, $todayInBranch, $branchDayStart, $branchDayEnd);
         } else {
             $data['stats'] = $personalStats;
         }
@@ -946,9 +943,12 @@ class DashboardController extends Controller
             ->first();
     }
 
-    private function getAdminAttendanceStats($branch_id = null, $todayDate = null)
+    private function getAdminAttendanceStats($branch_id = null, $todayDate = null, $dayStart = null, $dayEnd = null)
     {
-        $query = Attendance::whereDate('check_in_time', $todayDate)->where('presence_status', '!=', 'Alpha');
+        $dayStart = $dayStart ?: ($todayDate ? $todayDate . ' 00:00:00' : Carbon::today()->startOfDay()->toDateTimeString());
+        $dayEnd = $dayEnd ?: ($todayDate ? $todayDate . ' 23:59:59' : Carbon::today()->endOfDay()->toDateTimeString());
+
+        $query = Attendance::whereBetween('check_in_time', [$dayStart, $dayEnd])->where('presence_status', '!=', 'Alpha');
         if ($branch_id)
             $query->where('branch_id', $branch_id);
         $totalUsers = User::when($branch_id, function ($q) use ($branch_id) {
@@ -964,9 +964,12 @@ class DashboardController extends Controller
         return $this->calculateStats($query, $totalUsers);
     }
 
-    private function getAuditAttendanceStats($branchIds, $todayDate)
+    private function getAuditAttendanceStats($branchIds, $todayDate, $dayStart = null, $dayEnd = null)
     {
-        $query = Attendance::whereDate('check_in_time', $todayDate)->where('presence_status', '!=', 'Alpha');
+        $dayStart = $dayStart ?: ($todayDate ? $todayDate . ' 00:00:00' : Carbon::today()->startOfDay()->toDateTimeString());
+        $dayEnd = $dayEnd ?: ($todayDate ? $todayDate . ' 23:59:59' : Carbon::today()->endOfDay()->toDateTimeString());
+
+        $query = Attendance::whereBetween('check_in_time', [$dayStart, $dayEnd])->where('presence_status', '!=', 'Alpha');
         if (!empty($branchIds)) {
             $query->whereIn('branch_id', is_array($branchIds) ? $branchIds : [$branchIds]);
         }
@@ -993,9 +996,12 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getSecurityAttendanceStats($security_id, $branchIds, $todayDate)
+    private function getSecurityAttendanceStats($security_id, $branchIds, $todayDate, $dayStart = null, $dayEnd = null)
     {
-        $query = Attendance::whereDate('check_in_time', $todayDate);
+        $dayStart = $dayStart ?: ($todayDate ? $todayDate . ' 00:00:00' : Carbon::today()->startOfDay()->toDateTimeString());
+        $dayEnd = $dayEnd ?: ($todayDate ? $todayDate . ' 23:59:59' : Carbon::today()->endOfDay()->toDateTimeString());
+
+        $query = Attendance::whereBetween('check_in_time', [$dayStart, $dayEnd]);
         if (!empty($branchIds)) {
             $query->whereIn('branch_id', is_array($branchIds) ? $branchIds : [$branchIds]);
         }
@@ -1018,9 +1024,11 @@ class DashboardController extends Controller
 
     private function getUserAttendanceStats($user_id, $branch_id = null)
     {
+        $monthStart = Carbon::now()->startOfMonth()->toDateTimeString();
+        $monthEnd = Carbon::now()->endOfMonth()->toDateTimeString();
+
         $query = Attendance::where('user_id', $user_id)
-            ->whereMonth('check_in_time', Carbon::now()->month)
-            ->whereYear('check_in_time', Carbon::now()->year)
+            ->whereBetween('check_in_time', [$monthStart, $monthEnd])
             ->where('presence_status', '!=', 'Alpha');
         if ($branch_id)
             $query->where('branch_id', $branch_id);
