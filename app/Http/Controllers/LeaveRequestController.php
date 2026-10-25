@@ -152,6 +152,37 @@ class LeaveRequestController extends Controller
             $data['start_time'] = null;
         }
 
+        // === VALIDASI ANTI-DOUBLE / OVERLAP ===
+        // Mencegah pengajuan izin/cuti ganda pada tanggal yang sama yang masih pending atau sudah disetujui
+        $startDate = $request->start_date;
+        $endDate = $data['end_date'];
+
+        $overlapping = LeaveRequest::where('user_id', Auth::id())
+            ->whereIn('status', ['pending', 'approved'])
+            ->where(function ($query) use ($startDate, $endDate, $request) {
+                if ($request->type === 'telat') {
+                    $query->where('type', 'telat')
+                          ->whereDate('start_date', $startDate);
+                } else {
+                    $query->where('type', '!=', 'telat')
+                          ->where(function ($sub) use ($startDate, $endDate) {
+                              $sub->whereDate('start_date', '<=', $endDate)
+                                  ->whereDate(DB::raw('COALESCE(end_date, start_date)'), '>=', $startDate);
+                          });
+                }
+            })
+            ->first();
+
+        if ($overlapping) {
+            $formattedStart = Carbon::parse($overlapping->start_date)->translatedFormat('d M Y');
+            $formattedEnd = Carbon::parse($overlapping->end_date ?: $overlapping->start_date)->translatedFormat('d M Y');
+            $rangeStr = ($overlapping->start_date == ($overlapping->end_date ?: $overlapping->start_date))
+                ? $formattedStart
+                : "{$formattedStart} s/d {$formattedEnd}";
+
+            return back()->withInput()->with('error', "Gagal mengajukan: Anda sudah memiliki pengajuan " . strtoupper($overlapping->type) . " ({$overlapping->status}) pada periode {$rangeStr}.");
+        }
+
         // === LOGIC CUTI: Tidak ada validasi saldo ===
         // User boleh ambil cuti melebihi jatah.
         // Kelebihan akan dipotong dari gaji di payroll (fitur "Cuti Lebih")
