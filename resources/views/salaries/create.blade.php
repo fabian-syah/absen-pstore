@@ -240,16 +240,33 @@
                             </div>
 
                             {{-- TELAT --}}
-                            <div class="row mb-2 align-items-center bg-light p-2 rounded mx-0 border">
+                            @php
+                                $isBatamCenter = $selectedUser && $selectedUser->branch && (stripos($selectedUser->branch->name, 'Batam') !== false);
+                            @endphp
+                            <div class="row mb-2 align-items-center bg-light p-2 rounded mx-0 border {{ $isBatamCenter ? 'border-warning shadow-sm' : '' }}">
                                 <div class="col-4">
-                                    <label class="small fw-bold mb-0">Telat (Kali)</label>
-                                    <input type="number" name="late_days" id="late_days" class="form-control form-control-sm mt-1 fw-bold text-danger" value="{{ $lateCount ?? 0 }}" readonly>
+                                    <div class="d-flex justify-content-between align-items-center mb-0">
+                                        <label class="small fw-bold mb-0">Telat (Kali)</label>
+                                        @if($isBatamCenter)
+                                            <span class="badge bg-warning text-dark px-1 py-0" style="font-size: 8px;"><i class="mdi mdi-pencil"></i> Batam</span>
+                                        @else
+                                            <button type="button" id="btn_unlock_late" class="btn btn-link p-0 text-muted" style="font-size: 11px; text-decoration: none;" title="Buka untuk edit manual">
+                                                <i class="mdi mdi-lock-outline"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <input type="number" min="0" name="late_days" id="late_days" 
+                                           class="form-control form-control-sm mt-1 fw-bold text-danger {{ $isBatamCenter ? 'bg-white' : '' }}" 
+                                           value="{{ $lateCount ?? 0 }}" 
+                                           {{ $isBatamCenter ? '' : 'readonly' }}>
                                 </div>
                                 <div class="col-8">
                                     <label class="small text-muted fst-italic mb-0">Rumus: (Fixed / 93) x Telat</label>
                                     <div class="input-group input-group-sm mt-1">
                                         <span class="input-group-text text-danger bg-white">Rp</span>
-                                        <input type="text" name="late_deduction" id="late_deduction" class="form-control deduction-input fw-bold text-danger" readonly>
+                                        <input type="text" name="late_deduction" id="late_deduction" 
+                                               class="form-control deduction-input fw-bold text-danger {{ $isBatamCenter ? 'bg-white' : '' }}" 
+                                               {{ $isBatamCenter ? '' : 'readonly' }}>
                                     </div>
                                     @if(isset($lateDates) && count($lateDates) > 0)
                                         <div class="mt-1">
@@ -541,6 +558,8 @@
             });
         });
 
+        let isManualLateDeduction = false;
+
         function calculate() {
             if(!categoryInput) return;
             let cat = categoryInput.value;
@@ -609,8 +628,10 @@
                     if(alphaDed) alphaDed.value = formatRupiah(Math.floor(alphaVal)); 
 
                     let lateVal = 0;
-                    if(totalFixed > 0 && lDays > 0) lateVal = (totalFixed / 93) * lDays;
-                    if(lateDed) lateDed.value = formatRupiah(Math.floor(lateVal)); 
+                    if (!isManualLateDeduction) {
+                        if(totalFixed > 0 && lDays > 0) lateVal = (totalFixed / 93) * lDays;
+                        if(lateDed) lateDed.value = formatRupiah(Math.floor(lateVal)); 
+                    } 
 
                     // [BARU] Hitung Cuti Lebih Deduction (Rumus sama seperti Alpha: Fixed/31 x Hari)
                     const cutiLebihDaysEl = document.getElementById('cuti_lebih_days');
@@ -654,6 +675,60 @@
 
         const overrideCheck = document.getElementById('override_attendance');
         if(overrideCheck) overrideCheck.addEventListener('change', calculate);
+
+        // Handler untuk Input Manual Telat (Batam Center & Unlock Toggle)
+        const lateDaysInput = document.getElementById('late_days');
+        const lateDedInput = document.getElementById('late_deduction');
+        const btnUnlockLate = document.getElementById('btn_unlock_late');
+
+        if (btnUnlockLate) {
+            btnUnlockLate.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (lateDaysInput && lateDedInput) {
+                    const isReadOnly = lateDaysInput.readOnly;
+                    lateDaysInput.readOnly = !isReadOnly;
+                    lateDedInput.readOnly = !isReadOnly;
+                    if (!isReadOnly) {
+                        this.innerHTML = '<i class="mdi mdi-lock-outline"></i>';
+                        lateDaysInput.classList.remove('bg-white');
+                        lateDedInput.classList.remove('bg-white');
+                    } else {
+                        this.innerHTML = '<i class="mdi mdi-lock-open-variant text-warning"></i>';
+                        lateDaysInput.classList.add('bg-white');
+                        lateDedInput.classList.add('bg-white');
+                        lateDaysInput.focus();
+                    }
+                }
+            });
+        }
+
+        if (lateDaysInput) {
+            lateDaysInput.addEventListener('input', function() {
+                isManualLateDeduction = false; // User ubah jumlah kali telat -> hitung via rumus
+                calculate();
+            });
+            lateDaysInput.addEventListener('change', function() {
+                isManualLateDeduction = false;
+                calculate();
+            });
+        }
+
+        if (lateDedInput) {
+            lateDedInput.addEventListener('input', function() {
+                if (!this.readOnly) {
+                    isManualLateDeduction = true; // User ketik nominal rupiah manual
+                    this.value = formatRupiah(this.value);
+                    calculate();
+                }
+            });
+            lateDedInput.addEventListener('keyup', function() {
+                if (!this.readOnly) {
+                    isManualLateDeduction = true;
+                    this.value = formatRupiah(this.value);
+                    calculate();
+                }
+            });
+        }
 
         // [BARU] Auto-bullet helper untuk Potongan Lainnya
         const deductionNote = document.querySelector('textarea[name="other_deduction_note"]');
