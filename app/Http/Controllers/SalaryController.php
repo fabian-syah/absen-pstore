@@ -347,6 +347,9 @@ class SalaryController extends Controller
         DB::transaction(function () use ($request) {
             $data = $request->except(['_token', 'send_type', 'scheduled_date', 'selected_loans', 'start_date', 'end_date', 'freelance_total_income']);
             $data['created_by'] = Auth::id();
+            $data['alpha_days'] = !empty($data['alpha_days']) ? (int) $data['alpha_days'] : 0;
+            $data['late_days'] = !empty($data['late_days']) ? (int) $data['late_days'] : 0;
+            $data['late_deduction'] = !empty($data['late_deduction']) ? (float) $data['late_deduction'] : 0;
 
             if ($request->send_type == 'now') {
                 $data['published_at'] = now();

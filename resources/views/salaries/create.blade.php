@@ -257,7 +257,8 @@
                                     </div>
                                     <input type="number" min="0" name="late_days" id="late_days" 
                                            class="form-control form-control-sm mt-1 fw-bold text-danger {{ $isBatamCenter ? 'bg-white' : '' }}" 
-                                           value="{{ $lateCount ?? 0 }}" 
+                                           value="{{ ($lateCount && $lateCount > 0) ? $lateCount : '' }}" 
+                                           placeholder="0"
                                            {{ $isBatamCenter ? '' : 'readonly' }}>
                                 </div>
                                 <div class="col-8">
@@ -702,24 +703,43 @@
                         this.innerHTML = '<i class="mdi mdi-lock-open-variant text-warning"></i>';
                         lateDaysInput.classList.add('bg-white');
                         lateDedInput.classList.add('bg-white');
+                        if (lateDaysInput.value === '0') {
+                            lateDaysInput.value = '';
+                        }
                         lateDaysInput.focus();
+                        lateDaysInput.select();
                     }
                 }
             });
         }
 
         if (lateDaysInput) {
+            lateDaysInput.addEventListener('focus', function() {
+                if (this.value === '0') {
+                    this.value = '';
+                }
+                this.select();
+            });
             lateDaysInput.addEventListener('input', function() {
+                if (this.value && this.value.length > 1 && this.value.startsWith('0')) {
+                    this.value = parseInt(this.value, 10) || '';
+                }
                 isManualLateDays = true;
                 isManualLateDeduction = false; // User ubah jumlah kali telat -> hitung via rumus
                 calculate();
             });
             lateDaysInput.addEventListener('change', function() {
+                if (this.value && this.value.length > 1 && this.value.startsWith('0')) {
+                    this.value = parseInt(this.value, 10) || '';
+                }
                 isManualLateDays = true;
                 isManualLateDeduction = false;
                 calculate();
             });
             lateDaysInput.addEventListener('keyup', function() {
+                if (this.value && this.value.length > 1 && this.value.startsWith('0')) {
+                    this.value = parseInt(this.value, 10) || '';
+                }
                 isManualLateDays = true;
                 isManualLateDeduction = false;
                 calculate();
