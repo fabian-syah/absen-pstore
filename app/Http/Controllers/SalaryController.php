@@ -399,7 +399,6 @@ class SalaryController extends Controller
                             'cash_advance_id' => $loan->id,
                             'user_id' => $request->user_id,
                             'amount_paid' => $payAmount,
-                            'received_by' => 'SYSTEM (PAYROLL)',
                             'status' => 'approved',
                             'note' => 'Potongan Gaji ' . $request->month . '/' . $request->year
                         ]);
@@ -481,7 +480,6 @@ class SalaryController extends Controller
             // Jika ada potongan kasbon di payroll ini, kembalikan/hapus installment yang sesuai
             $note = 'Potongan Gaji ' . $salary->month . '/' . $salary->year;
             $installments = CashAdvanceInstallment::where('user_id', $salary->user_id)
-                ->where('received_by', 'SYSTEM (PAYROLL)')
                 ->where('note', $note)
                 ->get();
 
