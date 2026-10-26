@@ -481,42 +481,13 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        const isBatamBranch = {{ $isBatamCenter ? 'true' : 'false' }};
+        let isManualLateDeduction = false;
+        let isManualLateDays = false;
+
         const categoryInput = document.getElementById('category');
         const sections = document.querySelectorAll('.category-section');
         const dateRangeBox = document.getElementById('freelance_date_range');
-        
-        function toggleCategoryForms() {
-            if(!categoryInput) return;
-            const cat = categoryInput.value;
-            sections.forEach(el => el.style.display = 'none');
-            
-            if(cat === 'employee') document.getElementById('form_employee').style.display = 'block';
-            else if(cat === 'promotor') document.getElementById('form_promotor').style.display = 'block';
-            else if(cat === 'freelance') document.getElementById('form_freelance').style.display = 'block';
-            
-            // Show/Hide Range Date
-            if(dateRangeBox) {
-                dateRangeBox.style.display = (cat === 'freelance') ? 'block' : 'none';
-            }
-            
-            if(cat === 'promotor') {
-                const promoBasic = document.getElementById('promotor_basic');
-                const empBasic = document.getElementById('employee_basic');
-                if(promoBasic && empBasic) {
-                    promoBasic.addEventListener('input', function() { 
-                        empBasic.value = this.value; 
-                        calculate(); 
-                    });
-                    empBasic.value = promoBasic.value;
-                }
-            }
-            calculate();
-        }
-        
-        if(categoryInput && categoryInput.tagName === 'SELECT') {
-            categoryInput.addEventListener('change', toggleCategoryForms);
-        }
-        toggleCategoryForms();
 
         function cleanNumber(value) {
             if(!value) return 0;
@@ -537,30 +508,6 @@
             }
             return (isNegative ? '-' : '') + rupiah;
         }
-
-        document.querySelectorAll('.rupiah-input').forEach(input => {
-            input.addEventListener('keyup', function(e) {
-                this.value = formatRupiah(this.value);
-                calculate();
-            });
-        });
-
-        // Event Listener untuk Loan List (Multi)
-        document.querySelectorAll('.loan-input').forEach(input => {
-            input.addEventListener('keyup', function(e) {
-                this.value = formatRupiah(this.value);
-                let max = parseFloat(this.getAttribute('data-max'));
-                let current = cleanNumber(this.value);
-                if(current > max) {
-                    this.value = formatRupiah(max);
-                }
-                calculate();
-            });
-        });
-
-        let isManualLateDeduction = false;
-        let isManualLateDays = false;
-        const isBatamBranch = {{ $isBatamCenter ? 'true' : 'false' }};
 
         function calculate() {
             if(!categoryInput) return;
@@ -680,6 +627,58 @@
             }
         }
 
+        function toggleCategoryForms() {
+            if(!categoryInput) return;
+            const cat = categoryInput.value;
+            sections.forEach(el => el.style.display = 'none');
+            
+            if(cat === 'employee') document.getElementById('form_employee').style.display = 'block';
+            else if(cat === 'promotor') document.getElementById('form_promotor').style.display = 'block';
+            else if(cat === 'freelance') document.getElementById('form_freelance').style.display = 'block';
+            
+            // Show/Hide Range Date
+            if(dateRangeBox) {
+                dateRangeBox.style.display = (cat === 'freelance') ? 'block' : 'none';
+            }
+            
+            if(cat === 'promotor') {
+                const promoBasic = document.getElementById('promotor_basic');
+                const empBasic = document.getElementById('employee_basic');
+                if(promoBasic && empBasic) {
+                    promoBasic.addEventListener('input', function() { 
+                        empBasic.value = this.value; 
+                        calculate(); 
+                    });
+                    empBasic.value = promoBasic.value;
+                }
+            }
+            calculate();
+        }
+        
+        if(categoryInput && categoryInput.tagName === 'SELECT') {
+            categoryInput.addEventListener('change', toggleCategoryForms);
+        }
+
+        document.querySelectorAll('.rupiah-input').forEach(input => {
+            input.addEventListener('keyup', function(e) {
+                this.value = formatRupiah(this.value);
+                calculate();
+            });
+        });
+
+        // Event Listener untuk Loan List (Multi)
+        document.querySelectorAll('.loan-input').forEach(input => {
+            input.addEventListener('keyup', function(e) {
+                this.value = formatRupiah(this.value);
+                let max = parseFloat(this.getAttribute('data-max'));
+                let current = cleanNumber(this.value);
+                if(current > max) {
+                    this.value = formatRupiah(max);
+                }
+                calculate();
+            });
+        });
+
         const overrideCheck = document.getElementById('override_attendance');
         if(overrideCheck) overrideCheck.addEventListener('change', calculate);
 
@@ -780,6 +779,8 @@
             });
         }
         
+        toggleCategoryForms();
+        calculate();
         setTimeout(calculate, 500);
     });
 </script>
