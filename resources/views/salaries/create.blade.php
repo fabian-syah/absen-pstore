@@ -559,6 +559,8 @@
         });
 
         let isManualLateDeduction = false;
+        let isManualLateDays = false;
+        const isBatamBranch = {{ $isBatamCenter ? 'true' : 'false' }};
 
         function calculate() {
             if(!categoryInput) return;
@@ -613,35 +615,40 @@
                 const cutiLebihDed = document.getElementById('cuti_lebih_deduction');
                 if(cutiLebihDed) cutiLebihDed.value = "0";
             } else {
+                let aDays = parseFloat(document.getElementById('alpha_days')?.value) || 0;
+                let lDays = parseFloat(document.getElementById('late_days')?.value) || 0;
+
+                // 1. Potongan Alpha
                 if (overrideCheck && overrideCheck.checked) {
                     if(alphaDed) alphaDed.value = "0";
-                    if(lateDed) lateDed.value = "0";
-                    // [BARU] Reset cuti lebih jika privilege
-                    const cutiLebihDed = document.getElementById('cuti_lebih_deduction');
-                    if(cutiLebihDed) cutiLebihDed.value = "0";
                 } else {
-                    let aDays = parseFloat(document.getElementById('alpha_days').value) || 0;
-                    let lDays = parseFloat(document.getElementById('late_days').value) || 0;
-                    
                     let alphaVal = 0;
                     if(totalFixed > 0 && aDays > 0) alphaVal = (totalFixed / 31) * aDays;
                     if(alphaDed) alphaDed.value = formatRupiah(Math.floor(alphaVal)); 
+                }
 
+                // 2. Potongan Telat (Tetap dihitung jika Batam Center atau input manual, meskipun privilege checked)
+                const isLateManual = isBatamBranch || isManualLateDays || isManualLateDeduction;
+                if (overrideCheck && overrideCheck.checked && !isLateManual) {
+                    if(lateDed) lateDed.value = "0";
+                } else {
                     let lateVal = 0;
                     if (!isManualLateDeduction) {
                         if(totalFixed > 0 && lDays > 0) lateVal = (totalFixed / 93) * lDays;
                         if(lateDed) lateDed.value = formatRupiah(Math.floor(lateVal)); 
                     } 
+                }
 
-                    // [BARU] Hitung Cuti Lebih Deduction (Rumus sama seperti Alpha: Fixed/31 x Hari)
-                    const cutiLebihDaysEl = document.getElementById('cuti_lebih_days');
-                    const cutiLebihDed = document.getElementById('cuti_lebih_deduction');
-                    if (cutiLebihDaysEl && cutiLebihDed) {
-                        let clDays = parseFloat(cutiLebihDaysEl.value) || 0;
-                        let clVal = 0;
-                        if(totalFixed > 0 && clDays > 0) clVal = (totalFixed / 31) * clDays;
-                        cutiLebihDed.value = formatRupiah(Math.floor(clVal));
-                    }
+                // 3. Potongan Cuti Lebih
+                const cutiLebihDaysEl = document.getElementById('cuti_lebih_days');
+                const cutiLebihDed = document.getElementById('cuti_lebih_deduction');
+                if (overrideCheck && overrideCheck.checked) {
+                    if(cutiLebihDed) cutiLebihDed.value = "0";
+                } else if (cutiLebihDaysEl && cutiLebihDed) {
+                    let clDays = parseFloat(cutiLebihDaysEl.value) || 0;
+                    let clVal = 0;
+                    if(totalFixed > 0 && clDays > 0) clVal = (totalFixed / 31) * clDays;
+                    cutiLebihDed.value = formatRupiah(Math.floor(clVal));
                 }
             }
 
@@ -704,10 +711,17 @@
 
         if (lateDaysInput) {
             lateDaysInput.addEventListener('input', function() {
+                isManualLateDays = true;
                 isManualLateDeduction = false; // User ubah jumlah kali telat -> hitung via rumus
                 calculate();
             });
             lateDaysInput.addEventListener('change', function() {
+                isManualLateDays = true;
+                isManualLateDeduction = false;
+                calculate();
+            });
+            lateDaysInput.addEventListener('keyup', function() {
+                isManualLateDays = true;
                 isManualLateDeduction = false;
                 calculate();
             });
