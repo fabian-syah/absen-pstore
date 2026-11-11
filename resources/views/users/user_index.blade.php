@@ -17,9 +17,14 @@
 
                     {{-- CONTAINER: TOMBOL TAMBAH & SEARCH FORM --}}
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
-                            <i class="mdi mdi-plus"></i> Tambah User Baru
-                        </a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
+                                <i class="mdi mdi-plus"></i> Tambah User Baru
+                            </a>
+                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#exportResignModal">
+                                <i class="mdi mdi-file-export-outline me-1"></i> Export Resign / Non Karyawan
+                            </button>
+                        </div>
 
                         <form action="{{ route('users.index') }}" method="GET" class="d-flex">
                             <div class="input-group input-group-sm" style="width: 250px;">
@@ -335,6 +340,8 @@
             </div>
         </div>
     </div>
+
+    @include('reports.modal_export_resign')
 @endsection
 
 @push('scripts')

@@ -46,6 +46,7 @@ use App\Http\Controllers\CashAdvanceController; // <--- ADD THIS
 use App\Http\Controllers\BonusController; // <--- ADD THIS
 use App\Http\Controllers\AuditMonitoringController;
 use App\Http\Controllers\EmployeeEvaluationController;
+use App\Http\Controllers\ResignReportController;
 
 
 /*
@@ -187,6 +188,14 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::post('/employment-history/{id}/attachment', [EmploymentHistoryController::class, 'updateAttachment'])
         ->name('employment-history.attachment')
         ->middleware('role:admin');
+
+    // === EXPORT LAPORAN RESIGN & NON KARYAWAN (EXCEL & PDF) ===
+    Route::get('/reports/resign-nonkaryawan/export-excel', [ResignReportController::class, 'exportExcel'])
+        ->name('reports.resign-nonkaryawan.export-excel')
+        ->middleware('role:admin,audit,leader,admin_gaji');
+    Route::get('/reports/resign-nonkaryawan/export-pdf', [ResignReportController::class, 'exportPdf'])
+        ->name('reports.resign-nonkaryawan.export-pdf')
+        ->middleware('role:admin,audit,leader,admin_gaji');
 
     // === RUTE RIWAYAT ABSENSI ===
     Route::get('/riwayat-absensi', [AttendanceHistoryController::class, 'index'])->name('attendance.history');

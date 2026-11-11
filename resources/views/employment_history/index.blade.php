@@ -597,9 +597,14 @@
             </div>
         </div>
         @if($canCreate)
-            <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn-add-history">
-                <i class="mdi mdi-plus-circle-outline"></i> Tambah Riwayat
-            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" class="btn btn-light btn-sm fw-bold shadow-sm d-inline-flex align-items-center gap-1" style="border-radius: 10px; padding: .65rem 1rem; color: #0f172a;" data-bs-toggle="modal" data-bs-target="#exportResignModal">
+                    <i class="mdi mdi-file-export-outline text-primary"></i> Export Resign / Non Karyawan
+                </button>
+                <a href="{{ route('employment-history.create', ['user_id' => $targetUser->id]) }}" class="btn-add-history">
+                    <i class="mdi mdi-plus-circle-outline"></i> Tambah Riwayat
+                </a>
+            </div>
         @endif
     </div>
 </div>
@@ -1058,6 +1063,8 @@
     </div>
 </div>
 @endif
+
+@include('reports.modal_export_resign')
 
 @endsection
 
