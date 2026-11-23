@@ -198,7 +198,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group mb-3"><label class="form-label">Tanggal Lahir</label><input
                                             type="date" class="form-control" name="birth_date"
-                                            value="{{ old('birth_date', $user->birth_date) }}"></div>
+                                            value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3"><label class="form-label">Tanggal Masuk</label><input

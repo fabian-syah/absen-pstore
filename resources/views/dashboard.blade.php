@@ -2175,11 +2175,11 @@
                                 @if(Auth::user()->personality)
                                     @php $p = Auth::user()->personality; @endphp
                                     <p class="card-id-label mt-2">KEPRIBADIAN</p>
-                                    <span class="badge rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
-                                          style="background-color: #ffffff; color: {{ $p['color'] }}; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; border: 1.5px solid #ffffff; max-width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.25);"
+                                    <span class="badge rounded-pill card-id-personality-badge px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-wrap text-start"
+                                          style="background-color: {{ $p['bg_color'] }} !important; color: {{ $p['text_color'] }} !important; border: 1.5px solid {{ $p['color'] }} !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; max-width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.35);"
                                           title="Kepribadian: {{ $p['full'] }} ({{ $p['description'] }})">
-                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }}; font-size: 13px;"></i>
-                                        <span>{{ $p['full'] }}</span>
+                                        <i class="mdi {{ $p['icon'] }} flex-shrink-0" style="color: {{ $p['color'] }} !important; font-size: 13px;"></i>
+                                        <span style="color: {{ $p['text_color'] }} !important; font-weight: 700;">{{ $p['full'] }}</span>
                                     </span>
                                 @endif
                             </div>
@@ -3453,12 +3453,16 @@
             color: #ffffff !important;
         }
 
-        .card-id .card-body *,
+        .card-id .card-body *:not(.card-id-personality-badge):not(.card-id-personality-badge *),
         .card-id-label,
         .card-id-name,
         .card-id-division,
         .card-id-card-number {
             color: #ffffff !important;
+        }
+
+        .card-id .card-id-personality-badge {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35) !important;
         }
 
         /* Regular white cards - DARK text  */

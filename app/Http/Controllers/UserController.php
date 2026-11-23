@@ -361,6 +361,7 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
+        $data['birth_date'] = $request->filled('birth_date') ? \Carbon\Carbon::parse($request->birth_date)->format('Y-m-d') : null;
         $data['hire_date'] = $request->filled('hire_date') ? \Carbon\Carbon::parse($request->hire_date)->format('Y-m-d') : null;
 
         $targetBranchId = $request->branch_id ?? $user->branch_id;
