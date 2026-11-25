@@ -52,6 +52,7 @@ class AttendanceHistoryController extends Controller
             'selectedMonth' => $selectedMonth,
             'selectedYear' => $selectedYear,
             'employee' => $employee,
+            'targetUser' => $targetUser,
             'prevMonth' => $prevDate->month,
             'prevYear' => $prevDate->year,
             'nextMonth' => $nextDate->month,

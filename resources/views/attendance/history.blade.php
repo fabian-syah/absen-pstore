@@ -223,6 +223,140 @@
             color: #e11d48;
         }
 
+        .metric-icon-purple {
+            background: #faf5ff;
+            color: #7c3aed;
+            border: 1px solid #e9d5ff;
+        }
+
+        .text-purple {
+            color: #7c3aed !important;
+        }
+
+        .badge-pill-purple {
+            background: #faf5ff;
+            color: #6b21a8;
+            border: 1px solid #e9d5ff;
+        }
+
+        .metric-card-cuti {
+            border-color: #e2e8f0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .metric-card-cuti:hover {
+            border-color: #c084fc;
+            box-shadow: 0 8px 20px -3px rgba(124, 58, 237, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .date-pill-cuti {
+            background: #f3e8ff;
+            color: #6b21a8;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 2.5px 6.5px;
+            border-radius: 6px;
+            border: 1px solid #d8b4fe;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .date-pill-cuti:hover {
+            background: #e9d5ff;
+            color: #581c87;
+            border-color: #c084fc;
+        }
+
+        /* --- QUICK FILTER TABS --- */
+        .history-filter-tabs-wrapper {
+            background: #f8fafc;
+            border-bottom: 1px solid var(--slate-200);
+            padding: 0.65rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .history-filter-tabs {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 2px 0;
+        }
+
+        .history-filter-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .history-filter-btn {
+            border: 1px solid var(--slate-200);
+            background: #ffffff;
+            color: var(--slate-600);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .history-filter-btn:hover {
+            background: var(--slate-100);
+            color: var(--slate-900);
+            border-color: var(--slate-300);
+        }
+
+        .history-filter-btn.active {
+            background: var(--slate-900);
+            color: #ffffff;
+            border-color: var(--slate-900);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+        }
+
+        .history-filter-btn.active .filter-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .history-filter-btn.btn-cuti-highlight {
+            border-color: #d8b4fe;
+            background: #faf5ff;
+            color: #6b21a8;
+        }
+
+        .history-filter-btn.btn-cuti-highlight:hover {
+            background: #f3e8ff;
+            border-color: #c084fc;
+        }
+
+        .history-filter-btn.btn-cuti-highlight.active {
+            background: #7c3aed;
+            color: #ffffff;
+            border-color: #7c3aed;
+        }
+
+        .filter-count {
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 9999px;
+            background: var(--slate-100);
+            color: var(--slate-600);
+        }
+
         .metric-value {
             font-size: 2rem;
             font-weight: 800;
@@ -781,6 +915,14 @@
                                 <span class="badge" style="font-size: 10px; font-weight: 700; background: #0f172a; color: #ffffff; padding: 3px 8px; border-radius: 6px;">
                                     <i class="mdi mdi-shield-check me-1"></i>{{ strtoupper(str_replace('_', ' ', $employee->role ?? 'karyawan')) }}
                                 </span>
+                                @php
+                                    $empUser = $employee ?? $targetUser ?? auth()->user();
+                                    $empYearlyLimit = $empUser->yearly_leave_limit ?? 12;
+                                    $empLeaveBalance = $empUser->leave_balance ?? 12;
+                                @endphp
+                                <span class="badge" style="font-size: 10.5px; font-weight: 700; background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; padding: 3.5px 8px; border-radius: 6px;" title="Sisa Saldo Cuti Tahunan">
+                                    <i class="mdi mdi-beach me-1"></i>Sisa Cuti: <strong>{{ $empLeaveBalance }}</strong>/{{ $empYearlyLimit }} Hari
+                                </span>
                             </div>
                             <small class="text-muted d-flex align-items-center gap-1 mt-0.5" style="font-size: 11.5px;">
                                 <i class="mdi mdi-office-building text-primary"></i> {{ $employee->division->name ?? '-' }} <span class="text-slate-300">|</span> <i class="mdi mdi-map-marker text-rose-500"></i> {{ $employee->branch->name ?? '-' }}
@@ -899,10 +1041,10 @@
                 </div>
             </div>
 
-            {{-- 3. PRIMARY KPI SUMMARY CARDS (Bento Grid 4 Cards) --}}
+            {{-- 3. PRIMARY KPI SUMMARY CARDS (5 Bento Grid Cards) --}}
             <div class="row g-3 mb-3">
                 {{-- Total Hari Kerja --}}
-                <div class="col-6 col-lg-3">
+                <div class="col-6 col-md-4 col-xl">
                     <div class="metric-card-bento">
                         <div>
                             <div class="metric-header">
@@ -920,7 +1062,7 @@
                 </div>
 
                 {{-- Hadir / WFH --}}
-                <div class="col-6 col-lg-3">
+                <div class="col-6 col-md-4 col-xl">
                     <div class="metric-card-bento">
                         <div>
                             <div class="metric-header">
@@ -940,8 +1082,67 @@
                     </div>
                 </div>
 
+                {{-- Cuti Tahunan --}}
+                @php
+                    $activeTarget = $targetUser ?? $employee ?? auth()->user();
+                    $yearlyLimit = $activeTarget->yearly_leave_limit ?? 12;
+                    $leaveBalance = $activeTarget->leave_balance ?? 12;
+                    $cutiItems = $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'cuti')->values();
+                @endphp
+                <div class="col-6 col-md-4 col-xl">
+                    <div class="metric-card-bento metric-card-cuti" id="bento-cuti-card" style="cursor: pointer;" title="Klik untuk memfilter tabel ke baris Cuti">
+                        <div>
+                            <div class="metric-header">
+                                <span class="metric-label text-purple fw-bold">Cuti</span>
+                                <div class="metric-icon-box metric-icon-purple">
+                                    <i class="mdi mdi-beach"></i>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-baseline gap-1.5">
+                                <div class="metric-value text-purple">{{ $summary['cuti'] }}</div>
+                                <span class="text-muted fw-semibold" style="font-size: 13px;">Hari</span>
+                            </div>
+                        </div>
+                        <div class="metric-footer-text mt-1 flex-column align-items-start gap-1">
+                            <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-1">
+                                <span class="metric-badge-pill badge-pill-purple" title="Sisa kuota cuti tahunan">
+                                    Sisa: <strong>{{ $leaveBalance }}</strong>/{{ $yearlyLimit }}
+                                </span>
+                                @if($summary['cuti'] > 0)
+                                    <button type="button" class="btn btn-link p-0 text-purple fw-bold text-decoration-none" style="font-size: 10px;" data-bs-toggle="modal" data-bs-target="#cutiDetailModal" onclick="event.stopPropagation();">
+                                        <i class="mdi mdi-calendar-search me-0.5"></i>Detail
+                                    </button>
+                                @endif
+                            </div>
+                            @if($summary['cuti'] > 0)
+                                <div class="d-flex flex-wrap gap-1 mt-0.5">
+                                    @foreach($cutiItems->take(3) as $cItem)
+                                        @php
+                                            $cDate = $cItem->check_in_time ?? $cItem->check_out_time;
+                                        @endphp
+                                        @if($cDate)
+                                            <span class="date-pill-cuti" title="{{ $cItem->notes ?? 'Cuti' }}">
+                                                <i class="mdi mdi-calendar-check me-0.5"></i>{{ $cDate->translatedFormat('d M') }}
+                                            </span>
+                                        @endif
+                                    @endforeach
+                                    @if($cutiItems->count() > 3)
+                                        <span class="date-pill-cuti" title="Lihat detail semua tanggal cuti" data-bs-toggle="modal" data-bs-target="#cutiDetailModal" onclick="event.stopPropagation();">
+                                            +{{ $cutiItems->count() - 3 }} lagi
+                                        </span>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="text-muted small" style="font-size: 10.5px;">
+                                    <i class="mdi mdi-check-circle-outline text-success me-0.5"></i>Nihil periode ini
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Sakit & Izin --}}
-                <div class="col-6 col-lg-3">
+                <div class="col-6 col-md-4 col-xl">
                     <div class="metric-card-bento">
                         <div>
                             <div class="metric-header">
@@ -960,7 +1161,7 @@
                 </div>
 
                 {{-- Alpha (Tanpa Keterangan) --}}
-                <div class="col-6 col-lg-3">
+                <div class="col-12 col-md-4 col-xl">
                     <div class="metric-card-bento">
                         <div>
                             <div class="metric-header">
@@ -1072,6 +1273,34 @@
                     </div>
                 </div>
 
+                {{-- QUICK FILTER TABS (Cuti, Hadir, Sakit/Izin, Alpha, Libur) --}}
+                <div class="history-filter-tabs-wrapper">
+                    <div class="history-filter-tabs">
+                        <button type="button" class="history-filter-btn active" data-filter="all" onclick="applyHistoryFilter('all')">
+                            Semua <span class="filter-count">{{ count($history) }}</span>
+                        </button>
+                        <button type="button" class="history-filter-btn" data-filter="hadir" onclick="applyHistoryFilter('hadir')">
+                            <i class="mdi mdi-account-check text-emerald"></i> Hadir <span class="filter-count">{{ $summary['present'] }}</span>
+                        </button>
+                        <button type="button" class="history-filter-btn {{ $summary['cuti'] > 0 ? 'btn-cuti-highlight' : '' }}" data-filter="cuti" onclick="applyHistoryFilter('cuti')">
+                            <i class="mdi mdi-beach text-purple"></i> Cuti <span class="filter-count">{{ $summary['cuti'] }}</span>
+                        </button>
+                        <button type="button" class="history-filter-btn" data-filter="sakit_izin" onclick="applyHistoryFilter('sakit_izin')">
+                            <i class="mdi mdi-file-document-edit text-sky"></i> Sakit & Izin <span class="filter-count">{{ $summary['sakit'] + $summary['izin'] }}</span>
+                        </button>
+                        <button type="button" class="history-filter-btn" data-filter="alpha" onclick="applyHistoryFilter('alpha')">
+                            <i class="mdi mdi-close-circle text-rose"></i> Alpha <span class="filter-count">{{ $summary['alpha'] }}</span>
+                        </button>
+                        <button type="button" class="history-filter-btn" data-filter="libur" onclick="applyHistoryFilter('libur')">
+                            <i class="mdi mdi-calendar-star text-teal"></i> Libur <span class="filter-count">{{ $summary['libur'] }}</span>
+                        </button>
+                    </div>
+                    <div id="filter-active-indicator" class="text-muted small d-none" style="font-size: 11px;">
+                        Filter: <strong id="filter-active-name" class="text-slate-900">Semua</strong>
+                        <a href="javascript:void(0)" onclick="applyHistoryFilter('all')" class="ms-1 text-primary text-decoration-none fw-bold">(Tampilkan Semua)</a>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table modern-history-table">
                         <thead>
@@ -1093,7 +1322,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($history as $att)
+                            @foreach ($history as $att)
                                 @php
                                     $displayDate = $att->check_in_time ?? $att->check_out_time ?? now();
                                     $dayEng = $displayDate->format('l');
@@ -1137,8 +1366,17 @@
                                     if ($displayText === 'Izin Telat') {
                                         $displayText = 'Telat Hadir';
                                     }
+
+                                    $catClass = match(true) {
+                                        $statusLwr == 'cuti' => 'cuti',
+                                        in_array($statusLwr, ['masuk', 'wfh', 'dinas', 'izin telat', 'telat', 'telat hadir']) || str_contains($statusLwr, 'telat') => 'hadir',
+                                        in_array($statusLwr, ['sakit', 'izin']) => 'sakit_izin',
+                                        $statusLwr == 'alpha' => 'alpha',
+                                        $statusLwr == 'libur' => 'libur',
+                                        default => 'other',
+                                    };
                                 @endphp
-                                <tr>
+                                <tr class="history-row" data-category="{{ $catClass }}">
                                     {{-- 1. Tanggal & Hari --}}
                                     <td class="ps-4">
                                         <div class="date-tile-box">
@@ -1423,7 +1661,17 @@
                                         </td>
                                     @endif
                                 </tr>
-                            @empty
+                            @endforeach
+                            <tr id="history-filter-empty-row" style="display: none;">
+                                <td colspan="{{ (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')) ? 12 : 11 }}" class="p-4 text-center text-muted">
+                                    <div class="py-3">
+                                        <i class="mdi mdi-filter-remove-outline fs-2 d-block mb-1 text-slate-300"></i>
+                                        <span class="fw-semibold text-slate-700">Tidak ada catatan kehadiran dengan filter ini pada periode terpilih.</span>
+                                        <div><a href="javascript:void(0)" onclick="applyHistoryFilter('all')" class="small text-primary text-decoration-none fw-bold mt-1 d-inline-block">Kembali Tampilkan Semua Data</a></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @if(count($history) === 0)
                                 <tr>
                                     <td colspan="{{ (isset($employee) && (auth()->user()->role == 'audit' || auth()->user()->role == 'admin')) ? 12 : 11 }}" class="p-0">
                                         <div class="empty-history-box">
@@ -1435,7 +1683,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -1635,11 +1883,112 @@
             @endif
         @endforeach
     @endif
+
+    {{-- MODAL DETAIL CUTI TAHUNAN --}}
+    @php
+        $modalTarget = $targetUser ?? $employee ?? auth()->user();
+        $mYearlyLimit = $modalTarget->yearly_leave_limit ?? 12;
+        $mLeaveBalance = $modalTarget->leave_balance ?? 12;
+        $mCutiItems = $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'cuti')->values();
+    @endphp
+    <div class="modal fade" id="cutiDetailModal" tabindex="-1" aria-labelledby="cutiDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-bottom p-3 bg-slate-50 rounded-top-4">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="metric-icon-box metric-icon-purple" style="width: 38px; height: 38px; font-size: 18px;">
+                            <i class="mdi mdi-beach"></i>
+                        </div>
+                        <div>
+                            <h6 class="modal-title fw-bold text-slate-900 mb-0" id="cutiDetailModalLabel">Riwayat Cuti: {{ $modalTarget->name }}</h6>
+                            <small class="text-muted" style="font-size: 11px;">Periode Cut-Off: 26 {{ $indoMonths[$prevMonth] ?? 'Bulan Lalu' }} - 25 {{ $indoMonths[$selectedMonth] ?? 'Bulan Ini' }} {{ $selectedYear }}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+
+                <div class="modal-body p-3.5">
+                    {{-- Summary Stat Box --}}
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="p-2.5 rounded-3 border bg-slate-50 text-center">
+                                <small class="text-muted d-block fw-semibold" style="font-size: 11px;">Cuti Periode Ini</small>
+                                <span class="fw-bold fs-5 text-purple">{{ $summary['cuti'] }} <small style="font-size: 12px;">Hari</small></span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2.5 rounded-3 border bg-slate-50 text-center">
+                                <small class="text-muted d-block fw-semibold" style="font-size: 11px;">Sisa Saldo Cuti</small>
+                                <span class="fw-bold fs-5 text-emerald">{{ $mLeaveBalance }} <small style="font-size: 12px;">/ {{ $mYearlyLimit }} Hari</small></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-slate-700 mb-2 small text-uppercase" style="letter-spacing: 0.5px;">
+                        <i class="mdi mdi-calendar-check text-purple me-1"></i>Rincian Tanggal Cuti ({{ count($mCutiItems) }} Hari)
+                    </h6>
+
+                    <div class="cuti-detail-list">
+                        @forelse($mCutiItems as $cIndex => $cItem)
+                            @php
+                                $cDate = $cItem->check_in_time ?? $cItem->check_out_time;
+                                $dayEng = $cDate ? $cDate->format('l') : '';
+                                $cDayName = $indoDays[$dayEng] ?? $dayEng;
+                            @endphp
+                            <div class="p-2.5 mb-2 rounded-3 border d-flex align-items-center justify-content-between gap-2" style="background: #faf5ff; border-color: #e9d5ff !important;">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="badge-pill-purple px-2 py-1 rounded-2 fw-bold text-center flex-shrink-0" style="min-width: 44px;">
+                                        <div style="font-size: 14px; line-height: 1.1;">{{ $cDate ? $cDate->format('d') : '-' }}</div>
+                                        <div style="font-size: 9.5px; text-transform: uppercase;">{{ $cDate ? $cDate->format('M') : '' }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-slate-900" style="font-size: 13px;">
+                                            {{ $cDayName }}, {{ $cDate ? $cDate->translatedFormat('d F Y') : '-' }}
+                                        </div>
+                                        <small class="text-muted d-block mt-0.5" style="font-size: 11px;">
+                                            <i class="mdi mdi-information-outline me-0.5"></i>{{ $cItem->notes ?: ($cItem->leaveRequest?->reason ?: 'Cuti Tahunan Disetujui') }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="text-end flex-shrink-0">
+                                    <span class="badge presence-cuti px-2 py-1" style="font-size: 10px;">
+                                        <i class="mdi mdi-check-circle me-0.5"></i>Disetujui
+                                    </span>
+                                    @if($cItem->verifier || $cItem->leaveRequest?->verifier)
+                                        <div class="text-muted mt-1" style="font-size: 10px;">
+                                            {{ $cItem->verifier->name ?? $cItem->leaveRequest?->verifier?->name ?? 'Admin' }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-4 text-muted">
+                                <i class="mdi mdi-beach fs-2 d-block mb-1 text-slate-300"></i>
+                                <span class="small fw-semibold">Tidak ada pengambilan cuti pada periode cut-off ini.</span>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top p-3 bg-slate-50 rounded-bottom-4 d-flex justify-content-between">
+                    @if(count($mCutiItems) > 0)
+                        <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" data-bs-dismiss="modal" onclick="applyHistoryFilter('cuti')">
+                            <i class="mdi mdi-filter-variant"></i> Tampilkan di Tabel
+                        </button>
+                    @else
+                        <div></div>
+                    @endif
+                    <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Preview Image Modal
             var imagePreviewModal = document.getElementById('imagePreviewModal');
             if (imagePreviewModal) {
                 imagePreviewModal.addEventListener('show.bs.modal', function (event) {
@@ -1656,6 +2005,66 @@
                     }
                 });
             }
+
+            // Click Bento Cuti Card to Filter
+            var cutiCard = document.getElementById('bento-cuti-card');
+            if (cutiCard) {
+                cutiCard.addEventListener('click', function (e) {
+                    if (e.target.closest('[data-bs-toggle="modal"]')) return;
+                    applyHistoryFilter('cuti');
+                    var tableCard = document.querySelector('.history-table-card');
+                    if (tableCard) {
+                        tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            }
         });
+
+        // Quick Filter Function for History Table
+        window.applyHistoryFilter = function (filter) {
+            var rows = document.querySelectorAll('.modern-history-table tbody tr.history-row');
+            var emptyRow = document.getElementById('history-filter-empty-row');
+            var visibleCount = 0;
+
+            document.querySelectorAll('.history-filter-btn').forEach(function (btn) {
+                if (btn.getAttribute('data-filter') === filter) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            rows.forEach(function (row) {
+                var cat = row.getAttribute('data-category');
+                if (filter === 'all' || cat === filter) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            var indicator = document.getElementById('filter-active-indicator');
+            var activeName = document.getElementById('filter-active-name');
+            if (indicator && activeName) {
+                if (filter === 'all') {
+                    indicator.classList.add('d-none');
+                } else {
+                    var filterLabels = {
+                        'hadir': 'Hadir / WFH',
+                        'cuti': 'Cuti Tahunan',
+                        'sakit_izin': 'Sakit & Izin',
+                        'alpha': 'Alpha',
+                        'libur': 'Hari Libur'
+                    };
+                    activeName.textContent = (filterLabels[filter] || filter) + ' (' + visibleCount + ' Catatan)';
+                    indicator.classList.remove('d-none');
+                }
+            }
+
+            if (emptyRow) {
+                emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+            }
+        };
     </script>
 @endpush
