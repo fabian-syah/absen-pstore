@@ -48,11 +48,29 @@ class AttendanceHistoryController extends Controller
 
         $data = $this->getHistoryData($targetUser, $selectedMonth, $selectedYear);
 
+        // Hitung saldo cuti tahunan secara dinamis (sinkron dengan Monitoring Cuti)
+        $currentYear = now()->year;
+        $yearlyLeaveTaken = LeaveRequest::where('user_id', $targetUser->id)
+            ->where('type', 'cuti')
+            ->where('status', 'approved')
+            ->whereYear('start_date', $currentYear)
+            ->get()
+            ->sum(function ($req) {
+                $start = Carbon::parse($req->start_date);
+                $end = $req->end_date ? Carbon::parse($req->end_date) : $start;
+                return $start->diffInDays($end) + 1;
+            });
+        $yearlyLeaveLimit = $targetUser->yearly_leave_limit ?? 12;
+        $yearlyLeaveBalance = $yearlyLeaveLimit - $yearlyLeaveTaken;
+
         return view('attendance.history', array_merge($data, [
             'selectedMonth' => $selectedMonth,
             'selectedYear' => $selectedYear,
             'employee' => $employee,
             'targetUser' => $targetUser,
+            'yearlyLeaveLimit' => $yearlyLeaveLimit,
+            'yearlyLeaveTaken' => $yearlyLeaveTaken,
+            'yearlyLeaveBalance' => $yearlyLeaveBalance,
             'prevMonth' => $prevDate->month,
             'prevYear' => $prevDate->year,
             'nextMonth' => $nextDate->month,

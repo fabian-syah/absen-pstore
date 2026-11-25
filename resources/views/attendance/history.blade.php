@@ -1001,10 +1001,10 @@
                                 </span>
                                 @php
                                     $empUser = $employee ?? $targetUser ?? auth()->user();
-                                    $empYearlyLimit = $empUser->yearly_leave_limit ?? 12;
-                                    $empLeaveBalance = $empUser->leave_balance ?? 12;
+                                    $empYearlyLimit = $yearlyLeaveLimit ?? ($empUser->yearly_leave_limit ?? 12);
+                                    $empLeaveBalance = $yearlyLeaveBalance ?? ($empUser->leave_balance ?? 12);
                                 @endphp
-                                <span class="badge" style="font-size: 10.5px; font-weight: 700; background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; padding: 3.5px 8px; border-radius: 6px;" title="Sisa Saldo Cuti Tahunan">
+                                <span class="badge" style="font-size: 10.5px; font-weight: 700; background: {{ $empLeaveBalance <= 0 ? '#fff1f2' : '#faf5ff' }}; color: {{ $empLeaveBalance <= 0 ? '#be123c' : '#7e22ce' }}; border: 1px solid {{ $empLeaveBalance <= 0 ? '#fecdd3' : '#e9d5ff' }}; padding: 4px 8px; border-radius: 6px;" title="Sisa Saldo Cuti Tahunan">
                                     <i class="mdi mdi-beach me-1"></i>Sisa Cuti: <strong>{{ $empLeaveBalance }}</strong>/{{ $empYearlyLimit }} Hari
                                 </span>
                             </div>
@@ -1169,8 +1169,8 @@
                 {{-- Cuti Tahunan --}}
                 @php
                     $activeTarget = $targetUser ?? $employee ?? auth()->user();
-                    $yearlyLimit = $activeTarget->yearly_leave_limit ?? 12;
-                    $leaveBalance = $activeTarget->leave_balance ?? 12;
+                    $yearlyLimit = $yearlyLeaveLimit ?? ($activeTarget->yearly_leave_limit ?? 12);
+                    $leaveBalance = $yearlyLeaveBalance ?? ($activeTarget->leave_balance ?? 12);
                     $cutiItems = $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'cuti')->values();
                 @endphp
                 <div class="col-6 col-md-4 col-xl">
@@ -1971,8 +1971,9 @@
     {{-- MODAL DETAIL CUTI TAHUNAN --}}
     @php
         $modalTarget = $targetUser ?? $employee ?? auth()->user();
-        $mYearlyLimit = $modalTarget->yearly_leave_limit ?? 12;
-        $mLeaveBalance = $modalTarget->leave_balance ?? 12;
+        $mYearlyLimit = $yearlyLeaveLimit ?? ($modalTarget->yearly_leave_limit ?? 12);
+        $mLeaveBalance = $yearlyLeaveBalance ?? ($modalTarget->leave_balance ?? 12);
+        $mLeaveTaken = $yearlyLeaveTaken ?? $summary['cuti'];
         $mCutiItems = $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'cuti')->values();
     @endphp
     <div class="modal fade" id="cutiDetailModal" tabindex="-1" aria-labelledby="cutiDetailModalLabel" aria-hidden="true">
@@ -2002,8 +2003,9 @@
                         </div>
                         <div class="col-6">
                             <div class="cuti-stat-box">
-                                <small class="text-muted d-block fw-semibold mb-1" style="font-size: 11.5px;">Sisa Saldo Cuti</small>
-                                <span class="fw-bold fs-4 text-emerald">{{ $mLeaveBalance }} <small class="fw-semibold text-muted" style="font-size: 12.5px;">/ {{ $mYearlyLimit }} Hari</small></span>
+                                <small class="text-muted d-block fw-semibold mb-1" style="font-size: 11.5px;">Sisa Saldo ({{ now()->year }})</small>
+                                <span class="fw-bold fs-4 {{ $mLeaveBalance <= 0 ? 'text-danger' : 'text-emerald' }}">{{ $mLeaveBalance }} <small class="fw-semibold text-muted" style="font-size: 12.5px;">/ {{ $mYearlyLimit }} Hari</small></span>
+                                <div class="text-muted mt-1" style="font-size: 10.5px;">Terpakai tahun ini: <strong>{{ $mLeaveTaken }}</strong> Hari</div>
                             </div>
                         </div>
                     </div>
