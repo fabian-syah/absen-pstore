@@ -275,7 +275,7 @@
         .history-filter-tabs-wrapper {
             background: #f8fafc;
             border-bottom: 1px solid var(--slate-200);
-            padding: 0.65rem 1.25rem;
+            padding: 0.75rem 1.25rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -286,7 +286,7 @@
         .history-filter-tabs {
             display: flex;
             align-items: center;
-            gap: 0.35rem;
+            gap: 0.5rem;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
@@ -301,9 +301,10 @@
             border: 1px solid var(--slate-200);
             background: #ffffff;
             color: var(--slate-600);
-            padding: 5px 12px;
+            padding: 7px 14px;
+            min-height: 36px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
@@ -311,6 +312,89 @@
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.15s ease;
+        }
+
+        /* --- MODAL DETAIL CUTI (ANTISLOP & RESPONSIVE) --- */
+        .cuti-modal-header {
+            background: var(--slate-50);
+            border-bottom: 1px solid var(--slate-200);
+            padding: 1.125rem 1.375rem;
+        }
+
+        .cuti-modal-body {
+            padding: 1.375rem;
+            background: #ffffff;
+        }
+
+        .cuti-modal-footer {
+            background: var(--slate-50);
+            border-top: 1px solid var(--slate-200);
+            padding: 1rem 1.375rem;
+        }
+
+        .cuti-stat-box {
+            background: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            text-align: center;
+            height: 100%;
+        }
+
+        .cuti-detail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .cuti-item-row {
+            background: #ffffff;
+            border: 1px solid var(--slate-200);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.875rem;
+            transition: border-color 0.15s ease;
+        }
+
+        .cuti-item-row:hover {
+            border-color: var(--slate-300);
+        }
+
+        .cuti-date-tile {
+            background: #faf5ff;
+            color: #6b21a8;
+            border: 1px solid #e9d5ff;
+            border-radius: 10px;
+            padding: 0.45rem 0.625rem;
+            min-width: 52px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 575.98px) {
+            .cuti-modal-header,
+            .cuti-modal-body,
+            .cuti-modal-footer {
+                padding: 1rem;
+            }
+
+            .cuti-item-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .cuti-item-meta {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-top: 0.5rem;
+                border-top: 1px dashed var(--slate-200);
+            }
         }
 
         .history-filter-btn:hover {
@@ -1098,31 +1182,31 @@
                                     <i class="mdi mdi-beach"></i>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-baseline gap-1.5">
+                            <div class="d-flex align-items-baseline gap-2">
                                 <div class="metric-value text-purple">{{ $summary['cuti'] }}</div>
                                 <span class="text-muted fw-semibold" style="font-size: 13px;">Hari</span>
                             </div>
                         </div>
-                        <div class="metric-footer-text mt-1 flex-column align-items-start gap-1">
-                            <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-1">
+                        <div class="metric-footer-text mt-2 flex-column align-items-start gap-2">
+                            <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
                                 <span class="metric-badge-pill badge-pill-purple" title="Sisa kuota cuti tahunan">
                                     Sisa: <strong>{{ $leaveBalance }}</strong>/{{ $yearlyLimit }}
                                 </span>
                                 @if($summary['cuti'] > 0)
-                                    <button type="button" class="btn btn-link p-0 text-purple fw-bold text-decoration-none" style="font-size: 10px;" data-bs-toggle="modal" data-bs-target="#cutiDetailModal" onclick="event.stopPropagation();">
-                                        <i class="mdi mdi-calendar-search me-0.5"></i>Detail
+                                    <button type="button" class="btn btn-link p-0 text-purple fw-bold text-decoration-none" style="font-size: 11px;" data-bs-toggle="modal" data-bs-target="#cutiDetailModal" onclick="event.stopPropagation();">
+                                        <i class="mdi mdi-calendar-search me-1"></i>Detail
                                     </button>
                                 @endif
                             </div>
                             @if($summary['cuti'] > 0)
-                                <div class="d-flex flex-wrap gap-1 mt-0.5">
+                                <div class="d-flex flex-wrap gap-1 mt-1">
                                     @foreach($cutiItems->take(3) as $cItem)
                                         @php
                                             $cDate = $cItem->check_in_time ?? $cItem->check_out_time;
                                         @endphp
                                         @if($cDate)
                                             <span class="date-pill-cuti" title="{{ $cItem->notes ?? 'Cuti' }}">
-                                                <i class="mdi mdi-calendar-check me-0.5"></i>{{ $cDate->translatedFormat('d M') }}
+                                                <i class="mdi mdi-calendar-check me-1"></i>{{ $cDate->translatedFormat('d M') }}
                                             </span>
                                         @endif
                                     @endforeach
@@ -1133,8 +1217,8 @@
                                     @endif
                                 </div>
                             @else
-                                <div class="text-muted small" style="font-size: 10.5px;">
-                                    <i class="mdi mdi-check-circle-outline text-success me-0.5"></i>Nihil periode ini
+                                <div class="text-muted small" style="font-size: 11px;">
+                                    <i class="mdi mdi-check-circle-outline text-success me-1"></i>Nihil periode ini
                                 </div>
                             @endif
                         </div>
@@ -1894,37 +1978,37 @@
     <div class="modal fade" id="cutiDetailModal" tabindex="-1" aria-labelledby="cutiDetailModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content rounded-4 border-0 shadow-lg">
-                <div class="modal-header border-bottom p-3 bg-slate-50 rounded-top-4">
-                    <div class="d-flex align-items-center gap-2.5">
-                        <div class="metric-icon-box metric-icon-purple" style="width: 38px; height: 38px; font-size: 18px;">
+                <div class="modal-header cuti-modal-header rounded-top-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="metric-icon-box metric-icon-purple flex-shrink-0" style="width: 40px; height: 40px; font-size: 18px;">
                             <i class="mdi mdi-beach"></i>
                         </div>
                         <div>
-                            <h6 class="modal-title fw-bold text-slate-900 mb-0" id="cutiDetailModalLabel">Riwayat Cuti: {{ $modalTarget->name }}</h6>
-                            <small class="text-muted" style="font-size: 11px;">Periode Cut-Off: 26 {{ $indoMonths[$prevMonth] ?? 'Bulan Lalu' }} - 25 {{ $indoMonths[$selectedMonth] ?? 'Bulan Ini' }} {{ $selectedYear }}</small>
+                            <h6 class="modal-title fw-bold text-slate-900 mb-1" id="cutiDetailModalLabel">Riwayat Cuti: {{ $modalTarget->name }}</h6>
+                            <small class="text-muted d-block" style="font-size: 11.5px;">Periode Cut-Off: 26 {{ $indoMonths[$prevMonth] ?? 'Bulan Lalu' }} - 25 {{ $indoMonths[$selectedMonth] ?? 'Bulan Ini' }} {{ $selectedYear }}</small>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
 
-                <div class="modal-body p-3.5">
+                <div class="modal-body cuti-modal-body">
                     {{-- Summary Stat Box --}}
-                    <div class="row g-2 mb-3">
+                    <div class="row g-3 mb-4">
                         <div class="col-6">
-                            <div class="p-2.5 rounded-3 border bg-slate-50 text-center">
-                                <small class="text-muted d-block fw-semibold" style="font-size: 11px;">Cuti Periode Ini</small>
-                                <span class="fw-bold fs-5 text-purple">{{ $summary['cuti'] }} <small style="font-size: 12px;">Hari</small></span>
+                            <div class="cuti-stat-box">
+                                <small class="text-muted d-block fw-semibold mb-1" style="font-size: 11.5px;">Cuti Periode Ini</small>
+                                <span class="fw-bold fs-4 text-purple">{{ $summary['cuti'] }} <small class="fw-semibold text-muted" style="font-size: 12.5px;">Hari</small></span>
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="p-2.5 rounded-3 border bg-slate-50 text-center">
-                                <small class="text-muted d-block fw-semibold" style="font-size: 11px;">Sisa Saldo Cuti</small>
-                                <span class="fw-bold fs-5 text-emerald">{{ $mLeaveBalance }} <small style="font-size: 12px;">/ {{ $mYearlyLimit }} Hari</small></span>
+                            <div class="cuti-stat-box">
+                                <small class="text-muted d-block fw-semibold mb-1" style="font-size: 11.5px;">Sisa Saldo Cuti</small>
+                                <span class="fw-bold fs-4 text-emerald">{{ $mLeaveBalance }} <small class="fw-semibold text-muted" style="font-size: 12.5px;">/ {{ $mYearlyLimit }} Hari</small></span>
                             </div>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold text-slate-700 mb-2 small text-uppercase" style="letter-spacing: 0.5px;">
+                    <h6 class="fw-bold text-slate-700 mb-3 small text-uppercase" style="letter-spacing: 0.5px;">
                         <i class="mdi mdi-calendar-check text-purple me-1"></i>Rincian Tanggal Cuti ({{ count($mCutiItems) }} Hari)
                     </h6>
 
@@ -1935,27 +2019,28 @@
                                 $dayEng = $cDate ? $cDate->format('l') : '';
                                 $cDayName = $indoDays[$dayEng] ?? $dayEng;
                             @endphp
-                            <div class="p-2.5 mb-2 rounded-3 border d-flex align-items-center justify-content-between gap-2" style="background: #faf5ff; border-color: #e9d5ff !important;">
-                                <div class="d-flex align-items-center gap-2.5">
-                                    <div class="badge-pill-purple px-2 py-1 rounded-2 fw-bold text-center flex-shrink-0" style="min-width: 44px;">
-                                        <div style="font-size: 14px; line-height: 1.1;">{{ $cDate ? $cDate->format('d') : '-' }}</div>
-                                        <div style="font-size: 9.5px; text-transform: uppercase;">{{ $cDate ? $cDate->format('M') : '' }}</div>
+                            <div class="cuti-item-row">
+                                <div class="d-flex align-items-center gap-3 flex-grow-1" style="min-width: 0;">
+                                    <div class="cuti-date-tile">
+                                        <div class="fw-bold" style="font-size: 15px; line-height: 1.15;">{{ $cDate ? $cDate->format('d') : '-' }}</div>
+                                        <div class="fw-bold" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">{{ $cDate ? $cDate->format('M') : '' }}</div>
                                     </div>
-                                    <div>
-                                        <div class="fw-bold text-slate-900" style="font-size: 13px;">
+                                    <div style="min-width: 0;">
+                                        <div class="fw-bold text-slate-900" style="font-size: 13.5px; line-height: 1.3;">
                                             {{ $cDayName }}, {{ $cDate ? $cDate->translatedFormat('d F Y') : '-' }}
                                         </div>
-                                        <small class="text-muted d-block mt-0.5" style="font-size: 11px;">
-                                            <i class="mdi mdi-information-outline me-0.5"></i>{{ $cItem->notes ?: ($cItem->leaveRequest?->reason ?: 'Cuti Tahunan Disetujui') }}
+                                        <small class="text-muted d-flex align-items-start gap-1 mt-1" style="font-size: 11.5px; line-height: 1.4;">
+                                            <i class="mdi mdi-information-outline flex-shrink-0" style="margin-top: 1px;"></i>
+                                            <span>{{ $cItem->notes ?: ($cItem->leaveRequest?->reason ?: 'Cuti Tahunan Disetujui') }}</span>
                                         </small>
                                     </div>
                                 </div>
-                                <div class="text-end flex-shrink-0">
-                                    <span class="badge presence-cuti px-2 py-1" style="font-size: 10px;">
-                                        <i class="mdi mdi-check-circle me-0.5"></i>Disetujui
+                                <div class="cuti-item-meta text-sm-end flex-shrink-0">
+                                    <span class="badge presence-cuti px-2 py-1" style="font-size: 10.5px;">
+                                        <i class="mdi mdi-check-circle me-1"></i>Disetujui
                                     </span>
                                     @if($cItem->verifier || $cItem->leaveRequest?->verifier)
-                                        <div class="text-muted mt-1" style="font-size: 10px;">
+                                        <div class="text-muted mt-sm-1" style="font-size: 11px;">
                                             {{ $cItem->verifier->name ?? $cItem->leaveRequest?->verifier?->name ?? 'Admin' }}
                                         </div>
                                     @endif
@@ -1963,22 +2048,22 @@
                             </div>
                         @empty
                             <div class="text-center py-4 text-muted">
-                                <i class="mdi mdi-beach fs-2 d-block mb-1 text-slate-300"></i>
+                                <i class="mdi mdi-beach fs-2 d-block mb-2 text-slate-300"></i>
                                 <span class="small fw-semibold">Tidak ada pengambilan cuti pada periode cut-off ini.</span>
                             </div>
                         @endforelse
                     </div>
                 </div>
 
-                <div class="modal-footer border-top p-3 bg-slate-50 rounded-bottom-4 d-flex justify-content-between">
+                <div class="modal-footer cuti-modal-footer rounded-bottom-4 d-flex justify-content-between gap-2">
                     @if(count($mCutiItems) > 0)
-                        <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" data-bs-dismiss="modal" onclick="applyHistoryFilter('cuti')">
+                        <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 px-3 py-2" data-bs-dismiss="modal" onclick="applyHistoryFilter('cuti')">
                             <i class="mdi mdi-filter-variant"></i> Tampilkan di Tabel
                         </button>
                     @else
                         <div></div>
                     @endif
-                    <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-sm btn-secondary px-4 py-2" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
