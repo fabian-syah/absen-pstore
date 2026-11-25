@@ -1183,7 +1183,7 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-baseline gap-2">
-                                <div class="metric-value text-purple">{{ $summary['cuti'] }}</div>
+                                <div class="metric-value text-purple">{{ ($summary['cuti'] ?? 0) }}</div>
                                 <span class="text-muted fw-semibold" style="font-size: 13px;">Hari</span>
                             </div>
                         </div>
@@ -1192,13 +1192,13 @@
                                 <span class="metric-badge-pill badge-pill-purple" title="Sisa kuota cuti tahunan">
                                     Sisa: <strong>{{ $leaveBalance }}</strong>/{{ $yearlyLimit }}
                                 </span>
-                                @if($summary['cuti'] > 0)
+                                @if(($summary['cuti'] ?? 0) > 0)
                                     <button type="button" class="btn btn-link p-0 text-purple fw-bold text-decoration-none" style="font-size: 11px;" data-bs-toggle="modal" data-bs-target="#cutiDetailModal" onclick="event.stopPropagation();">
                                         <i class="mdi mdi-calendar-search me-1"></i>Detail
                                     </button>
                                 @endif
                             </div>
-                            @if($summary['cuti'] > 0)
+                            @if(($summary['cuti'] ?? 0) > 0)
                                 <div class="d-flex flex-wrap gap-1 mt-1">
                                     @foreach($cutiItems->take(3) as $cItem)
                                         @php
@@ -1366,8 +1366,8 @@
                         <button type="button" class="history-filter-btn" data-filter="hadir" onclick="applyHistoryFilter('hadir')">
                             <i class="mdi mdi-account-check text-emerald"></i> Hadir <span class="filter-count">{{ $summary['present'] }}</span>
                         </button>
-                        <button type="button" class="history-filter-btn {{ $summary['cuti'] > 0 ? 'btn-cuti-highlight' : '' }}" data-filter="cuti" onclick="applyHistoryFilter('cuti')">
-                            <i class="mdi mdi-beach text-purple"></i> Cuti <span class="filter-count">{{ $summary['cuti'] }}</span>
+                        <button type="button" class="history-filter-btn {{ ($summary['cuti'] ?? 0) > 0 ? 'btn-cuti-highlight' : '' }}" data-filter="cuti" onclick="applyHistoryFilter('cuti')">
+                            <i class="mdi mdi-beach text-purple"></i> Cuti <span class="filter-count">{{ ($summary['cuti'] ?? 0) }}</span>
                         </button>
                         <button type="button" class="history-filter-btn" data-filter="sakit_izin" onclick="applyHistoryFilter('sakit_izin')">
                             <i class="mdi mdi-file-document-edit text-sky"></i> Sakit & Izin <span class="filter-count">{{ $summary['sakit'] + $summary['izin'] }}</span>
@@ -1973,7 +1973,7 @@
         $modalTarget = $targetUser ?? $employee ?? auth()->user();
         $mYearlyLimit = $yearlyLeaveLimit ?? ($modalTarget->yearly_leave_limit ?? 12);
         $mLeaveBalance = $yearlyLeaveBalance ?? ($modalTarget->leave_balance ?? 12);
-        $mLeaveTaken = $yearlyLeaveTaken ?? $summary['cuti'];
+        $mLeaveTaken = $yearlyLeaveTaken ?? ($summary['cuti'] ?? 0);
         $mCutiItems = $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'cuti')->values();
     @endphp
     <div class="modal fade" id="cutiDetailModal" tabindex="-1" aria-labelledby="cutiDetailModalLabel" aria-hidden="true">
@@ -1998,7 +1998,7 @@
                         <div class="col-6">
                             <div class="cuti-stat-box">
                                 <small class="text-muted d-block fw-semibold mb-1" style="font-size: 11.5px;">Cuti Periode Ini</small>
-                                <span class="fw-bold fs-4 text-purple">{{ $summary['cuti'] }} <small class="fw-semibold text-muted" style="font-size: 12.5px;">Hari</small></span>
+                                <span class="fw-bold fs-4 text-purple">{{ ($summary['cuti'] ?? 0) }} <small class="fw-semibold text-muted" style="font-size: 12.5px;">Hari</small></span>
                             </div>
                         </div>
                         <div class="col-6">

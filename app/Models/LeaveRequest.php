@@ -66,4 +66,33 @@ class LeaveRequest extends Model
             ->where('status', 'approved')
             ->whereDate('start_date', today());
     }
+
+    /**
+     * Hitung total hari cuti tahunan yang benar-benar terpakai (approved & belum di-refund).
+     */
+    public static function countApprovedCutiDays(int $userId, ?int $year = null): int
+    {
+        $year = $year ?? now()->year;
+
+        $requests = self::where('user_id', $userId)
+            ->where('type', 'cuti')
+            ->where('status', 'approved')
+            ->whereYear('start_date', $year)
+            ->get();
+
+        $totalDays = 0;
+        foreach ($requests as $req) {
+            $start = \Carbon\Carbon::parse($req->start_date)->startOfDay();
+            $end = ($req->end_date ? \Carbon\Carbon::parse($req->end_date) : $start)->startOfDay();
+            $reason = $req->reason ?? '';
+
+            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                if (!str_contains($reason, '[Refunded:' . $date->format('Y-m-d') . ']')) {
+                    $totalDays++;
+                }
+            }
+        }
+
+        return $totalDays;
+    }
 }

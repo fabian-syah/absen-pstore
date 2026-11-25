@@ -568,17 +568,8 @@ class LeaveRequestController extends Controller
         $totalTaken = 0;
         $totalBalance = 0;
         foreach ($allUsers as $usr) {
-            // Hitung approved cuti untuk user ini di tahun ini
-            $approvedDays = LeaveRequest::where('user_id', $usr->id)
-                ->where('type', 'cuti')
-                ->where('status', 'approved')
-                ->whereYear('start_date', $currentYear)
-                ->get()
-                ->sum(function ($req) {
-                    $start = Carbon::parse($req->start_date);
-                    $end = $req->end_date ? Carbon::parse($req->end_date) : $start;
-                    return $start->diffInDays($end) + 1;
-                });
+            // Hitung approved cuti untuk user ini di tahun ini (abaikan tanggal yang sudah di-refund)
+            $approvedDays = LeaveRequest::countApprovedCutiDays($usr->id, $currentYear);
 
             // Override nilai untuk tampilan
             $usr->leave_taken = $approvedDays;

@@ -421,6 +421,10 @@ class TeamController extends Controller
 
         $data = $this->getHistoryData($employee, $selectedMonth, $selectedYear);
 
+        $yearlyLeaveTaken = LeaveRequest::countApprovedCutiDays($employee->id, now()->year);
+        $yearlyLeaveLimit = $employee->yearly_leave_limit ?? 12;
+        $yearlyLeaveBalance = $yearlyLeaveLimit - $yearlyLeaveTaken;
+
         // Get all employees in this branch for prev/next navigation
         $branchEmployees = User::where('branch_id', $branchId)
             ->where('is_active', true)
@@ -440,6 +444,10 @@ class TeamController extends Controller
             'selectedMonth' => $selectedMonth,
             'selectedYear' => $selectedYear,
             'employee' => $employee,
+            'targetUser' => $employee,
+            'yearlyLeaveLimit' => $yearlyLeaveLimit,
+            'yearlyLeaveTaken' => $yearlyLeaveTaken,
+            'yearlyLeaveBalance' => $yearlyLeaveBalance,
             'branchId' => $branchId,
             'prevMonth' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subMonth()->month,
             'prevYear' => Carbon::createFromDate($selectedYear, $selectedMonth, 1)->subMonth()->year,
@@ -522,6 +530,9 @@ class TeamController extends Controller
                 if ($l->type === 'telat' && !$att) {
                     return false;
                 }
+                if (str_contains($l->reason ?? '', '[Refunded:' . $date->format('Y-m-d') . ']')) {
+                    return false;
+                }
                 $lStart = Carbon::parse($l->start_date, $branchTimezone)->startOfDay();
                 $lEnd = Carbon::parse($l->end_date ?? $l->start_date, $branchTimezone)->endOfDay();
                 return $date->between($lStart, $lEnd);
@@ -595,7 +606,8 @@ class TeamController extends Controller
                     (empty($s) && in_array($item->attendance_type, ['scan', 'self', 'manual']));
             })->count(),
             'sakit' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'sakit')->count(),
-            'izin' => $history->filter(fn($i) => in_array(strtolower($i->presence_status ?? ''), ['izin', 'cuti', 'offday']))->count(),
+            'izin' => $history->filter(fn($i) => in_array(strtolower($i->presence_status ?? ''), ['izin', 'offday']))->count(),
+            'cuti' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'cuti')->count(),
             'libur' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'libur')->count(),
             'alpha' => $history->filter(fn($i) => strtolower($i->presence_status ?? '') === 'alpha')->count(),
             'telat' => $history->where('is_late_checkin', true)->count(),
