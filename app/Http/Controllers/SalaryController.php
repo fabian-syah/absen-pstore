@@ -45,6 +45,8 @@ class SalaryController extends Controller
         $totalRemainingDebt = 0;
         $alphaCount = 0;
         $lateCount = 0;
+        $alphaDates = [];
+        $lateDates = [];
         $masterSalary = null;
         $freelanceAttendance = 0;
 
@@ -95,21 +97,8 @@ class SalaryController extends Controller
             $branchTimezone = $selectedUser->branch?->timezone ?? 'Asia/Jakarta';
 
             // LOGIC CUTOFF: 26 Bulan Kemarin - 25 Bulan Ini
-            // Definisikan Variable Tanggal menggunakan timezone cabang
             $monthStartDate = Carbon::createFromDate($year, $month, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
             $monthEndDate = Carbon::createFromDate($year, $month, 1, $branchTimezone)->day(25)->endOfDay();
-            $today = Carbon::now($branchTimezone)->startOfDay();
-
-            // Limit Date pastikan tidak melewati hari ini
-            $limitDate = ($monthEndDate->gt(Carbon::now($branchTimezone))) ? $today : $monthEndDate;
-
-            // Ambil semua attendance dengan buffer hari agar timezone tidak terpotong
-            $attendances = Attendance::where('user_id', $selectedUserId)
-                ->whereBetween('check_in_time', [
-                    $monthStartDate->copy()->subDays(2)->startOfDay(),
-                    $monthEndDate->copy()->addDays(2)->endOfDay()
-                ])
-                ->get();
 
             // Absensi Regular (Bulanan) untuk Employee/Promotor (Freelance dilewati)
             $lateDates = [];
@@ -118,67 +107,11 @@ class SalaryController extends Controller
             $alphaDates = [];
 
             if (!$masterSalary || $masterSalary->category !== 'freelance') {
-                $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone, &$lateDates) {
-                    $attFullDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
-                    $attDate = $attFullDate->copy()->startOfDay();
-                    $isInRange = $attDate->between($monthStartDate, $limitDate);
-                    $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
-                    
-                    if ($isInRange && $isTelat) {
-                        $lateDates[] = $attFullDate->format('d/m');
-                        return true;
-                    }
-                    return false;
-                })->count();
-
-                // ALPHA COUNT - LOGIC TRANSLASI LANGSUNG DARI AttendanceHistoryController
-                // Sesuaikan query LeaveRequest menggunakan format 'Y-m-d' sesuai AttendanceHistoryController
-                $leaves = LeaveRequest::where('user_id', $selectedUserId)
-                    ->where('status', 'approved')
-                    ->where(function ($query) use ($monthStartDate, $monthEndDate) {
-                        $s = $monthStartDate->format('Y-m-d');
-                        $e = $monthEndDate->format('Y-m-d');
-                        // Overlap condition: leave starts on or before the end of the month AND ends on or after the start of the month
-                        $query->where('start_date', '<=', $e)
-                            ->where(function ($q) use ($s) {
-                            $q->whereNull('end_date')
-                                ->orWhere('end_date', '>=', $s);
-                        });
-                    })->get();
-
-                // Buat period (PENTING: Gunakan startOfDay agar tidak terpotong jam)
-                $period = \Carbon\CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
-
-                foreach ($period as $date) {
-                    $currentDateStr = $date->format('Y-m-d');
-
-                    // 1. Cari Attendance yang Scan Masuk-nya di tanggal ini (Prioritaskan 'Masuk')
-                    $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
-                        if ($a->attendance_type === 'system' && strtolower($a->presence_status) === 'alpha') return false;
-                        return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
-                    })->sortBy(fn($a) => strtolower($a->presence_status) === 'masuk' ? 0 : 1)->first();
-
-                    // 2. Cari leave yang membebaskan dari Alpha (semua tipe leave kecuali 'telat')
-                    $leave = $leaves->filter(function ($l) use ($date) {
-                        return $l->type !== 'telat' && $date->between(
-                            Carbon::parse($l->start_date)->startOfDay(),
-                            Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
-                        );
-                    });
-
-                    // Syarat Alpha Hard Reset 00:00: Tidak ada Masuk baru & Tidak ada Izin
-                    if (!$att && $leave->isEmpty()) {
-                        $alphaCount++;
-                        $alphaDates[] = $date->format('d/m');
-                    } else if ($att) {
-                        // Jika ADA record tapi statusnya khusus sistem Alpha
-                        $status = strtolower($att->presence_status ?? '');
-                        if ($status === 'alpha') {
-                            $alphaCount++;
-                            $alphaDates[] = $date->format('d/m');
-                        }
-                    }
-                }
+                $attSummary = Salary::summarizeMonthlyAttendance($selectedUser, (int) $month, (int) $year);
+                $lateCount = $attSummary['lateCount'];
+                $lateDates = $attSummary['lateDates'];
+                $alphaCount = $attSummary['alphaCount'];
+                $alphaDates = $attSummary['alphaDates'];
             }
 
             // [BARU] FREELANCE ATTENDANCE BERDASARKAN RANGE TANGGAL

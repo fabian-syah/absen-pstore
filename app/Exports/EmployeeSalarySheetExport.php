@@ -193,70 +193,9 @@ class EmployeeSalarySheetExport implements FromQuery, WithHeadings, WithMapping,
         if ($totalMaster > 0) {
             $branchTimezone = $user->branch->timezone ?? 'Asia/Jakarta';
             $now = Carbon::now($branchTimezone);
-            $currentMonth = $now->month;
-            $currentYear = $now->year;
-
-            // CUTOFF: 26 bulan kemarin - 25 bulan ini
-            $monthStartDate = Carbon::createFromDate($currentYear, $currentMonth, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
-            $monthEndDate = Carbon::createFromDate($currentYear, $currentMonth, 1, $branchTimezone)->day(25)->endOfDay();
-            $today = Carbon::now($branchTimezone)->startOfDay();
-            $limitDate = ($monthEndDate->gt($now)) ? $today : $monthEndDate;
-
-            // Query Attendance
-            $attendances = Attendance::where('user_id', $user->id)
-                ->whereBetween('check_in_time', [
-                    $monthStartDate->copy()->subDays(2)->startOfDay(),
-                    $monthEndDate->copy()->addDays(2)->endOfDay()
-                ])->get();
-
-            // Query Leaves
-            $leaves = LeaveRequest::where('user_id', $user->id)
-                ->where('status', 'approved')
-                ->where(function ($query) use ($monthStartDate, $monthEndDate) {
-                    $s = $monthStartDate->format('Y-m-d');
-                    $e = $monthEndDate->format('Y-m-d');
-                    $query->whereBetween('start_date', [$s, $e])
-                        ->orWhereBetween('end_date', [$s, $e])
-                        ->orWhere(function ($q) use ($s, $e) {
-                            $q->where('start_date', '<=', $s)
-                                ->where('end_date', '>=', $e);
-                        });
-                })->get();
-
-            // HITUNG TELAT (hanya dari attendance, izin telat sudah ter-record di attendance)
-            $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone) {
-                $attDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone)->startOfDay();
-                $isInRange = $attDate->between($monthStartDate, $limitDate);
-                $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
-                return $isInRange && $isTelat;
-            })->count();
-
-            // HITUNG ALPHA (loop setiap hari kerja)
-            $period = CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
-
-            foreach ($period as $date) {
-                $currentDateStr = $date->format('Y-m-d');
-
-                $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
-                    return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
-                })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
-
-                $leave = $leaves->filter(function ($l) use ($date) {
-                    return $date->between(
-                        Carbon::parse($l->start_date)->startOfDay(),
-                        Carbon::parse($l->end_date ?? $l->start_date)->endOfDay()
-                    );
-                });
-
-                if (!$att && $leave->isEmpty()) {
-                    $alphaCount++;
-                } else if ($att) {
-                    $status = strtolower($att->presence_status ?? '');
-                    if ($status === 'alpha') {
-                        $alphaCount++;
-                    }
-                }
-            }
+            $attSummary = \App\Models\Salary::summarizeMonthlyAttendance($user, (int) $now->month, (int) $now->year);
+            $alphaCount = $attSummary['alphaCount'];
+            $lateCount = $attSummary['lateCount'];
 
             // Hitung Potongan (Rumus: Fixed/31 x Alpha, Fixed/93 x Telat)
             if ($alphaCount > 0) {

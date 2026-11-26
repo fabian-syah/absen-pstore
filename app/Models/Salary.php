@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,6 +24,120 @@ class Salary extends Model
     }
 
     /**
+     * Hitung ringkasan Alpha dan Terlambat bulanan (cutoff 26-25),
+     * sinkron dengan logika Riwayat Absensi di TeamController & AttendanceHistoryController.
+     */
+    public static function summarizeMonthlyAttendance(User $user, int $month, int $year): array
+    {
+        $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
+        $monthStartDate = Carbon::createFromDate($year, $month, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
+        $monthEndDate = Carbon::createFromDate($year, $month, 1, $branchTimezone)->day(25)->endOfDay();
+        $now = Carbon::now($branchTimezone);
+        $todayInBranch = $now->copy()->startOfDay();
+
+        $attendances = Attendance::where('user_id', $user->id)
+            ->whereBetween('check_in_time', [
+                $monthStartDate->copy()->subDays(2)->startOfDay(),
+                $monthEndDate->copy()->addDays(2)->endOfDay(),
+            ])->get();
+
+        $leaves = LeaveRequest::where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->where('start_date', '<=', $monthEndDate->format('Y-m-d'))
+            ->where(function ($q) use ($monthStartDate) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $monthStartDate->format('Y-m-d'));
+            })->get();
+
+        $isCurrentPeriod = $todayInBranch->between($monthStartDate, $monthEndDate);
+        if ($isCurrentPeriod) {
+            $hasActivityToday = $attendances->first(fn($a) => Carbon::parse($a->check_in_time)->timezone($branchTimezone)->isToday())
+                || $leaves->first(fn($l) => Carbon::parse($l->start_date, $branchTimezone)->isToday());
+
+            $limitDate = (!$hasActivityToday && $now->hour < 4)
+                ? $todayInBranch->copy()->subDay()
+                : $todayInBranch;
+        } else {
+            $limitDate = $monthEndDate->gt($todayInBranch) ? $todayInBranch : $monthEndDate;
+        }
+
+        if ($limitDate->lt($monthStartDate->copy()->startOfDay())) {
+            return [
+                'alphaCount' => 0,
+                'alphaDates' => [],
+                'lateCount' => 0,
+                'lateDates' => [],
+            ];
+        }
+
+        $lateDates = [];
+        $lateCount = $attendances->filter(function ($a) use ($monthStartDate, $limitDate, $branchTimezone, &$lateDates) {
+            if ($a->attendance_type === 'system' && strtolower($a->presence_status ?? '') === 'alpha') {
+                return false;
+            }
+            if ($a->status === 'rejected') {
+                return false;
+            }
+            $attFullDate = Carbon::parse($a->check_in_time)->timezone($branchTimezone);
+            $attDate = $attFullDate->copy()->startOfDay();
+            $isInRange = $attDate->between($monthStartDate, $limitDate);
+            $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
+
+            if ($isInRange && $isTelat) {
+                $lateDates[] = $attFullDate->format('d/m');
+                return true;
+            }
+            return false;
+        })->count();
+
+        $alphaCount = 0;
+        $alphaDates = [];
+        $period = CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
+
+        foreach ($period as $date) {
+            $currentDateStr = $date->format('Y-m-d');
+
+            $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
+                if ($a->attendance_type === 'system' && strtolower($a->presence_status ?? '') === 'alpha') {
+                    return false;
+                }
+                if ($a->status === 'rejected') {
+                    return false;
+                }
+                return Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') === $currentDateStr;
+            })->sortBy(fn($a) => strtolower($a->presence_status ?? '') === 'masuk' ? 0 : 1)->first();
+
+            $leave = $leaves->filter(function ($l) use ($date, $branchTimezone) {
+                if ($l->type === 'telat') {
+                    return false;
+                }
+                if (str_contains($l->reason ?? '', '[Refunded:' . $date->format('Y-m-d') . ']')) {
+                    return false;
+                }
+                return $date->between(
+                    Carbon::parse($l->start_date, $branchTimezone)->startOfDay(),
+                    Carbon::parse($l->end_date ?? $l->start_date, $branchTimezone)->endOfDay()
+                );
+            });
+
+            if (!$att && $leave->isEmpty()) {
+                $alphaCount++;
+                $alphaDates[] = $date->format('d/m');
+            } elseif ($att && strtolower($att->presence_status ?? '') === 'alpha') {
+                $alphaCount++;
+                $alphaDates[] = $date->format('d/m');
+            }
+        }
+
+        return [
+            'alphaCount' => $alphaCount,
+            'alphaDates' => array_values(array_unique($alphaDates)),
+            'lateCount' => $lateCount,
+            'lateDates' => array_values(array_unique($lateDates)),
+        ];
+    }
+
+    /**
      * [BARU] Mengambil detail tanggal alpha dan terlambat untuk periode gaji ini
      */
     public function getAttendanceDetails()
@@ -33,69 +149,17 @@ class Salary extends Model
             ];
         }
 
-        $user = $this->user;
-        $alphaDates = [];
-        $lateDates = [];
-
         try {
-            $branchTimezone = $user->branch?->timezone ?? 'Asia/Jakarta';
-            $monthStartDate = \Carbon\Carbon::createFromDate($this->year, $this->month, 1, $branchTimezone)->subMonth()->day(26)->startOfDay();
-            $monthEndDate = \Carbon\Carbon::createFromDate($this->year, $this->month, 1, $branchTimezone)->day(25)->endOfDay();
-            
-            // Limit Date (Jangan melewati hari ini)
-            $limitDate = (now($branchTimezone)->lt($monthEndDate)) ? now($branchTimezone) : $monthEndDate;
-
-            // Ambil data absen & leave dalam range
-            $attendances = Attendance::where('user_id', $user->id)
-                ->whereBetween('check_in_time', [
-                        $monthStartDate->copy()->subDays(2)->startOfDay(),
-                        $monthEndDate->copy()->addDays(2)->endOfDay()
-                ])->get();
-
-            $leaves = LeaveRequest::where('user_id', $user->id)
-                ->where('status', 'approved')
-                ->where('start_date', '<=', $monthEndDate->format('Y-m-d'))
-                ->where(function ($q) use ($monthStartDate) {
-                    $q->whereNull('end_date')->orWhere('end_date', '>=', $monthStartDate->format('Y-m-d'));
-                })->get();
-
-            // 1. Cari Tanggal Terlambat
-            $attendances->filter(function ($a) use ($monthStartDate, $monthEndDate, $branchTimezone, &$lateDates) {
-                $attFullDate = \Carbon\Carbon::parse($a->check_in_time)->timezone($branchTimezone);
-                $attDate = $attFullDate->copy()->startOfDay();
-                $isInRange = $attDate->between($monthStartDate, $monthEndDate);
-                $isTelat = $a->is_late_checkin || $a->status === 'late' || str_contains(strtolower($a->presence_status ?? ''), 'telat');
-                
-                if ($isInRange && $isTelat) {
-                    $lateDates[] = $attFullDate->format('d/m');
-                }
-            });
-
-            // 2. Cari Tanggal Alpha
-            $period = \Carbon\CarbonPeriod::create($monthStartDate->copy()->startOfDay(), $limitDate->copy()->startOfDay());
-            foreach ($period as $date) {
-                $currentDateStr = $date->format('Y-m-d');
-                $att = $attendances->filter(function ($a) use ($currentDateStr, $branchTimezone) {
-                    return \Carbon\Carbon::parse($a->check_in_time)->timezone($branchTimezone)->format('Y-m-d') == $currentDateStr;
-                })->sortBy(fn($a) => $a->attendance_type == 'system' ? 1 : 0)->first();
-
-                $leave = $leaves->filter(function ($l) use ($date) {
-                    return $l->type !== 'telat' && $date->between(\Carbon\Carbon::parse($l->start_date)->startOfDay(), \Carbon\Carbon::parse($l->end_date ?? $l->start_date)->endOfDay());
-                });
-
-                if (!$att && $leave->isEmpty()) {
-                    $alphaDates[] = $date->format('d/m');
-                } elseif ($att && strtolower($att->presence_status ?? '') === 'alpha') {
-                    $alphaDates[] = $date->format('d/m');
-                }
-            }
+            $summary = self::summarizeMonthlyAttendance($this->user, (int) $this->month, (int) $this->year);
+            return [
+                'alphaDates' => $summary['alphaDates'],
+                'lateDates' => $summary['lateDates'],
+            ];
         } catch (\Exception $e) {
-            // Silently fail
+            return [
+                'alphaDates' => [],
+                'lateDates' => [],
+            ];
         }
-
-        return [
-            'alphaDates' => array_unique($alphaDates),
-            'lateDates' => array_unique($lateDates)
-        ];
     }
 }
